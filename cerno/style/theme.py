@@ -130,11 +130,28 @@ def theme_context(name: str):
         yield
 
 
+class _PassthroughTheme(Theme):
+    """A theme that does nothing — inherits the ambient matplotlib state."""
+
+    def __init__(self):
+        super().__init__("_passthrough", {})
+
+    @contextlib.contextmanager
+    def as_context(self):
+        # No rc_context wrapper — let the current rcParams (including any
+        # global theme set via set_theme()) pass through unchanged.
+        yield
+
+
+_PASSTHROUGH = _PassthroughTheme()
+
+
 def _resolve_theme(override):
     """Internal: return the Theme to use for a single render call."""
     if override is None:
-        # Return a no-op theme that applies nothing new
-        return Theme("_passthrough", {})
+        # No chart-level override — inherit whatever is currently active
+        # (including any global theme set via set_theme()).
+        return _PASSTHROUGH
     if isinstance(override, str):
         return get_theme(override)
     if isinstance(override, Theme):
