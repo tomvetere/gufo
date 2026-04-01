@@ -71,6 +71,7 @@ html_theme_options = {
 }
 
 html_title = "cerno"
+html_logo = "_static/cerno_logo.png"
 html_static_path = ["_static"]
 
 # -- Copybutton --------------------------------------------------------------

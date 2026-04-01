@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/_static/cerno_logo.png" alt="Cerno logo" width="200">
+</p>
+
 # Cerno
 
 **Data visualization for humans.**
