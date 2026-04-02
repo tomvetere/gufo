@@ -27,3 +27,18 @@ Initial release.
 
 **Escape hatch**
 - `.apply(func)` for direct matplotlib access
+
+**Bug fixes**
+- `is_categorical()` no longer crashes on empty arrays
+- `_normalize_size()` handles empty arrays gracefully
+- `cerno.grid(1, 1)` no longer crashes (scalar Axes from `plt.subplots` now handled)
+- Color resolution with `data=None` and a literal color string no longer raises `ValueError`
+
+**Internal improvements**
+- Shared mark utilities (`resolve_color`, `default_colors`) extracted to `marks/_base.py`, eliminating code duplication across all four mark renderers
+- `Chart._apply_decorators` refactored into table-driven setters and focused private methods
+- `DataAdapter._resolve_column` consolidated duplicate branches
+- Color palette defined in a single source of truth (`style/color.py`)
+
+**Testing**
+- Added pytest test suite with 138 tests covering data layer, core chart API, all mark types, theming, and grid layout

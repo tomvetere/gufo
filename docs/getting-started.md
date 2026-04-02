@@ -57,6 +57,15 @@ You do not need to reshape your data before passing it in:
 
 See [Data formats](guides/data-formats.md) for details and examples.
 
+## Running the tests
+
+If you are contributing or want to verify your installation:
+
+```bash
+pip install pytest
+pytest tests/ -v
+```
+
 ## Next steps
 
 - [Chart types](chart-types/index.md) — examples for every mark

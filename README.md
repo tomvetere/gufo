@@ -231,10 +231,10 @@ grid[1, 1].chart(df2).bar("region", "sales").title("Panel D")
 grid.show()
 ```
 
-### Faceting by a data column
+### Faceting by a data column (planned for v0.2)
 
 ```python
-# One panel per value of "continent"
+# Planned API — not yet implemented
 cerno.chart(df).scatter("gdp", "life_exp").facet("continent").show()
 
 # Control columns before wrapping
@@ -309,10 +309,25 @@ Cerno charts render inline automatically. Calling `.show()` displays the chart i
 
 ---
 
+## Development
+
+```bash
+# Install in editable mode with dev + docs dependencies
+pip install -e ".[docs]"
+pip install pytest
+
+# Run the test suite
+pytest tests/ -v
+```
+
+The test suite covers the data layer, all chart types, theming, and grid layout (138 tests).
+
+---
+
 ## Roadmap
 
-**v0.1** — scatter, line, bar, histogram, theming, wide-form data, faceting, grid layout
+**v0.1** — scatter, line, bar, histogram, theming, wide-form data, grid layout
 
-**v0.2** — box plot, heatmap, area chart, polars support, violin plot
+**v0.2** — box plot, heatmap, area chart, violin plot, faceting, polars support
 
 **v0.3** — regression overlay, pair plot, interactive export (Plotly backend)

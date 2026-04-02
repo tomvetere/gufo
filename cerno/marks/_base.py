@@ -13,7 +13,7 @@ def resolve_color(adapter, color_enc):
         return color_enc
     try:
         return adapter.resolve(color_enc)
-    except (KeyError, TypeError):
+    except (KeyError, TypeError, ValueError):
         return color_enc
 
 

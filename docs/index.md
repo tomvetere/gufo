@@ -1,9 +1,3 @@
-```{image} _static/cerno_logo.png
-:alt: Cerno logo
-:width: 200px
-:align: center
-```
-
 # cerno
 
 **Data visualization for humans.**
