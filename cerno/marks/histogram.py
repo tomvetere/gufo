@@ -1,4 +1,5 @@
 """Histogram mark."""
+from ._base import resolve_color
 
 
 def render(layer, adapter, axes):
@@ -11,11 +12,8 @@ def render(layer, adapter, axes):
     if enc.get("label") is not None:
         kwargs["label"] = enc["label"]
 
-    color_enc = enc.get("color")
-    if color_enc is not None:
-        try:
-            kwargs["color"] = adapter.resolve(color_enc)
-        except (KeyError, TypeError):
-            kwargs["color"] = color_enc
+    color_value = resolve_color(adapter, enc.get("color"))
+    if color_value is not None:
+        kwargs["color"] = color_value
 
     axes.hist(x, **kwargs)

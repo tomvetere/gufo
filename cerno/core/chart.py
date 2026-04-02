@@ -14,6 +14,14 @@ class Chart:
     Users create Chart instances via cerno.chart(), never directly.
     """
 
+    _SIMPLE_SETTERS = [
+        ("_title", "set_title"),
+        ("_xlabel", "set_xlabel"),
+        ("_ylabel", "set_ylabel"),
+        ("_xscale", "set_xscale"),
+        ("_yscale", "set_yscale"),
+    ]
+
     def __init__(self, data=None):
         self._data = data
         self._layers = []
@@ -220,52 +228,55 @@ class Chart:
         return fig, axes
 
     def _apply_decorators(self, fig, axes):
-        if self._title:
-            axes.set_title(self._title)
-        if self._subtitle:
-            fig.text(0.5, 0.92, self._subtitle, ha="center", fontsize="medium",
-                     color="gray", transform=fig.transFigure)
-        if self._xlabel:
-            axes.set_xlabel(self._xlabel)
-        if self._ylabel:
-            axes.set_ylabel(self._ylabel)
-        if self._caption:
-            fig.text(0.5, 0.01, self._caption, ha="center", fontsize="small",
-                     color="gray", transform=fig.transFigure)
+        for attr, method in self._SIMPLE_SETTERS:
+            value = getattr(self, attr)
+            if value is not None:
+                getattr(axes, method)(value)
+
         if self._xlim:
             axes.set_xlim(*self._xlim)
         if self._ylim:
             axes.set_ylim(*self._ylim)
-        if self._xscale:
-            axes.set_xscale(self._xscale)
-        if self._yscale:
-            axes.set_yscale(self._yscale)
-        if self._xticks:
-            opts = self._xticks
-            if opts.get("ticks") is not None:
-                axes.set_xticks(opts["ticks"])
-            if opts.get("labels") is not None:
-                axes.set_xticklabels(opts["labels"])
-            if opts.get("rotation") is not None:
-                axes.tick_params(axis="x", labelrotation=opts["rotation"])
-        if self._yticks:
-            opts = self._yticks
-            if opts.get("ticks") is not None:
-                axes.set_yticks(opts["ticks"])
-            if opts.get("labels") is not None:
-                axes.set_yticklabels(opts["labels"])
-            if opts.get("rotation") is not None:
-                axes.tick_params(axis="y", labelrotation=opts["rotation"])
-        if self._annotations:
-            for ann in self._annotations:
-                axes.annotate(ann["text"], xy=ann["xy"],
-                              xytext=(15, 15), textcoords="offset points",
-                              arrowprops={"arrowstyle": "->", "color": "black"})
-        if self._legend_opts:
-            opts = self._legend_opts
-            if not opts.get("hide"):
-                axes.legend(loc=opts.get("position", "best"),
-                            title=opts.get("title"))
+
+        self._apply_subtitle(fig)
+        self._apply_caption(fig)
+        self._apply_ticks(axes, "x", self._xticks)
+        self._apply_ticks(axes, "y", self._yticks)
+        self._apply_annotations(axes)
+        self._apply_legend(axes)
+
+    def _apply_subtitle(self, fig):
+        if self._subtitle:
+            fig.text(0.5, 0.92, self._subtitle, ha="center", fontsize="medium",
+                     color="gray", transform=fig.transFigure)
+
+    def _apply_caption(self, fig):
+        if self._caption:
+            fig.text(0.5, 0.01, self._caption, ha="center", fontsize="small",
+                     color="gray", transform=fig.transFigure)
+
+    def _apply_ticks(self, axes, axis, opts):
+        if not opts:
+            return
+        if opts.get("ticks") is not None:
+            getattr(axes, f"set_{axis}ticks")(opts["ticks"])
+        if opts.get("labels") is not None:
+            getattr(axes, f"set_{axis}ticklabels")(opts["labels"])
+        if opts.get("rotation") is not None:
+            axes.tick_params(axis=axis, labelrotation=opts["rotation"])
+
+    def _apply_annotations(self, axes):
+        for ann in self._annotations:
+            axes.annotate(ann["text"], xy=ann["xy"],
+                          xytext=(15, 15), textcoords="offset points",
+                          arrowprops={"arrowstyle": "->", "color": "black"})
+
+    def _apply_legend(self, axes):
+        if not self._legend_opts:
+            return
+        if not self._legend_opts.get("hide"):
+            axes.legend(loc=self._legend_opts.get("position", "best"),
+                        title=self._legend_opts.get("title"))
 
 
 def chart(data=None):

@@ -1,5 +1,6 @@
 """Scatter mark."""
 from ..data.inference import is_categorical
+from ._base import resolve_color, default_colors
 
 
 def render(layer, adapter, axes):
@@ -13,28 +14,28 @@ def render(layer, adapter, axes):
     if enc.get("label") is not None:
         kwargs["label"] = enc["label"]
 
-    color_enc = enc.get("color")
     size_enc = enc.get("size")
+    color_value = resolve_color(adapter, enc.get("color"))
 
-    if color_enc is not None and isinstance(color_enc, str):
-        try:
-            color_data = adapter.resolve(color_enc)
-            if is_categorical(color_data):
-                categories = list(dict.fromkeys(color_data))
-                cmap = _categorical_colors(len(categories))
-                color_map = {cat: cmap[i] for i, cat in enumerate(categories)}
-                for cat in categories:
-                    mask = color_data == cat
-                    scatter_kwargs = dict(kwargs, label=cat)
-                    if size_enc is not None:
-                        sz = adapter.resolve(size_enc)
-                        scatter_kwargs["s"] = _normalize_size(sz[mask])
-                    axes.scatter(x[mask], y[mask], color=color_map[cat], **scatter_kwargs)
-                return
-            else:
-                kwargs["c"] = color_data
-        except (KeyError, TypeError):
-            kwargs["color"] = color_enc
+    # Categorical color → one scatter call per category
+    if color_value is not None and hasattr(color_value, "__len__") and is_categorical(color_value):
+        categories = list(dict.fromkeys(color_value))
+        cmap = default_colors(len(categories))
+        color_map = {cat: cmap[i] for i, cat in enumerate(categories)}
+        for cat in categories:
+            mask = color_value == cat
+            scatter_kwargs = dict(kwargs, label=cat)
+            if size_enc is not None:
+                sz = adapter.resolve(size_enc)
+                scatter_kwargs["s"] = _normalize_size(sz[mask])
+            axes.scatter(x[mask], y[mask], color=color_map[cat], **scatter_kwargs)
+        return
+
+    if color_value is not None:
+        if hasattr(color_value, "__len__") and len(color_value) == len(x):
+            kwargs["c"] = color_value
+        else:
+            kwargs["color"] = color_value
 
     if size_enc is not None:
         try:
@@ -46,15 +47,11 @@ def render(layer, adapter, axes):
     axes.scatter(x, y, **kwargs)
 
 
-def _categorical_colors(n):
-    import matplotlib.pyplot as plt
-    cmap = plt.get_cmap("tab10")
-    return [cmap(i % 10) for i in range(n)]
-
-
 def _normalize_size(arr, min_size=20, max_size=400):
     import numpy as np
     arr = arr.astype(float)
+    if len(arr) == 0:
+        return []
     lo, hi = arr.min(), arr.max()
     if hi == lo:
         return [100] * len(arr)

@@ -33,7 +33,7 @@ class Grid:
     def __init__(self, rows, cols, figsize=None):
         self._fig, self._axs = plt.subplots(rows, cols, figsize=figsize)
         import numpy as np
-        self._axs = np.array(self._axs).reshape(rows, cols)
+        self._axs = np.atleast_2d(np.array(self._axs)).reshape(rows, cols)
 
     def __getitem__(self, idx):
         return GridCell(self._axs[idx])

@@ -5,8 +5,9 @@ import numpy as np
 def is_categorical(arr):
     """Return True if arr should be treated as a categorical variable."""
     if hasattr(arr, "dtype"):
-        import numpy as np
         return arr.dtype.kind in ("O", "U", "S") or str(arr.dtype) == "category"
+    if len(arr) == 0:
+        return False
     return isinstance(arr[0], str)
 
 

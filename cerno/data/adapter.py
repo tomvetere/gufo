@@ -56,9 +56,7 @@ class DataAdapter:
         return np.asarray(key)
 
     def _resolve_column(self, name):
-        if self._type == "dataframe":
-            return np.asarray(self._data[name])
-        if self._type == "dict":
+        if self._type in ("dataframe", "dict"):
             return np.asarray(self._data[name])
         raise ValueError(
             f"Cannot resolve column '{name}' — no DataFrame or dict was provided. "

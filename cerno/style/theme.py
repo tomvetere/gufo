@@ -2,6 +2,8 @@
 import contextlib
 import matplotlib.pyplot as plt
 
+from .color import CERNO_PALETTE
+
 
 class Theme:
     """
@@ -59,10 +61,7 @@ _CERNO_MODERN_RC = {
     "axes.spines.bottom": False,
     "lines.linewidth": 2.0,
     "font.family": "sans-serif",
-    "axes.prop_cycle": plt.cycler(color=[
-        "#4C72B0", "#DD8452", "#55A868", "#C44E52",
-        "#8172B3", "#937860", "#DA8BC3", "#8C8C8C",
-    ]),
+    "axes.prop_cycle": plt.cycler(color=CERNO_PALETTE.categorical),
 }
 
 _CERNO_DARK_RC = {

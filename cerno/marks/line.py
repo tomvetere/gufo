@@ -1,5 +1,6 @@
 """Line mark — supports single series, multi-series (wide-form), and color grouping."""
 from ..data.inference import is_categorical
+from ._base import resolve_color, default_colors
 
 _DASH_STYLES = {
     "solid": "-",
@@ -25,7 +26,7 @@ def render(layer, adapter, axes):
     # Wide-form: y is a list of column names
     if isinstance(layer.y, list) and all(isinstance(k, str) for k in layer.y):
         series = adapter.resolve(layer.y)   # list of arrays
-        colors = _default_colors(len(series))
+        colors = default_colors(len(series))
         for i, (name, y_data) in enumerate(zip(layer.y, series)):
             series_kwargs = dict(kwargs, label=name, color=colors[i])
             axes.plot(x, y_data, **series_kwargs)
@@ -34,27 +35,17 @@ def render(layer, adapter, axes):
     y = adapter.resolve(layer.y)
 
     # Long-form with color grouping
-    if color_enc is not None and isinstance(color_enc, str):
-        try:
-            color_data = adapter.resolve(color_enc)
-            if is_categorical(color_data):
-                categories = list(dict.fromkeys(color_data))
-                colors = _default_colors(len(categories))
-                for i, cat in enumerate(categories):
-                    mask = color_data == cat
-                    series_kwargs = dict(kwargs, label=cat, color=colors[i])
-                    axes.plot(x[mask], y[mask], **series_kwargs)
-                return
-        except (KeyError, TypeError):
-            kwargs["color"] = color_enc
+    color_value = resolve_color(adapter, color_enc)
+    if color_value is not None and hasattr(color_value, "__len__") and is_categorical(color_value):
+        categories = list(dict.fromkeys(color_value))
+        colors = default_colors(len(categories))
+        for i, cat in enumerate(categories):
+            mask = color_value == cat
+            series_kwargs = dict(kwargs, label=cat, color=colors[i])
+            axes.plot(x[mask], y[mask], **series_kwargs)
+        return
 
-    if color_enc is not None and not isinstance(color_enc, str):
-        kwargs["color"] = color_enc
+    if color_value is not None:
+        kwargs["color"] = color_value
 
     axes.plot(x, y, **kwargs)
-
-
-def _default_colors(n):
-    import matplotlib.pyplot as plt
-    cmap = plt.get_cmap("tab10")
-    return [cmap(i % 10) for i in range(n)]
