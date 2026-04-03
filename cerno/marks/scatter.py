@@ -1,6 +1,8 @@
 """Scatter mark."""
-from ..data.inference import is_categorical
-from ._base import resolve_color, default_colors
+import numpy as np
+
+from ..core.validate import check_array_lengths, warn_nan_inf
+from ._base import apply_label, resolve_color, iter_color_groups
 
 
 def render(layer, adapter, axes):
@@ -9,26 +11,25 @@ def render(layer, adapter, axes):
     enc = layer.encodings
     kwargs = dict(layer.kwargs)
 
+    check_array_lengths({"x": x, "y": y}, "scatter")
+    warn_nan_inf(x, "x", "scatter")
+    warn_nan_inf(y, "y", "scatter")
+
     if enc.get("alpha") is not None:
         kwargs["alpha"] = enc["alpha"]
-    if enc.get("label") is not None:
-        kwargs["label"] = enc["label"]
+    apply_label(kwargs, enc)
 
     size_enc = enc.get("size")
     color_value = resolve_color(adapter, enc.get("color"))
 
-    # Categorical color → one scatter call per category
-    if color_value is not None and hasattr(color_value, "__len__") and is_categorical(color_value):
-        categories = list(dict.fromkeys(color_value))
-        cmap = default_colors(len(categories))
-        color_map = {cat: cmap[i] for i, cat in enumerate(categories)}
-        for cat in categories:
-            mask = color_value == cat
+    groups = iter_color_groups(color_value)
+    if groups is not None:
+        sz = adapter.resolve(size_enc) if size_enc is not None else None
+        for cat, color, mask in groups:
             scatter_kwargs = dict(kwargs, label=cat)
-            if size_enc is not None:
-                sz = adapter.resolve(size_enc)
+            if sz is not None:
                 scatter_kwargs["s"] = _normalize_size(sz[mask])
-            axes.scatter(x[mask], y[mask], color=color_map[cat], **scatter_kwargs)
+            axes.scatter(x[mask], y[mask], color=color, **scatter_kwargs)
         return
 
     if color_value is not None:
@@ -48,11 +49,10 @@ def render(layer, adapter, axes):
 
 
 def _normalize_size(arr, min_size=20, max_size=400):
-    import numpy as np
-    arr = arr.astype(float)
+    arr = np.asarray(arr, dtype=float)
     if len(arr) == 0:
-        return []
+        return np.array([], dtype=float)
     lo, hi = arr.min(), arr.max()
     if hi == lo:
-        return [100] * len(arr)
+        return np.full(len(arr), 100.0)
     return min_size + (arr - lo) / (hi - lo) * (max_size - min_size)

@@ -1,6 +1,6 @@
 """Line mark — supports single series, multi-series (wide-form), and color grouping."""
-from ..data.inference import is_categorical
-from ._base import resolve_color, default_colors
+from ..core.validate import check_array_lengths, check_stroke_dash, warn_nan_inf
+from ._base import apply_label, resolve_color, default_colors, iter_color_groups
 
 _DASH_STYLES = {
     "solid": "-",
@@ -15,17 +15,19 @@ def render(layer, adapter, axes):
     enc = layer.encodings
     kwargs = dict(layer.kwargs)
 
+    check_stroke_dash(enc.get("stroke_dash"), _DASH_STYLES)
     linestyle = _DASH_STYLES.get(enc.get("stroke_dash", "solid"), "-")
     kwargs["linestyle"] = linestyle
 
-    if enc.get("label") is not None:
-        kwargs["label"] = enc["label"]
+    apply_label(kwargs, enc)
 
     color_enc = enc.get("color")
 
     # Wide-form: y is a list of column names
     if isinstance(layer.y, list) and all(isinstance(k, str) for k in layer.y):
         series = adapter.resolve(layer.y)   # list of arrays
+        if series and len(series[0]) != len(x):
+            check_array_lengths({"x": x, layer.y[0]: series[0]}, "line")
         colors = default_colors(len(series))
         for i, (name, y_data) in enumerate(zip(layer.y, series)):
             series_kwargs = dict(kwargs, label=name, color=colors[i])
@@ -33,15 +35,15 @@ def render(layer, adapter, axes):
         return
 
     y = adapter.resolve(layer.y)
+    check_array_lengths({"x": x, "y": y}, "line")
+    warn_nan_inf(x, "x", "line")
+    warn_nan_inf(y, "y", "line")
 
-    # Long-form with color grouping
     color_value = resolve_color(adapter, color_enc)
-    if color_value is not None and hasattr(color_value, "__len__") and is_categorical(color_value):
-        categories = list(dict.fromkeys(color_value))
-        colors = default_colors(len(categories))
-        for i, cat in enumerate(categories):
-            mask = color_value == cat
-            series_kwargs = dict(kwargs, label=cat, color=colors[i])
+    groups = iter_color_groups(color_value)
+    if groups is not None:
+        for cat, color, mask in groups:
+            series_kwargs = dict(kwargs, label=cat, color=color)
             axes.plot(x[mask], y[mask], **series_kwargs)
         return
 

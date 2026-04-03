@@ -1,5 +1,6 @@
 """Bar mark."""
-from ._base import resolve_color
+from ..core.validate import check_array_lengths, warn_nan_inf
+from ._base import apply_label, apply_color
 
 
 def render(layer, adapter, axes):
@@ -8,12 +9,11 @@ def render(layer, adapter, axes):
     enc = layer.encodings
     kwargs = dict(layer.kwargs)
 
-    if enc.get("label") is not None:
-        kwargs["label"] = enc["label"]
+    check_array_lengths({"x": x, "y": y}, "bar")
+    warn_nan_inf(y, "y", "bar")
 
-    color_value = resolve_color(adapter, enc.get("color"))
-    if color_value is not None:
-        kwargs["color"] = color_value
+    apply_label(kwargs, enc)
+    apply_color(kwargs, adapter, enc)
 
     if enc.get("horizontal"):
         axes.barh(x, y, **kwargs)

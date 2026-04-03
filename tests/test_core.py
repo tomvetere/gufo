@@ -253,16 +253,15 @@ class TestSave:
 class TestCanvas:
     def test_lazy_build(self):
         c = Canvas()
-        assert c._built is False
-        assert c.figure is None
-        assert c.axes is None
+        assert c._figure is None
+        assert c._axes is None
 
     def test_build_creates_figure(self):
         c = Canvas()
         fig, axes = c.build()
         assert fig is not None
         assert axes is not None
-        assert c._built is True
+        assert c._figure is not None
 
     def test_build_idempotent(self):
         c = Canvas()
@@ -305,3 +304,35 @@ class TestLayer:
         assert layer.y == "b"
         assert layer.encodings["color"] == "red"
         assert layer.kwargs["linewidth"] == 2
+
+
+# ── Input validation (Chart-level) ────────────────────────────────
+
+class TestInputValidation:
+    def test_scatter_alpha_out_of_range(self):
+        with pytest.raises(ValueError, match="between 0 and 1"):
+            chart().scatter("x", "y", alpha=2.0)
+
+    def test_xlim_swapped(self):
+        with pytest.raises(ValueError, match="Did you swap"):
+            chart().xlim(10, 5)
+
+    def test_ylim_swapped(self):
+        with pytest.raises(ValueError, match="Did you swap"):
+            chart().ylim(10, 5)
+
+    def test_xscale_invalid(self):
+        with pytest.raises(ValueError, match="unknown scale"):
+            chart().xscale("logs")
+
+    def test_xticks_labels_mismatch(self):
+        with pytest.raises(ValueError, match="3 ticks but 2 labels"):
+            chart().xticks(ticks=[1, 2, 3], labels=["a", "b"])
+
+    def test_annotate_bad_xy(self):
+        with pytest.raises(ValueError, match="length 3"):
+            chart().annotate("hi", (1, 2, 3))
+
+    def test_size_negative(self):
+        with pytest.raises(ValueError, match="positive numbers"):
+            chart().size(-1, 5)

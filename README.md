@@ -221,15 +221,19 @@ cerno.set_theme("brand_dark")
 ### Multi-panel grid
 
 ```python
-grid = cerno.grid(rows=2, cols=2, figsize=(14, 10))
+g = cerno.grid(rows=2, cols=2, figsize=(14, 10))
 
-grid[0, 0].chart(df).scatter("x", "y").title("Panel A")
-grid[0, 1].chart(df).line("year", "revenue").title("Panel B")
-grid[1, 0].chart(df).histogram("income").title("Panel C")
-grid[1, 1].chart(df2).bar("region", "sales").title("Panel D")
+g[0, 0] = cerno.chart(df).scatter("x", "y").title("Panel A")
+g[0, 1] = cerno.chart(df).line("year", "revenue").title("Panel B")
+g[1, 0] = cerno.chart(df).histogram("income").title("Panel C")
+g[1, 1] = cerno.chart(df2).bar("region", "sales").title("Panel D")
 
-grid.show()
+g.show()
 ```
+
+`cerno.grid()` returns a `Chart` configured as a grid. Assign panels with
+`g[row, col] = cerno.chart(data).mark(...)`. Each panel is a normal `Chart`,
+so all methods work as usual. Grid-level `.title()` becomes a super-title.
 
 ### Faceting by a data column (planned for v0.2)
 
@@ -320,13 +324,13 @@ pip install pytest
 pytest tests/ -v
 ```
 
-The test suite covers the data layer, all chart types, theming, and grid layout (138 tests).
+The test suite covers the data layer, all chart types, theming, grid layout, and input validation (190 tests).
 
 ---
 
 ## Roadmap
 
-**v0.1** — scatter, line, bar, histogram, theming, wide-form data, grid layout
+**v0.1** — scatter, line, bar, histogram, theming, wide-form data, grid layout, input validation
 
 **v0.2** — box plot, heatmap, area chart, violin plot, faceting, polars support
 

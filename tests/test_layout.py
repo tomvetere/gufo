@@ -1,101 +1,104 @@
-"""Tests for cerno.layout — Grid and GridCell."""
+"""Tests for cerno grid layout — now part of Chart."""
 import numpy as np
 import pytest
 import matplotlib.pyplot as plt
 
 import cerno
-from cerno.layout.grid import Grid, GridCell, grid
-from cerno.core.chart import Chart
+from cerno.core.chart import Chart, chart
 
 
 # ── Grid construction ───────────────────────────────────────────────
 
 class TestGridConstruction:
-    def test_grid_factory(self):
-        g = grid(2, 2)
-        assert isinstance(g, Grid)
+    def test_grid_returns_chart(self):
+        g = chart().grid(2, 2)
+        assert isinstance(g, Chart)
 
     def test_cerno_grid_entry_point(self):
         g = cerno.grid(2, 2)
-        assert isinstance(g, Grid)
+        assert isinstance(g, Chart)
 
-    def test_1x1_grid(self):
-        g = grid(1, 1)
-        cell = g[0, 0]
-        assert isinstance(cell, GridCell)
+    def test_grid_on_chart_with_layers_raises(self):
+        with pytest.raises(ValueError, match="already has layers"):
+            chart().scatter([1], [2]).grid(2, 2)
 
-    def test_1x2_grid(self):
-        g = grid(1, 2)
-        assert isinstance(g[0, 0], GridCell)
-        assert isinstance(g[0, 1], GridCell)
+    def test_custom_figsize(self, sample_df, tmp_path):
+        g = chart().grid(2, 2, figsize=(14, 10))
+        g[0, 0] = chart(sample_df).scatter("x", "y")
+        g.save(tmp_path / "sized.png")
+        assert (tmp_path / "sized.png").exists()
 
-    def test_2x1_grid(self):
-        g = grid(2, 1)
-        assert isinstance(g[0, 0], GridCell)
-        assert isinstance(g[1, 0], GridCell)
+    def test_setitem_rejects_non_chart(self):
+        g = chart().grid(2, 2)
+        with pytest.raises(TypeError, match="Chart instance"):
+            g[0, 0] = "not a chart"
 
-    def test_2x3_grid(self):
-        g = grid(2, 3)
-        for r in range(2):
-            for c in range(3):
-                assert isinstance(g[r, c], GridCell)
+    def test_setitem_rejects_out_of_range(self):
+        g = chart().grid(2, 2)
+        with pytest.raises(IndexError, match="out of range"):
+            g[5, 5] = chart()
 
-    def test_custom_figsize(self):
-        g = grid(2, 2, figsize=(14, 10))
-        w, h = g._fig.get_size_inches()
-        assert w == pytest.approx(14)
-        assert h == pytest.approx(10)
+    def test_getitem_raises_helpful_error(self):
+        g = chart().grid(2, 2)
+        with pytest.raises(TypeError, match="write-only"):
+            _ = g[0, 0]
+
+    def test_subscript_on_non_grid_raises(self):
+        c = chart()
+        with pytest.raises(TypeError, match="requires .grid"):
+            c[0, 0] = chart()
 
 
-# ── GridCell ────────────────────────────────────────────────────────
+# ── Grid panels ────────────────────────────────────────────────────
 
-class TestGridCell:
-    def test_cell_returns_chart(self):
-        g = grid(2, 2)
-        c = g[0, 0].chart()
-        assert isinstance(c, Chart)
-
-    def test_cell_chart_with_data(self, sample_df):
-        g = grid(1, 1)
-        c = g[0, 0].chart(sample_df)
-        assert c._data is sample_df
-
-    def test_cell_chart_pre_bound_to_axes(self):
-        g = grid(1, 1)
-        c = g[0, 0].chart()
-        assert c._canvas._built is True
-        assert c._canvas._axes is not None
-        assert c._canvas._figure is not None
-
-    def test_cell_chart_uses_grid_axes(self):
-        g = grid(2, 2)
-        c = g[0, 1].chart()
-        # The chart's axes should be the grid's axes at [0, 1]
-        assert c._canvas._axes is g._axs[0, 1]
-
-    def test_cell_chart_renders(self, sample_df, tmp_path):
-        g = grid(2, 2)
-        g[0, 0].chart(sample_df).scatter("x", "y").title("Top Left")
-        g[0, 1].chart(sample_df).line("x", "y").title("Top Right")
-        g[1, 0].chart(sample_df).bar("x", "y").title("Bottom Left")
-        g[1, 1].chart(sample_df).histogram("x").title("Bottom Right")
+class TestGridPanels:
+    def test_all_mark_types_render(self, sample_df, tmp_path):
+        g = chart().grid(2, 2)
+        g[0, 0] = chart(sample_df).scatter("x", "y").title("Scatter")
+        g[0, 1] = chart(sample_df).line("x", "y").title("Line")
+        g[1, 0] = chart(sample_df).bar("x", "y").title("Bar")
+        g[1, 1] = chart(sample_df).histogram("x").title("Histogram")
         g.save(tmp_path / "grid.png")
         assert (tmp_path / "grid.png").exists()
+
+    def test_different_data_per_panel(self, tmp_path):
+        df1 = {"x": [1, 2, 3], "y": [4, 5, 6]}
+        df2 = {"x": [10, 20], "y": [30, 40]}
+        g = chart().grid(1, 2)
+        g[0, 0] = chart(df1).scatter("x", "y")
+        g[0, 1] = chart(df2).bar("x", "y")
+        g.save(tmp_path / "multi_data.png")
+        assert (tmp_path / "multi_data.png").exists()
+
+    def test_grid_suptitle(self, sample_df, tmp_path):
+        g = chart().grid(1, 2).title("Overall Title")
+        g[0, 0] = chart(sample_df).scatter("x", "y")
+        g[0, 1] = chart(sample_df).line("x", "y")
+        path = tmp_path / "suptitle.png"
+        g.save(path)
+        assert path.exists()
+
+    def test_empty_cells_hidden(self, sample_df, tmp_path):
+        g = chart().grid(2, 2)
+        g[0, 0] = chart(sample_df).scatter("x", "y")
+        # Leave other 3 cells empty
+        g.save(tmp_path / "sparse.png")
+        assert (tmp_path / "sparse.png").exists()
 
 
 # ── Grid output ─────────────────────────────────────────────────────
 
 class TestGridOutput:
     def test_save(self, sample_df, tmp_path):
-        g = grid(1, 2)
-        g[0, 0].chart(sample_df).scatter("x", "y")
-        g[0, 1].chart(sample_df).line("x", "y")
+        g = cerno.grid(1, 2)
+        g[0, 0] = cerno.chart(sample_df).scatter("x", "y")
+        g[0, 1] = cerno.chart(sample_df).line("x", "y")
         path = tmp_path / "grid_out.png"
         g.save(str(path))
         assert path.exists()
         assert path.stat().st_size > 0
 
     def test_save_custom_dpi(self, sample_df, tmp_path):
-        g = grid(1, 1)
-        g[0, 0].chart(sample_df).scatter("x", "y")
+        g = cerno.grid(1, 1)
+        g[0, 0] = cerno.chart(sample_df).scatter("x", "y")
         g.save(tmp_path / "grid_dpi.png", dpi=300)

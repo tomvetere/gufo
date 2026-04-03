@@ -20,9 +20,11 @@ cerno/
 ├── core/
 │   ├── chart.py         # Chart class — the only thing users interact with
 │   ├── layer.py         # Layer dataclass (one per mark call)
-│   └── canvas.py        # matplotlib figure/axes lifecycle
+│   ├── canvas.py        # matplotlib figure/axes lifecycle
+│   └── validate.py      # input validation helpers (check_alpha, check_array_lengths, etc.)
 ├── marks/
 │   ├── __init__.py      # render_layer() dispatcher
+│   ├── _base.py         # shared mark utilities (resolve_color, default_colors, apply_label, apply_color, iter_color_groups)
 │   ├── scatter.py       # render(layer, adapter, axes)
 │   ├── line.py
 │   ├── bar.py
@@ -34,9 +36,8 @@ cerno/
 ├── style/
 │   ├── theme.py         # Theme class, registry, set_theme, theme_context
 │   ├── defaults.py      # (future) built-in theme definitions
-│   └── color.py         # Palette dataclass
+│   └── color.py         # Palette dataclass + CERNO_PALETTE
 └── layout/
-    ├── grid.py          # Grid(rows, cols) — multi-panel layout
     └── facet.py         # (future) facet by data column
 ```
 
@@ -60,10 +61,41 @@ Themes are immutable. `.merge(overrides)` returns a new `Theme`. Use `plt.rc_con
 ### Rendering pipeline (in `Chart._render()`)
 
 1. Resolve theme → enter `theme.as_context()`
-2. `Canvas.build()` creates fig/axes
-3. Each `Layer` dispatched via `render_layer(layer, data, axes)`
-4. `_apply_decorators()` sets titles, labels, axis options, legend
-5. Each `.apply()` function called as `func(figure, axes)`
+2. Create `DataAdapter` once for the chart's data (not per layer)
+3. `Canvas.build()` creates fig/axes
+4. Each `Layer` dispatched via `render_layer(layer, adapter, axes)`
+5. `_apply_decorators()` sets titles, labels, axis options, legend
+6. Each `.apply()` function called as `func(figure, axes)`
+
+For grid charts (`_grid_spec is not None`), `_render_grid()` takes over:
+1. `plt.subplots(rows, cols)` inside theme context
+2. Each panel Chart's layers rendered onto its grid cell axes
+3. Panel-level theme overrides respected via nested context
+4. Grid-level `.title()` → `fig.suptitle()`
+5. Unassigned cells hidden
+
+### Input validation
+
+Validation lives in `core/validate.py` — small pure functions that raise `ValueError` or `warnings.warn`.
+
+- **Call-time checks** (in `chart.py`): alpha, xlim/ylim order, scale names, tick/label length, annotate xy, figure dimensions. These fire immediately when the method is called.
+- **Render-time checks** (in mark renderers): array length mismatches, numeric type (histogram), NaN/Inf warnings. These require resolved data and fire during `_render()`.
+
+### Grid layout
+
+Grid is part of Chart, not a separate class. Usage:
+
+```python
+g = cerno.chart().grid(2, 2, figsize=(14, 10))
+g[0, 0] = cerno.chart(df).scatter("x", "y").title("Panel A")
+g[0, 1] = cerno.chart(df).line("x", "y").title("Panel B")
+g.show()
+```
+
+- `Chart.grid(rows, cols)` sets `_grid_spec`, returns self
+- `Chart.__setitem__` stores panel Charts in `_grid_panels`
+- `Chart.__getitem__` raises `TypeError` (panels are write-only — no implicit state)
+- `Chart._render_grid()` creates subplots and delegates to each panel
 
 ## What the README is
 
@@ -80,6 +112,6 @@ Polars is planned for v0.2 as an optional dependency.
 
 ## Roadmap
 
-- **v0.1**: scatter, line, bar, histogram, theming, wide-form data, grid layout
+- **v0.1**: scatter, line, bar, histogram, theming, wide-form data, grid layout, input validation
 - **v0.2**: box, heatmap, area, violin, polars support, faceting
 - **v0.3**: regression overlay, pair plot, interactive/Plotly backend

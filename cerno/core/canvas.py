@@ -13,21 +13,20 @@ class Canvas:
         self._figsize = figsize
         self._figure = None
         self._axes = None
-        self._built = False
+
+    @classmethod
+    def from_existing(cls, figure, axes):
+        """Wrap an already-created figure and axes (used by Grid)."""
+        canvas = cls.__new__(cls)
+        canvas._figsize = None
+        canvas._figure = figure
+        canvas._axes = axes
+        return canvas
 
     def build(self):
         """Create the figure and axes. Called once at render time."""
-        if self._built:
+        if self._figure is not None:
             return self._figure, self._axes
         import matplotlib.pyplot as plt
         self._figure, self._axes = plt.subplots(figsize=self._figsize)
-        self._built = True
         return self._figure, self._axes
-
-    @property
-    def figure(self):
-        return self._figure
-
-    @property
-    def axes(self):
-        return self._axes

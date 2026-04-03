@@ -1,5 +1,6 @@
 """Histogram mark."""
-from ._base import resolve_color
+from ..core.validate import check_numeric, warn_nan_inf
+from ._base import apply_label, apply_color
 
 
 def render(layer, adapter, axes):
@@ -7,13 +8,12 @@ def render(layer, adapter, axes):
     enc = layer.encodings
     kwargs = dict(layer.kwargs)
 
+    check_numeric(x, "x", "histogram")
+    warn_nan_inf(x, "x", "histogram")
+
     kwargs["bins"] = enc.get("bins", "auto")
 
-    if enc.get("label") is not None:
-        kwargs["label"] = enc["label"]
-
-    color_value = resolve_color(adapter, enc.get("color"))
-    if color_value is not None:
-        kwargs["color"] = color_value
+    apply_label(kwargs, enc)
+    apply_color(kwargs, adapter, enc)
 
     axes.hist(x, **kwargs)

@@ -12,10 +12,8 @@ _REGISTRY = {
 }
 
 
-def render_layer(layer, data, axes):
+def render_layer(layer, adapter, axes):
     """Dispatch a Layer to the correct mark renderer."""
-    from ..data.adapter import DataAdapter
-    adapter = DataAdapter.from_any(data)
     renderer = _REGISTRY.get(layer.mark_type)
     if renderer is None:
         raise ValueError(f"Unknown mark type: '{layer.mark_type}'")

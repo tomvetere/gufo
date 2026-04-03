@@ -41,16 +41,15 @@ class TestDefaultColors:
         colors = default_colors(5)
         assert len(colors) == 5
 
-    def test_wraps_around_at_10(self):
-        colors = default_colors(12)
-        assert len(colors) == 12
-        # tab10 has 10 colors, so index 10 wraps to index 0
-        assert colors[0] == colors[10]
+    def test_wraps_around_at_palette_length(self):
+        colors = default_colors(10)
+        assert len(colors) == 10
+        # CERNO_PALETTE has 8 colors, so index 8 wraps to index 0
+        assert colors[0] == colors[8]
 
-    def test_returns_tuples(self):
+    def test_returns_hex_strings(self):
         colors = default_colors(3)
-        # matplotlib cmap returns RGBA tuples
-        assert len(colors[0]) == 4
+        assert all(isinstance(c, str) and c.startswith("#") for c in colors)
 
 
 # ── Scatter ─────────────────────────────────────────────────────────
@@ -170,3 +169,34 @@ class TestMultiLayer:
         c = cerno.chart(sample_df).scatter("x", "y").line("x", "y")
         assert c._layers[0].mark_type == "scatter"
         assert c._layers[1].mark_type == "line"
+
+
+# ── Mark-level validation ─────────────────────────────────────────
+
+class TestMarkValidation:
+    def test_scatter_length_mismatch(self, tmp_path):
+        c = cerno.chart().scatter(np.arange(5), np.arange(3))
+        with pytest.raises(ValueError, match="array length mismatch"):
+            c.save(tmp_path / "bad.png")
+
+    def test_bar_length_mismatch(self, tmp_path):
+        c = cerno.chart().bar(np.arange(5), np.arange(3))
+        with pytest.raises(ValueError, match="array length mismatch"):
+            c.save(tmp_path / "bad.png")
+
+    def test_histogram_non_numeric(self, tmp_path):
+        c = cerno.chart().histogram(np.array(["a", "b", "c"]))
+        with pytest.raises(ValueError, match="must be numeric"):
+            c.save(tmp_path / "bad.png")
+
+    def test_scatter_nan_warns(self, tmp_path):
+        x = np.array([1.0, 2.0, np.nan])
+        y = np.array([1.0, 2.0, 3.0])
+        c = cerno.chart().scatter(x, y)
+        with pytest.warns(UserWarning, match="NaN"):
+            c.save(tmp_path / "nan.png")
+
+    def test_line_length_mismatch(self, tmp_path):
+        c = cerno.chart().line(np.arange(5), np.arange(3))
+        with pytest.raises(ValueError, match="array length mismatch"):
+            c.save(tmp_path / "bad.png")

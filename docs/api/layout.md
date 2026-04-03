@@ -1,17 +1,9 @@
 # Layout
 
-## grid
+Grid layout is part of the `Chart` class. See {py:class}`cerno.core.chart.Chart`.
 
-```{eval-rst}
-.. autofunction:: cerno.layout.grid.grid
+Key methods:
 
-.. autoclass:: cerno.layout.grid.Grid
-   :members:
-   :member-order: bysource
-   :undoc-members: False
-
-.. autoclass:: cerno.layout.grid.GridCell
-   :members:
-   :member-order: bysource
-   :undoc-members: False
-```
+- `Chart.grid(rows, cols, figsize=None)` — configure as a multi-panel grid
+- `Chart.__setitem__(idx, panel_chart)` — assign a `Chart` to a grid cell
+- `cerno.grid(rows, cols, figsize=None)` — convenience for `cerno.chart().grid(...)`
