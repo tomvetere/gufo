@@ -1,4 +1,9 @@
 """Chart — the central fluent builder object."""
+import matplotlib.pyplot as plt
+
+from ..data.adapter import DataAdapter
+from ..marks import render_layer
+from ..style.theme import _resolve_theme
 from .canvas import Canvas
 from .layer import Layer
 from .validate import (
@@ -47,11 +52,8 @@ class Chart:
         self._yticks = {}
         self._legend_opts = None
         self._theme_override = None
-        self._facet_opts = None
         self._apply_funcs = []
         self._canvas = Canvas()
-        self._grid_spec = None
-        self._grid_panels = {}
 
     # ------------------------------------------------------------------
     # Mark methods
@@ -175,36 +177,6 @@ class Chart:
         self._theme_override = name_or_theme
         return self
 
-    def grid(self, rows, cols, figsize=None):
-        """Configure this chart as a multi-panel grid layout. Returns self."""
-        if self._layers:
-            raise ValueError("Cannot add grid to a chart that already has layers.")
-        self._grid_spec = (rows, cols, figsize)
-        return self
-
-    def __setitem__(self, idx, panel_chart):
-        if self._grid_spec is None:
-            raise TypeError("Subscript assignment requires .grid() first.")
-        if not isinstance(panel_chart, Chart):
-            raise TypeError("Panel must be a Chart instance.")
-        rows, cols, _ = self._grid_spec
-        r, c = idx
-        if not (0 <= r < rows and 0 <= c < cols):
-            raise IndexError(f"Index {idx} out of range for {rows}x{cols} grid.")
-        self._grid_panels[idx] = panel_chart
-
-    def __getitem__(self, idx):
-        if self._grid_spec is None:
-            raise TypeError("Subscript access requires .grid() first.")
-        raise TypeError(
-            "Grid cells are write-only. "
-            "Use: g[0, 0] = cerno.chart(df).scatter('x', 'y')"
-        )
-
-    def facet(self, col=None, row=None, *, cols=3):
-        self._facet_opts = {"col": col, "row": row, "cols": cols}
-        return self
-
     def apply(self, func):
         """
         Call func(figure, axes) after all layers are rendered.
@@ -230,7 +202,6 @@ class Chart:
     def show(self):
         """Render and display the chart."""
         fig, axes = self._render()
-        import matplotlib.pyplot as plt
         plt.show()
         return self
 
@@ -238,7 +209,6 @@ class Chart:
         """Render and save the chart to a file."""
         fig, axes = self._render()
         fig.savefig(path, dpi=dpi, bbox_inches="tight")
-        import matplotlib.pyplot as plt
         plt.close(fig)
         return self
 
@@ -257,16 +227,7 @@ class Chart:
         4. Apply decorators (title, labels, axis options, legend)
         5. Call each .apply() function
         """
-        from ..style.theme import _resolve_theme
-
         theme = _resolve_theme(self._theme_override)
-
-        if self._grid_spec is not None:
-            return self._render_grid(theme)
-
-        from ..marks import render_layer
-        from ..data.adapter import DataAdapter
-
         adapter = DataAdapter.from_any(self._data)
 
         with theme.as_context():
@@ -282,44 +243,20 @@ class Chart:
 
         return fig, axes
 
-    def _render_grid(self, theme):
-        import matplotlib.pyplot as plt
-        import numpy as np
-        from ..style.theme import _resolve_theme
-        from ..marks import render_layer
-        from ..data.adapter import DataAdapter
+    def _render_onto(self, figure, axes):
+        """Render this chart's layers onto an externally provided axes.
 
-        rows, cols, figsize = self._grid_spec
+        Used by Grid to render panels without creating a new figure.
+        """
+        theme = _resolve_theme(self._theme_override)
+        adapter = DataAdapter.from_any(self._data)
 
         with theme.as_context():
-            fig, axs = plt.subplots(rows, cols, figsize=figsize)
-            axs = np.atleast_2d(np.array(axs)).reshape(rows, cols)
-
-            assigned = set()
-            for (r, c), panel in self._grid_panels.items():
-                assigned.add((r, c))
-                ax = axs[r, c]
-                panel_theme = _resolve_theme(panel._theme_override)
-                adapter = DataAdapter.from_any(panel._data)
-
-                with panel_theme.as_context():
-                    for layer in panel._layers:
-                        render_layer(layer, adapter, ax)
-                    panel._apply_decorators(fig, ax)
-                    for func in panel._apply_funcs:
-                        func(fig, ax)
-
-            for r in range(rows):
-                for c in range(cols):
-                    if (r, c) not in assigned:
-                        axs[r, c].set_visible(False)
-
-            if self._title:
-                fig.suptitle(self._title)
-
-            fig.tight_layout()
-
-        return fig, axs
+            for layer in self._layers:
+                render_layer(layer, adapter, axes)
+            self._apply_decorators(figure, axes)
+            for func in self._apply_funcs:
+                func(figure, axes)
 
     def _apply_decorators(self, fig, axes):
         for attr, method in self._SIMPLE_SETTERS:

@@ -2,7 +2,7 @@
 
 ## Multi-panel grid
 
-Use `cerno.grid()` (or `cerno.chart().grid()`) to build a fixed rows x cols layout. It returns a `Chart` — the same type you use for single charts.
+Use `cerno.grid()` to build a fixed rows x cols layout. It returns a `Grid` — a dedicated layout container for multiple charts.
 
 ```python
 import cerno
@@ -66,4 +66,4 @@ cerno.chart(df).scatter("x", "y").facet(row="region", col="decade").show()
 
 ## API reference
 
-See {py:class}`cerno.core.chart.Chart` — specifically `.grid()`, `.__setitem__`.
+See {py:class}`cerno.layout.grid.Grid` — specifically `.__setitem__`, `.title()`, `.theme()`, `.apply()`, `.show()`, `.save()`.

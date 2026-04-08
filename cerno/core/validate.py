@@ -5,6 +5,7 @@ with a plain-English message that names the problem and suggests a fix.
 """
 import warnings
 
+import matplotlib.scale as mscale
 import numpy as np
 
 
@@ -106,7 +107,6 @@ def check_stroke_dash(name, valid_styles):
 
 def check_scale(name: str, axis: str):
     """Verify that the scale name is recognized by matplotlib."""
-    import matplotlib.scale as mscale
     valid = mscale.get_scale_names()
     if name not in valid:
         raise ValueError(

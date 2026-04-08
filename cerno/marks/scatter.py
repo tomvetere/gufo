@@ -1,4 +1,6 @@
 """Scatter mark."""
+import warnings
+
 import numpy as np
 
 from ..core.validate import check_array_lengths, warn_nan_inf
@@ -43,7 +45,7 @@ def render(layer, adapter, axes):
             sz = adapter.resolve(size_enc)
             kwargs["s"] = _normalize_size(sz)
         except (KeyError, TypeError):
-            pass
+            warnings.warn(f"Could not resolve size encoding: {size_enc!r}")
 
     axes.scatter(x, y, **kwargs)
 
@@ -54,5 +56,5 @@ def _normalize_size(arr, min_size=20, max_size=400):
         return np.array([], dtype=float)
     lo, hi = arr.min(), arr.max()
     if hi == lo:
-        return np.full(len(arr), 100.0)
+        return np.full(len(arr), (min_size + max_size) / 2)
     return min_size + (arr - lo) / (hi - lo) * (max_size - min_size)

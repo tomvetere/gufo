@@ -1,4 +1,5 @@
 """Canvas — manages the matplotlib figure and axes lifecycle."""
+import matplotlib.pyplot as plt
 
 
 class Canvas:
@@ -27,6 +28,5 @@ class Canvas:
         """Create the figure and axes. Called once at render time."""
         if self._figure is not None:
             return self._figure, self._axes
-        import matplotlib.pyplot as plt
         self._figure, self._axes = plt.subplots(figsize=self._figsize)
         return self._figure, self._axes

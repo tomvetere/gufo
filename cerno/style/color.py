@@ -1,13 +1,12 @@
 """Palette abstraction — categorical, sequential, and diverging color sets."""
 from dataclasses import dataclass
-from typing import List
 
 
 @dataclass
 class Palette:
-    categorical: List[str]
-    sequential: List[str]
-    diverging: List[str]
+    categorical: list[str]
+    sequential: list[str]
+    diverging: list[str]
 
 
 CERNO_PALETTE = Palette(

@@ -7,7 +7,7 @@ Cerno is a Python data visualization library built on matplotlib. It targets res
 The core design philosophy:
 - **Fluent method-chaining only.** `cerno.chart(data).scatter(...).title(...).show()`. There is no functional API alias — one pattern, always.
 - **Wide-form and long-form data both work natively.** No `pd.melt()` required.
-- **Always returns `Chart`.** Every factory function and layout method returns a `Chart`. Never a FacetGrid, never an Axes.
+- **Always returns `Chart` or `Grid`.** Every factory function returns a `Chart` or `Grid`. Never a FacetGrid, never an Axes.
 - **One escape hatch: `.apply(func)`.** `func(figure, axes)` drops down to matplotlib and stays in the chain. No `.ax`, no `.fig` properties on the public API.
 - **Deferred rendering.** Marks register `Layer` objects on the `Chart`. Nothing is drawn until `.show()` or `.save()`.
 
@@ -32,14 +32,23 @@ cerno/
 ├── data/
 │   ├── adapter.py       # DataAdapter.from_any() — resolves all input types to numpy
 │   ├── inference.py     # is_categorical(), is_datetime()
-│   └── transform.py     # (future) aggregations, binning
+│   └── (transform.py planned for future aggregations, binning)
 ├── style/
-│   ├── theme.py         # Theme class, registry, set_theme, theme_context
-│   ├── defaults.py      # (future) built-in theme definitions
+│   ├── theme.py         # Theme class, registry, set_theme, theme_context, built-in themes
 │   └── color.py         # Palette dataclass + CERNO_PALETTE
 └── layout/
-    └── facet.py         # (future) facet by data column
+    ├── grid.py          # Grid class — multi-panel layout container
+    └── (facet.py planned for v0.2)
 ```
+
+## Style
+
+Follow [PEP 8](https://peps.python.org/pep-0008/) and [PEP 20 (The Zen of Python)](https://peps.python.org/pep-0020/). In particular:
+- Imports are always at the top of the file, never inside functions or methods.
+- Import order: standard library, third-party, local — separated by blank lines.
+- Beautiful is better than ugly. Simple is better than complex. Readability counts.
+- Explicit is better than implicit. Errors should never pass silently.
+- There should be one — and preferably only one — obvious way to do it.
 
 ## Key conventions
 
@@ -67,12 +76,13 @@ Themes are immutable. `.merge(overrides)` returns a new `Theme`. Use `plt.rc_con
 5. `_apply_decorators()` sets titles, labels, axis options, legend
 6. Each `.apply()` function called as `func(figure, axes)`
 
-For grid charts (`_grid_spec is not None`), `_render_grid()` takes over:
+Grid rendering is handled by `Grid._render()` in `layout/grid.py`:
 1. `plt.subplots(rows, cols)` inside theme context
-2. Each panel Chart's layers rendered onto its grid cell axes
+2. Each panel rendered via `panel._render_onto(figure, axes)` — Grid never reaches into Chart internals
 3. Panel-level theme overrides respected via nested context
 4. Grid-level `.title()` → `fig.suptitle()`
 5. Unassigned cells hidden
+6. Grid-level `.apply()` functions called with `(fig, axes_2d_array)`
 
 ### Input validation
 
@@ -83,19 +93,24 @@ Validation lives in `core/validate.py` — small pure functions that raise `Valu
 
 ### Grid layout
 
-Grid is part of Chart, not a separate class. Usage:
+Grid is a standalone layout container, separate from Chart. Usage:
 
 ```python
-g = cerno.chart().grid(2, 2, figsize=(14, 10))
+g = cerno.grid(2, 2, figsize=(14, 10))
 g[0, 0] = cerno.chart(df).scatter("x", "y").title("Panel A")
 g[0, 1] = cerno.chart(df).line("x", "y").title("Panel B")
 g.show()
 ```
 
-- `Chart.grid(rows, cols)` sets `_grid_spec`, returns self
-- `Chart.__setitem__` stores panel Charts in `_grid_panels`
-- `Chart.__getitem__` raises `TypeError` (panels are write-only — no implicit state)
-- `Chart._render_grid()` creates subplots and delegates to each panel
+- `cerno.grid(rows, cols)` creates a `Grid` instance directly
+- `Grid.__setitem__` stores panel Charts in `_panels`
+- `Grid.__getitem__` raises `TypeError` (panels are write-only — no implicit state)
+- `Grid._render()` creates subplots and delegates to each panel
+- `Grid.title()`, `.theme()`, `.apply()`, `.show()`, `.save()` for grid-level options
+
+### Testing
+
+Run `python -m pytest tests/` after every change to verify correctness. All tests must pass before committing.
 
 ## What the README is
 

@@ -1,4 +1,5 @@
 """Shared utilities for mark renderers."""
+from ..data.inference import is_categorical
 from ..style.color import CERNO_PALETTE
 
 
@@ -36,7 +37,6 @@ def apply_color(kwargs, adapter, enc):
     color_value = resolve_color(adapter, enc.get("color"))
     if color_value is not None:
         kwargs["color"] = color_value
-    return color_value
 
 
 def iter_color_groups(color_value):
@@ -45,7 +45,6 @@ def iter_color_groups(color_value):
     Returns None if color_value is not categorical, allowing callers to
     fall through to the non-grouped code path.
     """
-    from ..data.inference import is_categorical
     if color_value is None or not hasattr(color_value, "__len__") or not is_categorical(color_value):
         return None
     categories = list(dict.fromkeys(color_value))

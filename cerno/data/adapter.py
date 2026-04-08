@@ -1,5 +1,6 @@
 """DataAdapter — single resolution point for all input data types."""
 import numpy as np
+import pandas as pd
 
 
 class DataAdapter:
@@ -26,8 +27,7 @@ class DataAdapter:
     def _detect_type(self, data):
         if data is None:
             return "none"
-        type_name = type(data).__name__
-        if type_name == "DataFrame":
+        if isinstance(data, pd.DataFrame):
             return "dataframe"
         if isinstance(data, dict):
             return "dict"

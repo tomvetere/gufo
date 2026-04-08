@@ -231,21 +231,15 @@ g[1, 1] = cerno.chart(df2).bar("region", "sales").title("Panel D")
 g.show()
 ```
 
-`cerno.grid()` returns a `Chart` configured as a grid. Assign panels with
-`g[row, col] = cerno.chart(data).mark(...)`. Each panel is a normal `Chart`,
-so all methods work as usual. Grid-level `.title()` becomes a super-title.
+`cerno.grid()` returns a `Grid`, a layout container for multiple charts. Assign
+panels with `g[row, col] = cerno.chart(data).mark(...)`. Each panel is a normal
+`Chart`, so all methods work as usual. Grid-level `.title()` becomes a super-title.
 
 ### Faceting by a data column (planned for v0.2)
 
 ```python
 # Planned API — not yet implemented
 cerno.chart(df).scatter("gdp", "life_exp").facet("continent").show()
-
-# Control columns before wrapping
-cerno.chart(df).scatter("gdp", "life_exp").facet("continent", cols=3).show()
-
-# Facet grid: row variable and column variable
-cerno.chart(df).scatter("x", "y").facet(row="region", col="decade").show()
 ```
 
 ---
@@ -324,7 +318,7 @@ pip install pytest
 pytest tests/ -v
 ```
 
-The test suite covers the data layer, all chart types, theming, grid layout, and input validation (190 tests).
+The test suite covers the data layer, all chart types, theming, grid layout, and input validation (191 tests).
 
 ---
 

@@ -64,6 +64,11 @@ _CERNO_MODERN_RC = {
     "axes.prop_cycle": plt.cycler(color=CERNO_PALETTE.categorical),
 }
 
+_CERNO_DARK_PALETTE = [
+    "#7EB8DA", "#F2A65A", "#7DC87D", "#E87070",
+    "#B09ADB", "#C4A97D", "#F0A8D8", "#B0B0B0",
+]
+
 _CERNO_DARK_RC = {
     "axes.facecolor": "#1e1e2e",
     "figure.facecolor": "#13131e",
@@ -80,10 +85,7 @@ _CERNO_DARK_RC = {
     "xtick.color": "#cccccc",
     "ytick.color": "#cccccc",
     "font.family": "sans-serif",
-    "axes.prop_cycle": plt.cycler(color=[
-        "#7EB8DA", "#F2A65A", "#7DC87D", "#E87070",
-        "#B09ADB", "#C4A97D", "#F0A8D8", "#B0B0B0",
-    ]),
+    "axes.prop_cycle": plt.cycler(color=_CERNO_DARK_PALETTE),
 }
 
 _CERNO_PRINT_RC = {
