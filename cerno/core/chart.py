@@ -2,18 +2,11 @@
 import matplotlib.pyplot as plt
 
 from ..data.adapter import DataAdapter
+from ..layout.facet import render_facet
 from ..marks import render_layer
 from ..style.theme import _resolve_theme
 from .canvas import Canvas
 from .layer import Layer
-from .validate import (
-    check_alpha,
-    check_limit_order,
-    check_positive_dimensions,
-    check_scale,
-    check_ticks_labels,
-    check_xy_tuple,
-)
 
 
 class Chart:
@@ -52,6 +45,8 @@ class Chart:
         self._yticks = {}
         self._legend_opts = None
         self._theme_override = None
+        self._facet_column = None
+        self._facet_cols = None
         self._apply_funcs = []
         self._canvas = Canvas()
 
@@ -60,9 +55,11 @@ class Chart:
     # ------------------------------------------------------------------
 
     def scatter(self, x, y, *, color=None, size=None, alpha=None, label=None, **kwargs):
-        """Add a scatter plot layer."""
-        if alpha is not None:
-            check_alpha(alpha)
+        """Add a scatter plot layer.
+
+        y may be a list of column names for wide-form DataFrames — each column
+        becomes its own series without requiring pd.melt().
+        """
         self._layers.append(Layer(
             mark_type="scatter", x=x, y=y,
             encodings={"color": color, "size": size, "alpha": alpha, "label": label},
@@ -85,7 +82,11 @@ class Chart:
         return self
 
     def bar(self, x, y, *, color=None, horizontal=False, label=None, **kwargs):
-        """Add a bar chart layer."""
+        """Add a bar chart layer.
+
+        y may be a list of column names for wide-form DataFrames — each column
+        becomes a grouped bar without requiring pd.melt().
+        """
         self._layers.append(Layer(
             mark_type="bar", x=x, y=y,
             encodings={"color": color, "horizontal": horizontal, "label": label},
@@ -127,7 +128,6 @@ class Chart:
         return self
 
     def annotate(self, text, xy):
-        check_xy_tuple(xy, "annotate")
         self._annotations.append({"text": text, "xy": xy})
         return self
 
@@ -136,32 +136,26 @@ class Chart:
     # ------------------------------------------------------------------
 
     def xlim(self, low, high):
-        check_limit_order(low, high, "x")
         self._xlim = (low, high)
         return self
 
     def ylim(self, low, high):
-        check_limit_order(low, high, "y")
         self._ylim = (low, high)
         return self
 
     def xscale(self, scale):
-        check_scale(scale, "x")
         self._xscale = scale
         return self
 
     def yscale(self, scale):
-        check_scale(scale, "y")
         self._yscale = scale
         return self
 
     def xticks(self, ticks=None, labels=None, rotation=None):
-        check_ticks_labels(ticks, labels, "x")
         self._xticks = {"ticks": ticks, "labels": labels, "rotation": rotation}
         return self
 
     def yticks(self, ticks=None, labels=None, rotation=None):
-        check_ticks_labels(ticks, labels, "y")
         self._yticks = {"ticks": ticks, "labels": labels, "rotation": rotation}
         return self
 
@@ -175,6 +169,21 @@ class Chart:
 
     def theme(self, name_or_theme):
         self._theme_override = name_or_theme
+        return self
+
+    def facet(self, column, *, cols=3):
+        """Split the chart into subplots by a categorical column.
+
+        Each unique value in column gets its own panel showing the same
+        layers with only that subset of data. Panels wrap after cols columns.
+        """
+        if self._data is None:
+            raise ValueError(
+                "facet() requires data bound to the chart. "
+                "Pass data to cerno.chart(data)."
+            )
+        self._facet_column = column
+        self._facet_cols = cols
         return self
 
     def apply(self, func):
@@ -191,7 +200,6 @@ class Chart:
         return self
 
     def size(self, width, height):
-        check_positive_dimensions(width, height)
         self._canvas = Canvas(figsize=(width, height))
         return self
 
@@ -227,6 +235,9 @@ class Chart:
         4. Apply decorators (title, labels, axis options, legend)
         5. Call each .apply() function
         """
+        if self._facet_column is not None:
+            return render_facet(self, self._facet_column, self._facet_cols)
+
         theme = _resolve_theme(self._theme_override)
         adapter = DataAdapter.from_any(self._data)
 
@@ -243,13 +254,15 @@ class Chart:
 
         return fig, axes
 
-    def _render_onto(self, figure, axes):
+    def _render_onto(self, figure, axes, adapter=None):
         """Render this chart's layers onto an externally provided axes.
 
-        Used by Grid to render panels without creating a new figure.
+        Used by Grid and facet rendering. When adapter is provided, it is
+        used instead of creating one from self._data.
         """
         theme = _resolve_theme(self._theme_override)
-        adapter = DataAdapter.from_any(self._data)
+        if adapter is None:
+            adapter = DataAdapter.from_any(self._data)
 
         with theme.as_context():
             for layer in self._layers:

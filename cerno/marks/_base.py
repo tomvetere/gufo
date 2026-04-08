@@ -1,4 +1,5 @@
 """Shared utilities for mark renderers."""
+from ..core.validate import check_array_lengths
 from ..data.inference import is_categorical
 from ..style.color import CERNO_PALETTE
 
@@ -37,6 +38,30 @@ def apply_color(kwargs, adapter, enc):
     color_value = resolve_color(adapter, enc.get("color"))
     if color_value is not None:
         kwargs["color"] = color_value
+
+
+def is_wide_form(layer_y):
+    """Return True if y is a list of column name strings (wide-form)."""
+    return isinstance(layer_y, list) and all(isinstance(k, str) for k in layer_y)
+
+
+def render_wide_form(layer, adapter, axes, draw_fn, **extra_kwargs):
+    """Render wide-form data by calling draw_fn once per y-column.
+
+    draw_fn is called as draw_fn(axes, x, y_data, **kwargs) for each series.
+    Only call this after checking is_wide_form(layer.y).
+    """
+    x = adapter.resolve(layer.x)
+    series = adapter.resolve(layer.y)
+    if series and len(series[0]) != len(x):
+        check_array_lengths({"x": x, layer.y[0]: series[0]}, layer.mark_type)
+
+    kwargs = dict(layer.kwargs, **extra_kwargs)
+    colors = default_colors(len(series))
+
+    for i, (name, y_data) in enumerate(zip(layer.y, series)):
+        series_kwargs = dict(kwargs, label=name, color=colors[i])
+        draw_fn(axes, x, y_data, **series_kwargs)
 
 
 def iter_color_groups(color_value):

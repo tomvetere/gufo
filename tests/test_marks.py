@@ -92,6 +92,17 @@ class TestScatterMark:
     def test_scatter_extra_kwargs(self, sample_df, tmp_path):
         cerno.chart(sample_df).scatter("x", "y", marker="^").save(tmp_path / "s.png")
 
+    def test_scatter_wide_form(self, sample_df, tmp_path):
+        cerno.chart(sample_df).scatter("x", ["series_a", "series_b"]).save(tmp_path / "s.png")
+
+    def test_scatter_wide_form_creates_multiple_collections(self, sample_df):
+        c = cerno.chart(sample_df).scatter("x", ["series_a", "series_b"])
+        _, axes = c._render()
+        assert len(axes.collections) == 2
+
+    def test_scatter_wide_form_with_alpha(self, sample_df, tmp_path):
+        cerno.chart(sample_df).scatter("x", ["series_a", "series_b"], alpha=0.5).save(tmp_path / "s.png")
+
 
 # ── Line ────────────────────────────────────────────────────────────
 
@@ -138,6 +149,18 @@ class TestBarMark:
     def test_bar_with_arrays(self, tmp_path):
         data = {"cat": ["a", "b", "c"], "val": [1, 2, 3]}
         cerno.chart(data).bar("cat", "val").save(tmp_path / "b.png")
+
+    def test_bar_wide_form(self, sample_df, tmp_path):
+        cerno.chart(sample_df).bar("x", ["series_a", "series_b"]).save(tmp_path / "b.png")
+
+    def test_bar_wide_form_grouped(self, sample_df):
+        c = cerno.chart(sample_df).bar("x", ["series_a", "series_b"])
+        _, axes = c._render()
+        # 2 series × 5 x-values = 10 patches
+        assert len(axes.patches) == 10
+
+    def test_bar_wide_form_horizontal(self, sample_df, tmp_path):
+        cerno.chart(sample_df).bar("x", ["series_a", "series_b"], horizontal=True).save(tmp_path / "b.png")
 
 
 # ── Histogram ───────────────────────────────────────────────────────

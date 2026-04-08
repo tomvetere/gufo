@@ -1,16 +1,28 @@
 """Scatter mark."""
-import warnings
-
 import numpy as np
 
 from ..core.validate import check_array_lengths, warn_nan_inf
-from ._base import apply_label, resolve_color, iter_color_groups
+from ._base import (
+    apply_label, is_wide_form, render_wide_form, resolve_color, iter_color_groups,
+)
+
+
+def _draw_scatter(axes, x, y_data, **kwargs):
+    axes.scatter(x, y_data, **kwargs)
 
 
 def render(layer, adapter, axes):
+    enc = layer.encodings
+
+    if is_wide_form(layer.y):
+        extra = {}
+        if enc.get("alpha") is not None:
+            extra["alpha"] = enc["alpha"]
+        render_wide_form(layer, adapter, axes, _draw_scatter, **extra)
+        return
+
     x = adapter.resolve(layer.x)
     y = adapter.resolve(layer.y)
-    enc = layer.encodings
     kwargs = dict(layer.kwargs)
 
     check_array_lengths({"x": x, "y": y}, "scatter")
@@ -41,11 +53,8 @@ def render(layer, adapter, axes):
             kwargs["color"] = color_value
 
     if size_enc is not None:
-        try:
-            sz = adapter.resolve(size_enc)
-            kwargs["s"] = _normalize_size(sz)
-        except (KeyError, TypeError):
-            warnings.warn(f"Could not resolve size encoding: {size_enc!r}")
+        sz = adapter.resolve(size_enc)
+        kwargs["s"] = _normalize_size(sz)
 
     axes.scatter(x, y, **kwargs)
 

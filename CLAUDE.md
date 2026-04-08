@@ -24,21 +24,20 @@ cerno/
 │   └── validate.py      # input validation helpers (check_alpha, check_array_lengths, etc.)
 ├── marks/
 │   ├── __init__.py      # render_layer() dispatcher
-│   ├── _base.py         # shared mark utilities (resolve_color, default_colors, apply_label, apply_color, iter_color_groups)
+│   ├── _base.py         # shared mark utilities (resolve_color, default_colors, apply_label, apply_color, iter_color_groups, is_wide_form, render_wide_form)
 │   ├── scatter.py       # render(layer, adapter, axes)
 │   ├── line.py
 │   ├── bar.py
 │   └── histogram.py
 ├── data/
 │   ├── adapter.py       # DataAdapter.from_any() — resolves all input types to numpy
-│   ├── inference.py     # is_categorical(), is_datetime()
-│   └── (transform.py planned for future aggregations, binning)
+│   └── inference.py     # is_categorical(), is_datetime()
 ├── style/
 │   ├── theme.py         # Theme class, registry, set_theme, theme_context, built-in themes
 │   └── color.py         # Palette dataclass + CERNO_PALETTE
 └── layout/
     ├── grid.py          # Grid class — multi-panel layout container
-    └── (facet.py planned for v0.2)
+    └── facet.py         # render_facet() — split data by column into subplots
 ```
 
 ## Style
@@ -86,10 +85,10 @@ Grid rendering is handled by `Grid._render()` in `layout/grid.py`:
 
 ### Input validation
 
-Validation lives in `core/validate.py` — small pure functions that raise `ValueError` or `warnings.warn`.
+Validation lives in `core/validate.py` — small pure functions that raise `ValueError` or `warnings.warn`. Only checks that genuinely improve on matplotlib's own error messages belong here.
 
-- **Call-time checks** (in `chart.py`): alpha, xlim/ylim order, scale names, tick/label length, annotate xy, figure dimensions. These fire immediately when the method is called.
-- **Render-time checks** (in mark renderers): array length mismatches, numeric type (histogram), NaN/Inf warnings. These require resolved data and fire during `_render()`.
+- **Render-time checks** (in mark renderers): array length mismatches (`check_array_lengths`), numeric type for histogram (`check_numeric`), NaN/Inf warnings (`warn_nan_inf`), stroke dash validation (`check_stroke_dash`). These require resolved data and fire during `_render()`.
+- **Do not duplicate matplotlib.** If matplotlib already raises a clear error for invalid input (alpha out of range, bad scale name, negative figsize, etc.), do not add a cerno-level check. Only add validation when cerno can provide a meaningfully better message.
 
 ### Grid layout
 
@@ -127,6 +126,6 @@ Polars is planned for v0.2 as an optional dependency.
 
 ## Roadmap
 
-- **v0.1**: scatter, line, bar, histogram, theming, wide-form data, grid layout, input validation
-- **v0.2**: box, heatmap, area, violin, polars support, faceting
+- **v0.1**: scatter, line, bar, histogram, theming, wide-form data, grid layout, faceting, input validation
+- **v0.2**: box, heatmap, area, violin, polars support, two-variable faceting
 - **v0.3**: regression overlay, pair plot, interactive/Plotly backend

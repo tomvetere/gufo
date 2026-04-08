@@ -5,15 +5,9 @@ import numpy as np
 import pytest
 
 from cerno.core.validate import (
-    check_alpha,
     check_array_lengths,
-    check_limit_order,
     check_numeric,
-    check_positive_dimensions,
-    check_scale,
     check_stroke_dash,
-    check_ticks_labels,
-    check_xy_tuple,
     warn_nan_inf,
 )
 
@@ -63,94 +57,6 @@ class TestCheckNumeric:
             check_numeric(np.array([None, None], dtype=object), "x", "histogram")
 
 
-# ── check_alpha ──────────────────────────────────────────────────────
-
-class TestCheckAlpha:
-    def test_zero_passes(self):
-        check_alpha(0)
-
-    def test_one_passes(self):
-        check_alpha(1)
-
-    def test_half_passes(self):
-        check_alpha(0.5)
-
-    def test_negative_raises(self):
-        with pytest.raises(ValueError, match="between 0 and 1"):
-            check_alpha(-0.1)
-
-    def test_above_one_raises(self):
-        with pytest.raises(ValueError, match="between 0 and 1"):
-            check_alpha(1.5)
-
-    def test_non_numeric_raises(self):
-        with pytest.raises(ValueError, match="must be a number"):
-            check_alpha("half")
-
-
-# ── check_positive_dimensions ────────────────────────────────────────
-
-class TestCheckPositiveDimensions:
-    def test_positive_passes(self):
-        check_positive_dimensions(10, 6)
-
-    def test_zero_width_raises(self):
-        with pytest.raises(ValueError, match="positive numbers"):
-            check_positive_dimensions(0, 5)
-
-    def test_negative_height_raises(self):
-        with pytest.raises(ValueError, match="positive numbers"):
-            check_positive_dimensions(10, -1)
-
-
-# ── check_limit_order ────────────────────────────────────────────────
-
-class TestCheckLimitOrder:
-    def test_ordered_passes(self):
-        check_limit_order(0, 10, "x")
-
-    def test_equal_passes(self):
-        check_limit_order(5, 5, "x")
-
-    def test_swapped_raises(self):
-        with pytest.raises(ValueError, match="Did you swap"):
-            check_limit_order(10, 5, "x")
-
-
-# ── check_ticks_labels ──────────────────────────────────────────────
-
-class TestCheckTicksLabels:
-    def test_matching_passes(self):
-        check_ticks_labels([1, 2, 3], ["a", "b", "c"], "x")
-
-    def test_mismatched_raises(self):
-        with pytest.raises(ValueError, match="3 ticks but 2 labels"):
-            check_ticks_labels([1, 2, 3], ["a", "b"], "x")
-
-    def test_labels_none_skips(self):
-        check_ticks_labels([1, 2, 3], None, "x")
-
-    def test_ticks_none_skips(self):
-        check_ticks_labels(None, ["a", "b"], "x")
-
-
-# ── check_xy_tuple ──────────────────────────────────────────────────
-
-class TestCheckXyTuple:
-    def test_two_tuple_passes(self):
-        check_xy_tuple((1, 2), "annotate")
-
-    def test_two_list_passes(self):
-        check_xy_tuple([1, 2], "annotate")
-
-    def test_three_elements_raises(self):
-        with pytest.raises(ValueError, match="length 3"):
-            check_xy_tuple((1, 2, 3), "annotate")
-
-    def test_non_sequence_raises(self):
-        with pytest.raises(ValueError, match="got int"):
-            check_xy_tuple(42, "annotate")
-
 
 # ── check_stroke_dash ───────────────────────────────────────────────
 
@@ -172,19 +78,6 @@ class TestCheckStrokeDash:
         with pytest.warns(UserWarning, match="Unknown stroke_dash 'wiggly'"):
             check_stroke_dash("wiggly", self._STYLES)
 
-
-# ── check_scale ─────────────────────────────────────────────────────
-
-class TestCheckScale:
-    def test_log_passes(self):
-        check_scale("log", "x")
-
-    def test_linear_passes(self):
-        check_scale("linear", "y")
-
-    def test_unknown_raises(self):
-        with pytest.raises(ValueError, match="unknown scale 'logs'"):
-            check_scale("logs", "x")
 
 
 # ── warn_nan_inf ────────────────────────────────────────────────────

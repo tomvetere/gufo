@@ -66,6 +66,9 @@ cerno.chart(df).scatter("x", "y", color="category", size="population").show()
 
 # Transparency for dense data
 cerno.chart(df).scatter("x", "y", alpha=0.4).show()
+
+# Multiple series from wide-form data — no pd.melt() needed
+cerno.chart(df).scatter("x", ["series_a", "series_b"]).show()
 ```
 
 ### Line
@@ -99,6 +102,12 @@ cerno.chart(df).bar("region", "sales", horizontal=True).show()
 
 # Colored by category
 cerno.chart(df).bar("region", "sales", color="region").show()
+
+# Grouped bars from wide-form data
+cerno.chart(df).bar("quarter", ["product_a", "product_b"]).show()
+
+# Grouped bars, horizontal
+cerno.chart(df).bar("quarter", ["product_a", "product_b"], horizontal=True).show()
 ```
 
 ### Histogram
@@ -235,12 +244,19 @@ g.show()
 panels with `g[row, col] = cerno.chart(data).mark(...)`. Each panel is a normal
 `Chart`, so all methods work as usual. Grid-level `.title()` becomes a super-title.
 
-### Faceting by a data column (planned for v0.2)
+### Faceting by a data column
 
 ```python
-# Planned API — not yet implemented
+# Split into one subplot per continent
 cerno.chart(df).scatter("gdp", "life_exp").facet("continent").show()
+
+# Control the number of columns before wrapping
+cerno.chart(df).scatter("gdp", "life_exp").facet("continent", cols=4).show()
 ```
+
+`facet()` takes a categorical column name and creates one panel per unique value,
+each showing the same layers with only that subset of data. Chart-level `.title()`
+becomes a super-title above all panels. Empty cells are hidden automatically.
 
 ---
 
@@ -318,14 +334,14 @@ pip install pytest
 pytest tests/ -v
 ```
 
-The test suite covers the data layer, all chart types, theming, grid layout, and input validation (191 tests).
+The test suite covers the data layer, all chart types, theming, grid layout, faceting, and input validation (186 tests).
 
 ---
 
 ## Roadmap
 
-**v0.1** — scatter, line, bar, histogram, theming, wide-form data, grid layout, input validation
+**v0.1** — scatter, line, bar, histogram, theming, wide-form data, grid layout, faceting, input validation
 
-**v0.2** — box plot, heatmap, area chart, violin plot, faceting, polars support
+**v0.2** — box plot, heatmap, area chart, violin plot, polars support
 
 **v0.3** — regression overlay, pair plot, interactive export (Plotly backend)

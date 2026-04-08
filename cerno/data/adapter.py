@@ -55,6 +55,19 @@ class DataAdapter:
             return None
         return np.asarray(key)
 
+    def subset(self, mask):
+        """Return a new DataAdapter containing only rows where mask is True."""
+        if self._type == "none":
+            raise ValueError(
+                "Cannot subset data — no DataFrame or dict was provided. "
+                "Faceting requires bound columnar data passed to cerno.chart(data)."
+            )
+        if self._type == "dataframe":
+            return DataAdapter(self._data[mask].reset_index(drop=True))
+        if self._type == "dict":
+            filtered = {k: np.asarray(v)[mask] for k, v in self._data.items()}
+            return DataAdapter(filtered)
+
     def _resolve_column(self, name):
         if self._type in ("dataframe", "dict"):
             return np.asarray(self._data[name])

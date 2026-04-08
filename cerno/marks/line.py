@@ -1,6 +1,8 @@
 """Line mark — supports single series, multi-series (wide-form), and color grouping."""
 from ..core.validate import check_array_lengths, check_stroke_dash, warn_nan_inf
-from ._base import apply_label, resolve_color, default_colors, iter_color_groups
+from ._base import (
+    apply_label, is_wide_form, render_wide_form, resolve_color, iter_color_groups,
+)
 
 _DASH_STYLES = {
     "solid": "-",
@@ -19,20 +21,17 @@ def render(layer, adapter, axes):
     linestyle = _DASH_STYLES.get(enc.get("stroke_dash", "solid"), "-")
     kwargs["linestyle"] = linestyle
 
+    if is_wide_form(layer.y):
+        render_wide_form(
+            layer, adapter, axes,
+            lambda axes, x, y_data, **kw: axes.plot(x, y_data, **kw),
+            linestyle=linestyle,
+        )
+        return
+
     apply_label(kwargs, enc)
 
     color_enc = enc.get("color")
-
-    # Wide-form: y is a list of column names
-    if isinstance(layer.y, list) and all(isinstance(k, str) for k in layer.y):
-        series = adapter.resolve(layer.y)   # list of arrays
-        if series and len(series[0]) != len(x):
-            check_array_lengths({"x": x, layer.y[0]: series[0]}, "line")
-        colors = default_colors(len(series))
-        for i, (name, y_data) in enumerate(zip(layer.y, series)):
-            series_kwargs = dict(kwargs, label=name, color=colors[i])
-            axes.plot(x, y_data, **series_kwargs)
-        return
 
     y = adapter.resolve(layer.y)
     check_array_lengths({"x": x, "y": y}, "line")

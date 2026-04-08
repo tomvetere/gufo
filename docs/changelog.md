@@ -4,10 +4,13 @@
 
 **Breaking changes**
 - `Grid` is now a standalone class in `cerno/layout/grid.py`, no longer part of `Chart`. `cerno.grid(2, 2)` returns a `Grid` instance (not a `Chart`). The `chart().grid(...)` pattern no longer works.
-- `Chart.facet()` method removed (was a no-op stub). Faceting will be re-added in v0.2 with a working implementation.
 
 **New features**
-- Input validation module (`cerno/core/validate.py`) with plain-English error messages for: array length mismatches, invalid alpha, swapped axis limits, invalid scale names, tick/label count mismatches, invalid annotate coordinates, non-numeric histogram data, and NaN/Inf warnings
+- Faceting: `cerno.chart(df).scatter("x", "y").facet("category")` splits data by a categorical column into subplots. Chart-level `.title()` becomes a super-title; each panel is titled with its category value. Panels wrap after `cols` columns (default 3).
+- Wide-form scatter: `.scatter("x", ["col_a", "col_b"])` renders one series per column with automatic colors and legend labels
+- Wide-form bar: `.bar("x", ["col_a", "col_b"])` renders grouped bars with automatic offset positioning, colors, and legend labels. Supports `horizontal=True`.
+- Input validation module (`cerno/core/validate.py`) with plain-English error messages for: array length mismatches, non-numeric histogram data, NaN/Inf warnings, and invalid stroke dash styles
+- `DataAdapter.subset(mask)` returns a filtered adapter for row-level subsetting (used by faceting)
 - `Grid` supports `.title()`, `.theme()`, `.apply()`, `.show()`, `.save()`
 - Grid-level `.apply(func)` receives `(figure, axes_2d_array)` for full matplotlib access
 - Empty grid cells are automatically hidden
@@ -19,32 +22,34 @@
 - Grid figures now created inside theme context (previously ignored theme)
 - `_normalize_size()` always returns numpy arrays (previously mixed list/array return types)
 - `_normalize_size()` equal-value fallback now uses midpoint of min/max size instead of hardcoded 100
-- Size encoding in scatter now warns on resolution failure instead of silently ignoring
+- Size encoding in scatter now raises on resolution failure instead of silently swallowing the error
 - Size encoding in scatter categorical path resolved once instead of N times per category
 
 **Internal improvements**
 - `Grid` extracted from `Chart` into dedicated `cerno/layout/grid.py` class
-- `Chart._render_onto(figure, axes)` added so `Grid` renders panels without reaching into Chart internals
+- `Chart._render_onto(figure, axes, adapter=None)` added so `Grid` and faceting render panels without reaching into Chart internals
+- Redundant validation removed: `check_alpha`, `check_limit_order`, `check_positive_dimensions`, `check_scale`, `check_ticks_labels`, `check_xy_tuple` — matplotlib provides equally clear errors for these. `check_limit_order` was actively harmful (it blocked inverted axes, which are a valid matplotlib feature).
+- Shared wide-form utilities extracted to `_base.py`: `is_wide_form()`, `render_wide_form()` — used by scatter, line, and bar marks
 - `DataAdapter._detect_type` uses `isinstance(data, pd.DataFrame)` instead of string comparison
 - `apply_color()` no longer returns a value — consistent with `apply_label()`
 - Dark theme colors extracted to `_CERNO_DARK_PALETTE` constant
 - All imports moved to top of file per PEP 8 (no more lazy imports in methods)
+- `layout/__init__.py` simplified to docstring only, breaking circular import chain
 - `Palette` dataclass uses `list[str]` instead of `typing.List[str]`
-- Dead stubs removed: `facet.py`, `data/transform.py`, `Chart._facet_opts`
+- Dead stubs removed: `data/transform.py`, `Chart._facet_opts`
 - `DataAdapter` created once per `_render()` call, not per layer
 - `render_layer()` accepts adapter directly instead of raw data
 - Shared mark helpers extracted to `_base.py`: `apply_label()`, `apply_color()`, `iter_color_groups()`
 - `Canvas.from_existing()` classmethod replaces direct private attribute access
 - Redundant `_built` flag removed from Canvas
 - `check_stroke_dash` uses `_DASH_STYLES` as single source of truth
-- `check_scale` queries matplotlib's scale registry at runtime
 - `warn_nan_inf` uses `np.isfinite().all()` fast path for clean data
 
 **Testing**
-- Test suite expanded from 138 to 191 tests
-- New `test_validation.py` with 40 unit tests for all validation helpers
-- Integration validation tests added to `test_core.py` and `test_marks.py`
+- Test suite at 186 tests covering data layer, core API, all mark types (including wide-form), theming, grid layout, faceting, and input validation
 - Layout tests rewritten for standalone `Grid` class
+- Facet tests (`test_facet.py`) covering construction, rendering, decorators, and error handling
+- Wide-form tests for scatter and bar marks
 
 ---
 
