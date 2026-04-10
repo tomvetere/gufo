@@ -518,3 +518,5 @@ pytest tests/ -v
 **v0.3** — pair plot
 
 **v0.4** — regression overlay, KDE/density plot, strip/swarm plots (scipy optional dependency) ✓
+
+**v0.5** — categorical color on box/violin, countplot, error bars, rugplot, ECDF, color palette API, reference lines/bands

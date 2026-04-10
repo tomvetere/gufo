@@ -156,3 +156,4 @@ pandas, polars, and scipy are guarded with `try/except ImportError` at import ti
 - **v0.2**: box, heatmap, area, violin, polars support, two-variable faceting — complete
 - **v0.3**: pair plot — complete
 - **v0.4**: regression overlay, KDE/density plot, strip/swarm plots (scipy optional dependency) — complete
+- **v0.5**: categorical color on box/violin, countplot, error bars, rugplot, ECDF, color palette API, reference lines/bands
