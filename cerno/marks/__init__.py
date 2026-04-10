@@ -3,12 +3,20 @@ from .scatter import render as _scatter
 from .line import render as _line
 from .bar import render as _bar
 from .histogram import render as _histogram
+from .boxplot import render as _boxplot
+from .violin import render as _violin
+from .heatmap import render as _heatmap
+from .area import render as _area
 
 _REGISTRY = {
     "scatter": _scatter,
     "line": _line,
     "bar": _bar,
     "histogram": _histogram,
+    "boxplot": _boxplot,
+    "violin": _violin,
+    "heatmap": _heatmap,
+    "area": _area,
 }
 
 

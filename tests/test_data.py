@@ -1,6 +1,7 @@
 """Tests for cerno.data — DataAdapter and inference."""
 import numpy as np
 import pandas as pd
+import polars as pl
 import pytest
 
 from cerno.data.adapter import DataAdapter
@@ -33,6 +34,11 @@ class TestDataAdapterConstruction:
     def test_unsupported_type_list_raises(self):
         with pytest.raises(TypeError, match="Unsupported data type"):
             DataAdapter([1, 2, 3])
+
+    def test_from_polars(self):
+        df = pl.DataFrame({"x": [1, 2, 3], "y": [4, 5, 6]})
+        adapter = DataAdapter(df)
+        assert adapter._type == "polars"
 
 
 # ── DataAdapter.resolve ─────────────────────────────────────────────
@@ -87,6 +93,21 @@ class TestDataAdapterResolve:
         with pytest.raises(KeyError):
             adapter.resolve("nonexistent")
 
+    def test_resolve_column_from_polars(self):
+        df = pl.DataFrame({"x": [1, 2, 3], "y": [4, 5, 6]})
+        adapter = DataAdapter(df)
+        result = adapter.resolve("x")
+        assert isinstance(result, np.ndarray)
+        np.testing.assert_array_equal(result, [1, 2, 3])
+
+    def test_resolve_polars_list_of_columns(self):
+        df = pl.DataFrame({"x": [1, 2], "y": [3, 4]})
+        adapter = DataAdapter(df)
+        result = adapter.resolve(["x", "y"])
+        assert len(result) == 2
+        np.testing.assert_array_equal(result[0], [1, 2])
+        np.testing.assert_array_equal(result[1], [3, 4])
+
 
 # ── is_categorical ──────────────────────────────────────────────────
 
@@ -129,3 +150,19 @@ class TestIsDatetime:
 
     def test_plain_list(self):
         assert not is_datetime([1, 2, 3])
+
+
+# ── Polars end-to-end ──────────────────────────────────────────────
+
+class TestPolarsEndToEnd:
+    def test_scatter_with_polars(self, tmp_path):
+        import cerno
+        df = pl.DataFrame({"x": [1, 2, 3, 4, 5], "y": [2, 4, 1, 5, 3]})
+        cerno.chart(df).scatter("x", "y").save(tmp_path / "pl.png")
+
+    def test_polars_subset(self):
+        df = pl.DataFrame({"x": [1, 2, 3], "y": [4, 5, 6]})
+        adapter = DataAdapter(df)
+        mask = pl.Series([True, False, True])
+        sub = adapter.subset(mask)
+        np.testing.assert_array_equal(sub.resolve("x"), [1, 3])

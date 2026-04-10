@@ -1,11 +1,22 @@
 # Changelog
 
-## Unreleased
+## Unreleased (v0.2)
+
+**New chart types**
+- Box plot: `.boxplot("x", "y")` — grouped boxes, horizontal mode, wide-form support
+- Violin plot: `.violin("x", "y")` — distribution shapes, horizontal mode, wide-form support
+- Heatmap: `.heatmap()` — matrix form (DataFrame is the matrix) and long-form (x, y, color columns pivoted internally). Custom colormaps and cell annotations.
+- Area chart: `.area("x", "y")` — filled area, stacked area from wide-form data, categorical color grouping
+
+**New features**
+- Polars support: pass a Polars DataFrame to `cerno.chart()` and use it exactly like pandas. Install with `pip install cerno[polars]`.
+- Two-variable faceting: `.facet("col_var", row="row_var")` creates a row × column grid of subplots. Row-only faceting with `.facet(row="var")`.
+- pandas is now an optional dependency — install with `pip install cerno[pandas]`. Core cerno works with dicts, numpy arrays, and lists.
 
 **Breaking changes**
 - `Grid` is now a standalone class in `cerno/layout/grid.py`, no longer part of `Chart`. `cerno.grid(2, 2)` returns a `Grid` instance (not a `Chart`). The `chart().grid(...)` pattern no longer works.
 
-**New features**
+**Previously shipped features (v0.1 cycle)**
 - Faceting: `cerno.chart(df).scatter("x", "y").facet("category")` splits data by a categorical column into subplots. Chart-level `.title()` becomes a super-title; each panel is titled with its category value. Panels wrap after `cols` columns (default 3).
 - Wide-form scatter: `.scatter("x", ["col_a", "col_b"])` renders one series per column with automatic colors and legend labels
 - Wide-form bar: `.bar("x", ["col_a", "col_b"])` renders grouped bars with automatic offset positioning, colors, and legend labels. Supports `horizontal=True`.
@@ -17,6 +28,7 @@
 - Dark theme (`cerno_dark`) now includes a high-contrast color cycle
 
 **Bug fixes**
+- Violin wide-form now correctly applies user color encoding (previously silently ignored)
 - Figure memory leak: `.save()` now closes the figure after writing (both single charts and grids)
 - `default_colors()` now uses `CERNO_PALETTE.categorical` instead of matplotlib's tab10, so categorical colors are consistent with the active theme
 - Grid figures now created inside theme context (previously ignored theme)
@@ -26,10 +38,14 @@
 - Size encoding in scatter categorical path resolved once instead of N times per category
 
 **Internal improvements**
+- `DataAdapter` exposes `raw_data` and `data_type` properties — marks use these instead of private `_data`/`_type` attributes
+- Box plot and violin renderers now validate array lengths with `check_array_lengths()`
+- PEP 8 cleanup: long guard condition in `iter_color_groups` broken across lines, extra blank lines removed in `validate.py`, misaligned indentation fixed in `facet.py`
 - `Grid` extracted from `Chart` into dedicated `cerno/layout/grid.py` class
 - `Chart._render_onto(figure, axes, adapter=None)` added so `Grid` and faceting render panels without reaching into Chart internals
-- Redundant validation removed: `check_alpha`, `check_limit_order`, `check_positive_dimensions`, `check_scale`, `check_ticks_labels`, `check_xy_tuple` — matplotlib provides equally clear errors for these. `check_limit_order` was actively harmful (it blocked inverted axes, which are a valid matplotlib feature).
-- Shared wide-form utilities extracted to `_base.py`: `is_wide_form()`, `render_wide_form()` — used by scatter, line, and bar marks
+- Redundant validation removed: `check_alpha`, `check_limit_order`, `check_positive_dimensions`, `check_scale`, `check_ticks_labels`, `check_xy_tuple` — matplotlib provides equally clear errors for these
+- Shared wide-form utilities extracted to `_base.py`: `is_wide_form()`, `render_wide_form()`
+- Shared distribution mark helper `group_by_x()` in `_base.py`
 - `DataAdapter._detect_type` uses `isinstance(data, pd.DataFrame)` instead of string comparison
 - `apply_color()` no longer returns a value — consistent with `apply_label()`
 - Dark theme colors extracted to `_CERNO_DARK_PALETTE` constant
@@ -44,12 +60,10 @@
 - Redundant `_built` flag removed from Canvas
 - `check_stroke_dash` uses `_DASH_STYLES` as single source of truth
 - `warn_nan_inf` uses `np.isfinite().all()` fast path for clean data
+- Sphinx theme switched from Furo to PyData Sphinx Theme
 
 **Testing**
-- Test suite at 186 tests covering data layer, core API, all mark types (including wide-form), theming, grid layout, faceting, and input validation
-- Layout tests rewritten for standalone `Grid` class
-- Facet tests (`test_facet.py`) covering construction, rendering, decorators, and error handling
-- Wide-form tests for scatter and bar marks
+- 229 tests covering data layer, core API, all mark types (including wide-form and distribution), theming, grid layout, single- and two-variable faceting, Polars integration, and input validation
 
 ---
 

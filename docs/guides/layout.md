@@ -54,15 +54,28 @@ g.save("sparse.png")
 ## Faceting
 
 Faceting creates one panel per value of a categorical column automatically.
-Planned for v0.2.
 
 ```python
-# Planned API (v0.2)
+# Split into one subplot per continent
 cerno.chart(df).scatter("gdp", "life_exp").facet("continent").show()
 
-# With row and column variables
-cerno.chart(df).scatter("x", "y").facet(row="region", col="decade").show()
+# Control the number of columns before wrapping
+cerno.chart(df).scatter("gdp", "life_exp").facet("continent", cols=4).show()
 ```
+
+### Two-variable faceting
+
+Use `row` to add a second dimension. Row categories go down, column categories go across.
+
+```python
+# Row by income group, column by continent
+cerno.chart(df).scatter("gdp", "life_exp").facet("continent", row="income_group").show()
+
+# Row only — one panel per category, stacked vertically
+cerno.chart(df).scatter("gdp", "life_exp").facet(row="income_group").show()
+```
+
+Chart-level `.title()` becomes a super-title above all panels. Empty cells are hidden automatically.
 
 ## API reference
 

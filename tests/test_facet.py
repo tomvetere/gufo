@@ -156,3 +156,85 @@ class TestFacetDecorators:
                 assert ax.get_xlabel() == "X axis"
                 assert ax.get_ylabel() == "Y axis"
         plt.close(fig)
+
+
+# ── Two-variable faceting ──────────────────────────────────────────
+
+class TestTwoVariableFacet:
+    @pytest.fixture
+    def facet_df(self):
+        return pd.DataFrame({
+            "x": range(12),
+            "y": range(12),
+            "row_var": ["R1", "R1", "R1", "R1", "R2", "R2",
+                        "R2", "R2", "R3", "R3", "R3", "R3"],
+            "col_var": ["C1", "C2", "C1", "C2", "C1", "C2",
+                        "C1", "C2", "C1", "C2", "C1", "C2"],
+        })
+
+    def test_two_var_facet_saves(self, facet_df, tmp_path):
+        path = tmp_path / "two_var.png"
+        chart(facet_df).scatter("x", "y").facet("col_var", row="row_var").save(path)
+        assert path.exists()
+
+    def test_two_var_facet_grid_shape(self, facet_df):
+        c = chart(facet_df).scatter("x", "y").facet("col_var", row="row_var")
+        fig, axs = c._render()
+        assert axs.shape == (3, 2)  # 3 row cats × 2 col cats
+        plt.close(fig)
+
+    def test_two_var_facet_column_headers(self, facet_df):
+        c = chart(facet_df).scatter("x", "y").facet("col_var", row="row_var")
+        fig, axs = c._render()
+        # Top row should have column category titles
+        top_titles = [axs[0, j].get_title() for j in range(2)]
+        assert set(top_titles) == {"C1", "C2"}
+        # Other rows should not have titles set by faceting
+        for i in range(1, 3):
+            for j in range(2):
+                assert axs[i, j].get_title() == ""
+        plt.close(fig)
+
+    def test_two_var_facet_row_labels(self, facet_df):
+        c = chart(facet_df).scatter("x", "y").facet("col_var", row="row_var")
+        fig, axs = c._render()
+        row_labels = [axs[i, 0].get_ylabel() for i in range(3)]
+        assert row_labels == ["R1", "R2", "R3"]
+        plt.close(fig)
+
+    def test_two_var_facet_empty_cells_hidden(self, tmp_path):
+        df = pd.DataFrame({
+            "x": [1, 2, 3, 4],
+            "y": [1, 2, 3, 4],
+            "row_var": ["R1", "R1", "R2", "R2"],
+            "col_var": ["C1", "C1", "C2", "C2"],
+        })
+        c = chart(df).scatter("x", "y").facet("col_var", row="row_var")
+        fig, axs = c._render()
+        # R1×C2 and R2×C1 have no data → hidden
+        assert not axs[0, 1].get_visible()
+        assert not axs[1, 0].get_visible()
+        # R1×C1 and R2×C2 have data → visible
+        assert axs[0, 0].get_visible()
+        assert axs[1, 1].get_visible()
+        plt.close(fig)
+
+    def test_row_only_facet(self, facet_df, tmp_path):
+        path = tmp_path / "row_only.png"
+        c = chart(facet_df).scatter("x", "y").facet(row="row_var")
+        c.save(path)
+        assert path.exists()
+        fig, axs = c._render()
+        assert axs.shape == (3, 1)
+        plt.close(fig)
+
+    def test_facet_no_args_raises(self, facet_df):
+        with pytest.raises(ValueError, match="at least one"):
+            chart(facet_df).scatter("x", "y").facet()
+
+    def test_two_var_facet_with_title(self, facet_df):
+        c = (chart(facet_df).scatter("x", "y")
+             .title("Two-var").facet("col_var", row="row_var"))
+        fig, axs = c._render()
+        assert fig._suptitle.get_text() == "Two-var"
+        plt.close(fig)

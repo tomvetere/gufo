@@ -1,6 +1,15 @@
 """DataAdapter — single resolution point for all input data types."""
 import numpy as np
-import pandas as pd
+
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
+
+try:
+    import polars as pl
+except ImportError:
+    pl = None
 
 
 class DataAdapter:
@@ -12,6 +21,7 @@ class DataAdapter:
 
     Supported input types:
         pandas.DataFrame  — column access by string key
+        polars.DataFrame  — column access by string key (optional dependency)
         dict              — key access
         None              — no bound data; x/y must be arrays/lists directly
     """
@@ -20,6 +30,16 @@ class DataAdapter:
         self._data = data
         self._type = self._detect_type(data)
 
+    @property
+    def raw_data(self):
+        """The original data object passed to the adapter."""
+        return self._data
+
+    @property
+    def data_type(self):
+        """String identifying the data backend: 'dataframe', 'polars', 'dict', or 'none'."""
+        return self._type
+
     @classmethod
     def from_any(cls, data):
         return cls(data)
@@ -27,13 +47,20 @@ class DataAdapter:
     def _detect_type(self, data):
         if data is None:
             return "none"
-        if isinstance(data, pd.DataFrame):
+        if pd is not None and isinstance(data, pd.DataFrame):
             return "dataframe"
+        if pl is not None and isinstance(data, pl.DataFrame):
+            return "polars"
         if isinstance(data, dict):
             return "dict"
+        supported = ["dict", "None"]
+        if pd is not None:
+            supported.insert(0, "pandas DataFrame")
+        if pl is not None:
+            supported.insert(0, "Polars DataFrame")
         raise TypeError(
             f"Unsupported data type: {type(data).__name__}. "
-            "Pass a pandas DataFrame, a dict, or None."
+            f"Pass a {', '.join(supported[:-1])}, or {supported[-1]}."
         )
 
     def resolve(self, key):
@@ -64,6 +91,8 @@ class DataAdapter:
             )
         if self._type == "dataframe":
             return DataAdapter(self._data[mask].reset_index(drop=True))
+        if self._type == "polars":
+            return DataAdapter(self._data.filter(mask))
         if self._type == "dict":
             filtered = {k: np.asarray(v)[mask] for k, v in self._data.items()}
             return DataAdapter(filtered)
@@ -71,6 +100,8 @@ class DataAdapter:
     def _resolve_column(self, name):
         if self._type in ("dataframe", "dict"):
             return np.asarray(self._data[name])
+        if self._type == "polars":
+            return self._data[name].to_numpy()
         raise ValueError(
             f"Cannot resolve column '{name}' — no DataFrame or dict was provided. "
             "Pass data to cerno.chart(data) or pass arrays directly."

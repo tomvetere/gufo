@@ -1,6 +1,6 @@
 # Chart types
 
-Cerno supports four chart types. Each adds a layer to the chart —
+Cerno supports eight chart types. Each adds a layer to the chart —
 you can combine multiple types on the same axes.
 
 ```{toctree}
@@ -10,4 +10,8 @@ scatter
 line
 bar
 histogram
+boxplot
+violin
+heatmap
+area
 ```

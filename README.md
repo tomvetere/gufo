@@ -35,7 +35,7 @@ pip install cerno
 ## Core principles
 
 - **One API, one pattern.** Everything goes through `cerno.chart(data)`. No switching between function styles depending on what you want to do.
-- **Works with your data as-is.** Pass a wide DataFrame, a long DataFrame, a numpy array, a dict, or raw lists — cerno handles the shape without requiring you to reshape first.
+- **Works with your data as-is.** Pass a pandas DataFrame, Polars DataFrame, a numpy array, a dict, or raw lists — cerno handles the shape without requiring you to reshape first.
 - **Matplotlib when you need it.** Cerno covers the common cases cleanly. When you need something custom, `.apply()` drops you into matplotlib without starting over.
 - **Modern defaults.** Charts look good without any configuration.
 
@@ -49,6 +49,15 @@ import pandas as pd
 
 df = pd.read_csv("gapminder.csv")
 
+cerno.chart(df).scatter("gdp_per_capita", "life_expectancy").show()
+```
+
+Polars works the same way:
+
+```python
+import polars as pl
+
+df = pl.read_csv("gapminder.csv")
 cerno.chart(df).scatter("gdp_per_capita", "life_expectancy").show()
 ```
 
@@ -122,6 +131,64 @@ cerno.chart(df).histogram("income", bins=40).show()
 import numpy as np
 data = np.random.normal(0, 1, 1000)
 cerno.chart().histogram(data).show()
+```
+
+### Box plot
+
+```python
+cerno.chart(df).boxplot("department", "salary").show()
+
+# Horizontal
+cerno.chart(df).boxplot("department", "salary", horizontal=True).show()
+
+# Colored boxes
+cerno.chart(df).boxplot("department", "salary", color="steelblue").show()
+
+# Multiple columns from wide-form data — each column becomes a box
+cerno.chart(df).boxplot("x", ["q1_scores", "q2_scores", "q3_scores"]).show()
+```
+
+### Violin plot
+
+```python
+cerno.chart(df).violin("department", "salary").show()
+
+# Horizontal
+cerno.chart(df).violin("department", "salary", horizontal=True).show()
+
+# Colored violins
+cerno.chart(df).violin("department", "salary", color="steelblue").show()
+
+# Multiple columns from wide-form data — each column becomes a violin
+cerno.chart(df).violin("x", ["q1_scores", "q2_scores", "q3_scores"]).show()
+```
+
+### Heatmap
+
+```python
+# Matrix form — DataFrame is the heatmap
+cerno.chart(pivot_df).heatmap().show()
+
+# Long-form — pivoted internally
+cerno.chart(df).heatmap("x_col", "y_col", color="value").show()
+
+# Custom colormap and cell annotations
+cerno.chart(pivot_df).heatmap(cmap="coolwarm", annotate=True).show()
+```
+
+### Area
+
+```python
+cerno.chart(df).area("x", "y").show()
+
+# Stacked area from wide-form data
+cerno.chart(df).area("x", ["series_a", "series_b"]).show()
+
+# Colored area with transparency
+cerno.chart(df).area("x", "y", color="steelblue", alpha=0.3).show()
+
+# Grouped by category
+cerno.chart(df).area("x", "y", color="category").show()
 ```
 
 ---
@@ -258,6 +325,16 @@ cerno.chart(df).scatter("gdp", "life_exp").facet("continent", cols=4).show()
 each showing the same layers with only that subset of data. Chart-level `.title()`
 becomes a super-title above all panels. Empty cells are hidden automatically.
 
+### Two-variable faceting
+
+```python
+# Row by income group, column by continent
+cerno.chart(df).scatter("gdp", "life_exp").facet("continent", row="income_group").show()
+
+# Row only — one panel per category, stacked vertically
+cerno.chart(df).scatter("gdp", "life_exp").facet(row="income_group").show()
+```
+
 ---
 
 ## Saving
@@ -313,28 +390,37 @@ Cerno charts render inline automatically. Calling `.show()` displays the chart i
 
 ---
 
+## Installation
+
+```bash
+pip install cerno              # core only (matplotlib + numpy)
+pip install cerno[pandas]      # + pandas support
+pip install cerno[polars]      # + polars support
+pip install cerno[all]         # everything
+```
+
+Without pandas or polars, cerno works with dicts, numpy arrays, and raw lists.
+
 ## PyData stack compatibility
 
-| Library | Status |
-|---------|--------|
-| pandas  | Full support |
-| numpy   | Full support |
-| polars  | Planned (v0.2) |
+| Library | Install extra | Status |
+|---------|--------------|--------|
+| pandas  | `cerno[pandas]` | Full support |
+| numpy   | (included) | Full support |
+| polars  | `cerno[polars]` | Full support |
 
 ---
 
 ## Development
 
 ```bash
-# Install in editable mode with dev + docs dependencies
-pip install -e ".[docs]"
+# Install in editable mode with all dependencies
+pip install -e ".[all,docs]"
 pip install pytest
 
 # Run the test suite
 pytest tests/ -v
 ```
-
-The test suite covers the data layer, all chart types, theming, grid layout, faceting, and input validation (186 tests).
 
 ---
 

@@ -55,23 +55,19 @@ intersphinx_mapping = {
 
 # -- HTML output -------------------------------------------------------------
 
-html_theme = "furo"
+html_theme = "pydata_sphinx_theme"
 
 html_theme_options = {
-    "light_css_variables": {
-        "color-brand-primary": "#4C72B0",
-        "color-brand-content": "#4C72B0",
+    "logo": {
+        "image_light": "_static/cerno_logo.png",
+        "image_dark": "_static/cerno_logo.png",
     },
-    "dark_css_variables": {
-        "color-brand-primary": "#6e94d4",
-        "color-brand-content": "#6e94d4",
-    },
-    "sidebar_hide_name": False,
+    "github_url": "https://github.com/thomas/cerno",
+    "navbar_align": "left",
     "navigation_with_keys": True,
 }
 
 html_title = "cerno"
-html_logo = "_static/cerno_logo.png"
 html_static_path = ["_static"]
 
 # -- Copybutton --------------------------------------------------------------

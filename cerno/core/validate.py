@@ -34,7 +34,6 @@ def check_numeric(arr, name: str, mark: str):
         )
 
 
-
 def check_stroke_dash(name, valid_styles):
     """Warn if the stroke dash style is not recognized.
 
@@ -53,7 +52,6 @@ def check_stroke_dash(name, valid_styles):
             f"Valid options: {', '.join(sorted(valid_styles))}. Defaulting to solid.",
             stacklevel=3,
         )
-
 
 
 def warn_nan_inf(arr, name: str, mark: str):

@@ -3,7 +3,10 @@
 ## Installation
 
 ```bash
-pip install cerno
+pip install cerno              # core only (matplotlib + numpy)
+pip install cerno[pandas]      # + pandas support
+pip install cerno[polars]      # + polars support
+pip install cerno[all]         # everything
 ```
 
 For the latest development version:
@@ -28,7 +31,7 @@ cerno.chart(df).scatter("gdp_per_capita", "life_expectancy").show()
 Every cerno chart follows the same structure:
 
 1. **Create a chart** with `cerno.chart(data)` — pass your data once here.
-2. **Add marks** — `.scatter()`, `.line()`, `.bar()`, `.histogram()`.
+2. **Add marks** — `.scatter()`, `.line()`, `.bar()`, `.histogram()`, `.boxplot()`, `.violin()`, `.heatmap()`, `.area()`.
 3. **Describe the chart** — `.title()`, `.xlabel()`, `.ylabel()`, `.legend()`.
 4. **Output** — `.show()` to display, `.save("file.png")` to write to disk.
 
@@ -52,6 +55,7 @@ everything before them just registers intent.
 You do not need to reshape your data before passing it in:
 
 - **pandas DataFrame** — long-form or wide-form, refer to columns by name
+- **Polars DataFrame** — same as pandas, install with `cerno[polars]`
 - **dict** — `{"x": [...], "y": [...]}`
 - **numpy arrays or lists** — pass directly to mark methods, omit data from `cerno.chart()`
 
@@ -70,4 +74,5 @@ pytest tests/ -v
 
 - [Chart types](chart-types/index.md) — examples for every mark
 - [Theming](guides/theming.md) — built-in themes and custom theme creation
+- [Layout](guides/layout.md) — grids and faceting
 - [API reference](api/index.md) — full method documentation

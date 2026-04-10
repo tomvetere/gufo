@@ -21,13 +21,17 @@ cerno/
 │   ├── chart.py         # Chart class — the only thing users interact with
 │   ├── layer.py         # Layer dataclass (one per mark call)
 │   ├── canvas.py        # matplotlib figure/axes lifecycle
-│   └── validate.py      # input validation helpers (check_alpha, check_array_lengths, etc.)
+│   └── validate.py      # input validation helpers (check_array_lengths, check_numeric, etc.)
 ├── marks/
 │   ├── __init__.py      # render_layer() dispatcher
-│   ├── _base.py         # shared mark utilities (resolve_color, default_colors, apply_label, apply_color, iter_color_groups, is_wide_form, render_wide_form)
+│   ├── _base.py         # shared mark utilities (resolve_color, default_colors, apply_label, apply_color, iter_color_groups, is_wide_form, render_wide_form, group_by_x)
 │   ├── scatter.py       # render(layer, adapter, axes)
 │   ├── line.py
 │   ├── bar.py
+│   ├── boxplot.py
+│   ├── violin.py
+│   ├── heatmap.py
+│   ├── area.py
 │   └── histogram.py
 ├── data/
 │   ├── adapter.py       # DataAdapter.from_any() — resolves all input types to numpy
@@ -60,7 +64,7 @@ Follow [PEP 8](https://peps.python.org/pep-0008/) and [PEP 20 (The Zen of Python
 
 ### Data resolution
 
-Marks never receive raw DataFrames. Always go through `DataAdapter.resolve(key)` which returns a numpy array. This is the only place where column name → array resolution happens.
+Marks never receive raw DataFrames. Always go through `DataAdapter.resolve(key)` which returns a numpy array. This is the only place where column name → array resolution happens. When a mark needs the raw data object (e.g. heatmap matrix form), use the public `adapter.raw_data` and `adapter.data_type` properties — never access `_data` or `_type` directly.
 
 ### Theme
 
@@ -117,15 +121,20 @@ Run `python -m pytest tests/` after every change to verify correctness. All test
 
 ## Dependencies
 
+Core:
 - `matplotlib >= 3.5.0`
-- `pandas >= 1.3.0`
 - `numpy >= 1.21.0`
 - Python `>= 3.9`
 
-Polars is planned for v0.2 as an optional dependency.
+Optional extras:
+- `cerno[pandas]` — `pandas >= 1.3.0`
+- `cerno[polars]` — `polars >= 0.20.0`
+- `cerno[all]` — all optional dependencies
+
+Both pandas and polars are guarded with `try/except ImportError` at import time. If neither is installed, cerno still works with dicts, arrays, and lists.
 
 ## Roadmap
 
 - **v0.1**: scatter, line, bar, histogram, theming, wide-form data, grid layout, faceting, input validation
-- **v0.2**: box, heatmap, area, violin, polars support, two-variable faceting
+- **v0.2**: box, heatmap, area, violin, polars support, two-variable faceting — complete
 - **v0.3**: regression overlay, pair plot, interactive/Plotly backend

@@ -223,3 +223,147 @@ class TestMarkValidation:
         c = cerno.chart().line(np.arange(5), np.arange(3))
         with pytest.raises(ValueError, match="array length mismatch"):
             c.save(tmp_path / "bad.png")
+
+
+# ── Box plot ───────────────────────────────────────────────────────
+
+class TestBoxplotMark:
+    def test_basic_boxplot(self, sample_df, tmp_path):
+        cerno.chart(sample_df).boxplot("cat", "y").save(tmp_path / "bp.png")
+
+    def test_boxplot_horizontal(self, sample_df, tmp_path):
+        cerno.chart(sample_df).boxplot("cat", "y", horizontal=True).save(tmp_path / "bp.png")
+
+    def test_boxplot_with_color(self, sample_df, tmp_path):
+        cerno.chart(sample_df).boxplot("cat", "y", color="steelblue").save(tmp_path / "bp.png")
+
+    def test_boxplot_wide_form(self, sample_df, tmp_path):
+        cerno.chart(sample_df).boxplot("x", ["series_a", "series_b"]).save(tmp_path / "bp.png")
+
+    def test_boxplot_wide_form_box_count(self, sample_df):
+        c = cerno.chart(sample_df).boxplot("x", ["series_a", "series_b"])
+        _, axes = c._render()
+        # patch_artist=True creates one patch per box
+        assert len(axes.patches) == 2
+
+    def test_boxplot_with_dict_data(self, tmp_path):
+        data = {"g": ["a", "a", "b", "b"], "v": [1, 2, 3, 4]}
+        cerno.chart(data).boxplot("g", "v").save(tmp_path / "bp.png")
+
+    def test_boxplot_nan_warns(self, tmp_path):
+        data = {"g": ["a", "a", "b", "b"], "v": [1.0, np.nan, 3.0, 4.0]}
+        c = cerno.chart(data).boxplot("g", "v")
+        with pytest.warns(UserWarning, match="NaN"):
+            c.save(tmp_path / "bp.png")
+
+    def test_boxplot_extra_kwargs(self, sample_df, tmp_path):
+        cerno.chart(sample_df).boxplot("cat", "y", whis=1.5).save(tmp_path / "bp.png")
+
+
+# ── Violin ─────────────────────────────────────────────────────────
+
+class TestViolinMark:
+    def test_basic_violin(self, sample_df, tmp_path):
+        cerno.chart(sample_df).violin("cat", "y").save(tmp_path / "v.png")
+
+    def test_violin_horizontal(self, sample_df, tmp_path):
+        cerno.chart(sample_df).violin("cat", "y", horizontal=True).save(tmp_path / "v.png")
+
+    def test_violin_with_color(self, sample_df, tmp_path):
+        cerno.chart(sample_df).violin("cat", "y", color="steelblue").save(tmp_path / "v.png")
+
+    def test_violin_wide_form(self, sample_df, tmp_path):
+        cerno.chart(sample_df).violin("x", ["series_a", "series_b"]).save(tmp_path / "v.png")
+
+    def test_violin_wide_form_body_count(self, sample_df):
+        chart = cerno.chart(sample_df).violin("x", ["series_a", "series_b"])
+        _, axes = chart._render()
+        # Each wide-form column produces one PolyCollection body
+        polys = [col for col in axes.collections if hasattr(col, "get_facecolor")]
+        assert len(polys) >= 2
+
+    def test_violin_with_dict_data(self, tmp_path):
+        data = {"g": ["a", "a", "b", "b"], "v": [1, 2, 3, 4]}
+        cerno.chart(data).violin("g", "v").save(tmp_path / "v.png")
+
+    def test_violin_nan_warns(self, tmp_path):
+        data = {"g": ["a", "a", "b", "b"], "v": [1.0, np.nan, 3.0, 4.0]}
+        c = cerno.chart(data).violin("g", "v")
+        with pytest.warns(UserWarning, match="NaN"):
+            c.save(tmp_path / "v.png")
+
+    def test_violin_extra_kwargs(self, sample_df, tmp_path):
+        cerno.chart(sample_df).violin("cat", "y", showmeans=True).save(tmp_path / "v.png")
+
+
+# ── Heatmap ────────────────────────────────────────────────────────
+
+class TestHeatmapMark:
+    def test_heatmap_matrix_form(self, tmp_path):
+        matrix_df = pd.DataFrame(
+            [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+            index=["a", "b", "c"],
+            columns=["x", "y", "z"],
+        )
+        cerno.chart(matrix_df).heatmap().save(tmp_path / "hm.png")
+
+    def test_heatmap_long_form(self, tmp_path):
+        df = pd.DataFrame({
+            "row": ["a", "a", "b", "b"],
+            "col": ["x", "y", "x", "y"],
+            "val": [1, 2, 3, 4],
+        })
+        cerno.chart(df).heatmap("col", "row", color="val").save(tmp_path / "hm.png")
+
+    def test_heatmap_with_cmap(self, tmp_path):
+        matrix_df = pd.DataFrame([[1, 2], [3, 4]])
+        cerno.chart(matrix_df).heatmap(cmap="coolwarm").save(tmp_path / "hm.png")
+
+    def test_heatmap_annotated(self, tmp_path):
+        matrix_df = pd.DataFrame([[1, 2], [3, 4]])
+        cerno.chart(matrix_df).heatmap(annotate=True).save(tmp_path / "hm.png")
+
+    def test_heatmap_long_form_missing_color_raises(self, tmp_path):
+        df = pd.DataFrame({"a": [1, 2], "b": [3, 4]})
+        c = cerno.chart(df).heatmap("a", "b")
+        with pytest.raises(ValueError, match="color encoding"):
+            c.save(tmp_path / "hm.png")
+
+    def test_heatmap_dict_matrix_raises(self, tmp_path):
+        c = cerno.chart({"a": [1, 2]}).heatmap()
+        with pytest.raises(ValueError, match="DataFrame"):
+            c.save(tmp_path / "hm.png")
+
+
+# ── Area ───────────────────────────────────────────────────────────
+
+class TestAreaMark:
+    def test_basic_area(self, sample_df, tmp_path):
+        cerno.chart(sample_df).area("x", "y").save(tmp_path / "a.png")
+
+    def test_area_with_color(self, sample_df, tmp_path):
+        cerno.chart(sample_df).area("x", "y", color="steelblue").save(tmp_path / "a.png")
+
+    def test_area_with_alpha(self, sample_df, tmp_path):
+        cerno.chart(sample_df).area("x", "y", alpha=0.3).save(tmp_path / "a.png")
+
+    def test_area_wide_form(self, sample_df, tmp_path):
+        cerno.chart(sample_df).area("x", ["series_a", "series_b"]).save(tmp_path / "a.png")
+
+    def test_area_categorical_color(self, sample_df, tmp_path):
+        cerno.chart(sample_df).area("x", "y", color="cat").save(tmp_path / "a.png")
+
+    def test_area_with_arrays(self, tmp_path):
+        cerno.chart().area([1, 2, 3], [4, 5, 6]).save(tmp_path / "a.png")
+
+    def test_area_length_mismatch(self, tmp_path):
+        c = cerno.chart().area(np.arange(5), np.arange(3))
+        with pytest.raises(ValueError, match="array length mismatch"):
+            c.save(tmp_path / "a.png")
+
+    def test_area_nan_warns(self, tmp_path):
+        x = np.array([1.0, 2.0, 3.0])
+        y = np.array([1.0, np.nan, 3.0])
+        c = cerno.chart().area(x, y)
+        with pytest.warns(UserWarning, match="NaN"):
+            c.save(tmp_path / "a.png")

@@ -40,6 +40,20 @@ wide_df = pd.DataFrame({
 cerno.chart(wide_df).line("month", ["north", "south", "east"]).legend().show()
 ```
 
+## Polars DataFrame
+
+Polars works exactly like pandas — pass a Polars DataFrame to `cerno.chart()`
+and refer to columns by name.
+
+```python
+import polars as pl
+
+df = pl.read_csv("data.csv")
+cerno.chart(df).scatter("x", "y").show()
+```
+
+Install with `pip install cerno[polars]`.
+
 ## dict
 
 Pass a plain Python dict. Keys become column names.

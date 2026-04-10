@@ -46,6 +46,7 @@ class Chart:
         self._legend_opts = None
         self._theme_override = None
         self._facet_column = None
+        self._facet_row = None
         self._facet_cols = None
         self._apply_funcs = []
         self._canvas = Canvas()
@@ -99,6 +100,66 @@ class Chart:
         self._layers.append(Layer(
             mark_type="histogram", x=x, y=None,
             encodings={"bins": bins, "color": color, "label": label},
+            kwargs=kwargs,
+        ))
+        return self
+
+    def boxplot(self, x, y, *, color=None, horizontal=False, label=None, **kwargs):
+        """Add a box plot layer.
+
+        x is the grouping column (categorical). y is the values column (numeric).
+        Each unique x value produces one box.
+
+        y may be a list of column names for wide-form DataFrames — each column
+        becomes its own box without requiring pd.melt().
+        """
+        self._layers.append(Layer(
+            mark_type="boxplot", x=x, y=y,
+            encodings={"color": color, "horizontal": horizontal, "label": label},
+            kwargs=kwargs,
+        ))
+        return self
+
+    def violin(self, x, y, *, color=None, horizontal=False, label=None, **kwargs):
+        """Add a violin plot layer.
+
+        x is the grouping column (categorical). y is the values column (numeric).
+        Each unique x value produces one violin.
+
+        y may be a list of column names for wide-form DataFrames — each column
+        becomes its own violin without requiring pd.melt().
+        """
+        self._layers.append(Layer(
+            mark_type="violin", x=x, y=y,
+            encodings={"color": color, "horizontal": horizontal, "label": label},
+            kwargs=kwargs,
+        ))
+        return self
+
+    def heatmap(self, x=None, y=None, *, color=None, cmap=None, annotate=False, **kwargs):
+        """Add a heatmap layer.
+
+        Two usage modes:
+        - Matrix form: cerno.chart(pivot_df).heatmap() — DataFrame is the matrix.
+        - Long-form: cerno.chart(df).heatmap("x", "y", color="value") — pivoted
+          internally.
+        """
+        self._layers.append(Layer(
+            mark_type="heatmap", x=x, y=y,
+            encodings={"color": color, "cmap": cmap, "annotate": annotate},
+            kwargs=kwargs,
+        ))
+        return self
+
+    def area(self, x, y, *, color=None, alpha=None, label=None, **kwargs):
+        """Add an area chart layer.
+
+        y may be a list of column names for wide-form DataFrames — each column
+        becomes a stacked area without requiring pd.melt().
+        """
+        self._layers.append(Layer(
+            mark_type="area", x=x, y=y,
+            encodings={"color": color, "alpha": alpha, "label": label},
             kwargs=kwargs,
         ))
         return self
@@ -171,18 +232,25 @@ class Chart:
         self._theme_override = name_or_theme
         return self
 
-    def facet(self, column, *, cols=3):
-        """Split the chart into subplots by a categorical column.
+    def facet(self, column=None, *, row=None, cols=3):
+        """Split the chart into subplots by one or two categorical columns.
 
-        Each unique value in column gets its own panel showing the same
-        layers with only that subset of data. Panels wrap after cols columns.
+        With column only, panels wrap after cols columns. With row, panels
+        form a grid where row categories go down and column categories go
+        across. With row only, each row category gets one panel in a
+        single column.
         """
         if self._data is None:
             raise ValueError(
                 "facet() requires data bound to the chart. "
                 "Pass data to cerno.chart(data)."
             )
+        if column is None and row is None:
+            raise ValueError(
+                "facet() requires at least one of column or row."
+            )
         self._facet_column = column
+        self._facet_row = row
         self._facet_cols = cols
         return self
 
@@ -235,8 +303,9 @@ class Chart:
         4. Apply decorators (title, labels, axis options, legend)
         5. Call each .apply() function
         """
-        if self._facet_column is not None:
-            return render_facet(self, self._facet_column, self._facet_cols)
+        if self._facet_column is not None or self._facet_row is not None:
+            return render_facet(self, self._facet_column, self._facet_cols,
+                                facet_row=self._facet_row)
 
         theme = _resolve_theme(self._theme_override)
         adapter = DataAdapter.from_any(self._data)

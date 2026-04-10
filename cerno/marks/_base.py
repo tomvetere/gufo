@@ -64,13 +64,28 @@ def render_wide_form(layer, adapter, axes, draw_fn, **extra_kwargs):
         draw_fn(axes, x, y_data, **series_kwargs)
 
 
+def group_by_x(x, y):
+    """Group y-values by unique x-values for distribution marks.
+
+    Returns (unique_x, grouped, positions) where grouped is a list of
+    y sub-arrays and positions is 1-based integers for matplotlib.
+    """
+    unique_x = list(dict.fromkeys(x))
+    grouped = [y[x == val] for val in unique_x]
+    positions = list(range(1, len(unique_x) + 1))
+    return unique_x, grouped, positions
+
+
 def iter_color_groups(color_value):
     """Yield (category, color, mask) for each group in a categorical color array.
 
     Returns None if color_value is not categorical, allowing callers to
     fall through to the non-grouped code path.
     """
-    if color_value is None or not hasattr(color_value, "__len__") or not is_categorical(color_value):
+    if (color_value is None
+            or isinstance(color_value, str)
+            or not hasattr(color_value, "__len__")
+            or not is_categorical(color_value)):
         return None
     categories = list(dict.fromkeys(color_value))
     colors = default_colors(len(categories))
