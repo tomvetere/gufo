@@ -14,4 +14,5 @@ boxplot
 violin
 heatmap
 area
+pairplot
 ```

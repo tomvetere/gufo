@@ -1,6 +1,22 @@
 # Changelog
 
-## Unreleased (v0.2)
+## Unreleased (v0.3)
+
+**New features**
+- Pair plot: `cerno.pairplot(df)` generates an NxN grid of scatter plots (off-diagonal) and histograms (diagonal) for all numeric columns. Supports `color` for categorical grouping and `columns` to select a subset. Returns a `Grid`.
+
+**Bug fixes**
+- Histogram now handles categorical color encoding by grouping (previously passed raw category names to matplotlib as color values, causing a crash)
+
+**Internal improvements**
+- `DataAdapter.column_names()` method added for listing available columns
+
+**Testing**
+- 245 tests passing
+
+---
+
+## v0.2
 
 **New chart types**
 - Box plot: `.boxplot("x", "y")` — grouped boxes, horizontal mode, wide-form support

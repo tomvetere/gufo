@@ -191,6 +191,22 @@ cerno.chart(df).area("x", "y", color="steelblue", alpha=0.3).show()
 cerno.chart(df).area("x", "y", color="category").show()
 ```
 
+### Pair plot
+
+```python
+# All numeric columns — scatter matrix with histograms on diagonal
+cerno.pairplot(df).show()
+
+# Color by a categorical column
+cerno.pairplot(df, color="species").show()
+
+# Subset of columns
+cerno.pairplot(df, columns=["col_a", "col_b", "col_c"]).show()
+
+# Returns a Grid — all grid methods work
+cerno.pairplot(df, color="species").title("Iris").save("pairs.png")
+```
+
 ---
 
 ## Layering
@@ -430,4 +446,6 @@ pytest tests/ -v
 
 **v0.2** — box plot, heatmap, area chart, violin plot, polars support
 
-**v0.3** — regression overlay, pair plot, interactive export (Plotly backend)
+**v0.3** — pair plot
+
+**v0.4** — regression overlay, KDE/density plot, strip/swarm plots (scipy optional dependency)

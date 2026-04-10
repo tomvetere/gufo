@@ -8,6 +8,7 @@ data explorers, and anyone making reports.
 from ._version import __version__
 from .core.chart import chart
 from .layout.grid import Grid
+from .layout.pairplot import pairplot
 from .style.theme import set_theme, get_theme, register_theme, theme_context
 
 
@@ -20,6 +21,7 @@ __all__ = [
     "__version__",
     "chart",
     "grid",
+    "pairplot",
     "Grid",
     "set_theme",
     "get_theme",

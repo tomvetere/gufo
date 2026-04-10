@@ -63,6 +63,17 @@ class DataAdapter:
             f"Pass a {', '.join(supported[:-1])}, or {supported[-1]}."
         )
 
+    def column_names(self):
+        """Return list of column names from bound data."""
+        if self._type in ("dataframe", "polars"):
+            return list(self._data.columns)
+        if self._type == "dict":
+            return list(self._data.keys())
+        raise ValueError(
+            "Cannot list columns — no columnar data was provided. "
+            "Pass a DataFrame or dict to cerno.chart(data)."
+        )
+
     def resolve(self, key):
         """
         Return key as a numpy array.

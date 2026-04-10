@@ -41,7 +41,8 @@ cerno/
 │   └── color.py         # Palette dataclass + CERNO_PALETTE
 └── layout/
     ├── grid.py          # Grid class — multi-panel layout container
-    └── facet.py         # render_facet() — split data by column into subplots
+    ├── facet.py         # render_facet() — split data by column into subplots
+    └── pairplot.py      # pairplot() — NxN scatter/histogram grid
 ```
 
 ## Style
@@ -137,4 +138,5 @@ Both pandas and polars are guarded with `try/except ImportError` at import time.
 
 - **v0.1**: scatter, line, bar, histogram, theming, wide-form data, grid layout, faceting, input validation
 - **v0.2**: box, heatmap, area, violin, polars support, two-variable faceting — complete
-- **v0.3**: regression overlay, pair plot, interactive/Plotly backend
+- **v0.3**: pair plot
+- **v0.4**: regression overlay, KDE/density plot, strip/swarm plots (scipy optional dependency)
