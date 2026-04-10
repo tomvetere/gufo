@@ -27,6 +27,21 @@ data = np.random.normal(0, 1, 1000)
 cerno.chart().histogram(data).show()
 ```
 
+## KDE overlay
+
+Pass a `cerno.kde()` config to overlay a density curve on the histogram.
+The curve is automatically scaled to match the histogram's y-axis.
+Requires scipy (`pip install cerno[scipy]`).
+
+```python
+cerno.chart(df).histogram("income", kde=cerno.kde()).show()
+
+# Filled overlay
+cerno.chart(df).histogram("income", kde=cerno.kde(fill=True, alpha=0.3)).show()
+```
+
+See [KDE](kde.md) for standalone density plots and full details.
+
 ## API reference
 
 See {py:meth}`cerno.core.chart.Chart.histogram`.

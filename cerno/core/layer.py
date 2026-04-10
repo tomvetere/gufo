@@ -18,3 +18,6 @@ class Layer:
     y: Any                          # column name, array, list, or list-of-names (wide)
     encodings: dict = field(default_factory=dict)   # color, size, alpha, label, etc.
     kwargs: dict = field(default_factory=dict)       # raw mpl kwargs passed through
+
+    def __post_init__(self):
+        self.encodings = {k: v for k, v in self.encodings.items() if v is not None}

@@ -41,6 +41,25 @@ Use `alpha` for dense data where overplotting is a problem.
 cerno.chart(df).scatter("x", "y", alpha=0.3).show()
 ```
 
+## Regression overlay
+
+Pass a `cerno.regression()` config to the `fit` parameter to add a fit line.
+
+```python
+cerno.chart(df).scatter("x", "y", fit=cerno.regression()).show()
+
+# Polynomial fit
+cerno.chart(df).scatter("x", "y", fit=cerno.regression(degree=2)).show()
+
+# Custom styling
+cerno.chart(df).scatter(
+    "x", "y",
+    fit=cerno.regression(color="red", linestyle="--", linewidth=3),
+).show()
+```
+
+See [Regression overlay](regression.md) for full details.
+
 ## API reference
 
 See {py:meth}`cerno.core.chart.Chart.scatter`.

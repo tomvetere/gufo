@@ -9,12 +9,33 @@ from ._version import __version__
 from .core.chart import chart
 from .layout.grid import Grid
 from .layout.pairplot import pairplot
+from .stats.kde import KDE
+from .stats.regression import Regression
 from .style.theme import set_theme, get_theme, register_theme, theme_context
 
 
 def grid(rows, cols, figsize=None):
     """Create a multi-panel grid layout."""
     return Grid(rows, cols, figsize=figsize)
+
+
+def regression(degree=1, *, color=None, linestyle="-", linewidth=2.0,
+               label=None, n_points=200):
+    """Create a regression fit configuration for scatter plots."""
+    return Regression(
+        degree=degree, color=color, linestyle=linestyle,
+        linewidth=linewidth, label=label, n_points=n_points,
+    )
+
+
+def kde(*, bw_method=None, color=None, linestyle="-", linewidth=2.0,
+        alpha=1.0, label=None, fill=False, n_points=200):
+    """Create a KDE configuration for density plots."""
+    return KDE(
+        bw_method=bw_method, color=color, linestyle=linestyle,
+        linewidth=linewidth, alpha=alpha, label=label,
+        fill=fill, n_points=n_points,
+    )
 
 
 __all__ = [
@@ -27,4 +48,8 @@ __all__ = [
     "get_theme",
     "register_theme",
     "theme_context",
+    "regression",
+    "Regression",
+    "kde",
+    "KDE",
 ]

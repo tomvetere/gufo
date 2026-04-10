@@ -1,7 +1,7 @@
 # Chart types
 
-Cerno supports eight chart types. Each adds a layer to the chart —
-you can combine multiple types on the same axes.
+Cerno supports twelve chart types plus statistical overlays. Each adds a
+layer to the chart — you can combine multiple types on the same axes.
 
 ```{toctree}
 :maxdepth: 1
@@ -14,5 +14,9 @@ boxplot
 violin
 heatmap
 area
+kde
+strip
+swarm
 pairplot
+regression
 ```

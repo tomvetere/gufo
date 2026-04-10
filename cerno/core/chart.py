@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from ..data.adapter import DataAdapter
 from ..layout.facet import render_facet
 from ..marks import render_layer
+from ..stats.kde import KDE
 from ..style.theme import _resolve_theme
 from .canvas import Canvas
 from .layer import Layer
@@ -55,15 +56,19 @@ class Chart:
     # Mark methods
     # ------------------------------------------------------------------
 
-    def scatter(self, x, y, *, color=None, size=None, alpha=None, label=None, **kwargs):
+    def scatter(self, x, y, *, color=None, size=None, alpha=None, label=None,
+                fit=None, **kwargs):
         """Add a scatter plot layer.
 
         y may be a list of column names for wide-form DataFrames — each column
         becomes its own series without requiring pd.melt().
+
+        fit accepts a cerno.regression() config object to overlay a fit line.
         """
         self._layers.append(Layer(
             mark_type="scatter", x=x, y=y,
-            encodings={"color": color, "size": size, "alpha": alpha, "label": label},
+            encodings={"color": color, "size": size, "alpha": alpha,
+                       "label": label, "fit": fit},
             kwargs=kwargs,
         ))
         return self
@@ -95,11 +100,64 @@ class Chart:
         ))
         return self
 
-    def histogram(self, x, *, bins="auto", color=None, label=None, **kwargs):
-        """Add a histogram layer."""
+    def histogram(self, x, *, bins="auto", color=None, label=None, kde=None,
+                  **kwargs):
+        """Add a histogram layer.
+
+        kde accepts a cerno.kde() config object to overlay a density curve.
+        """
         self._layers.append(Layer(
             mark_type="histogram", x=x, y=None,
-            encodings={"bins": bins, "color": color, "label": label},
+            encodings={"bins": bins, "color": color, "label": label, "kde": kde},
+            kwargs=kwargs,
+        ))
+        return self
+
+    def kde(self, x, *, color=None, bw_method=None, fill=False, label=None,
+            **kwargs):
+        """Add a KDE (kernel density estimation) layer."""
+        kde_config = KDE(bw_method=bw_method, fill=fill)
+        self._layers.append(Layer(
+            mark_type="kde", x=x, y=None,
+            encodings={"color": color, "label": label, "kde_config": kde_config},
+            kwargs=kwargs,
+        ))
+        return self
+
+    def strip(self, x, y, *, color=None, size=None, alpha=None, jitter=0.2,
+              horizontal=False, label=None, **kwargs):
+        """Add a strip plot layer (jittered points along a categorical axis).
+
+        x is the grouping column (categorical). y is the values column (numeric).
+
+        y may be a list of column names for wide-form DataFrames — each column
+        becomes its own strip without requiring pd.melt().
+        """
+        self._layers.append(Layer(
+            mark_type="strip", x=x, y=y,
+            encodings={
+                "color": color, "size": size, "alpha": alpha,
+                "jitter": jitter, "horizontal": horizontal, "label": label,
+            },
+            kwargs=kwargs,
+        ))
+        return self
+
+    def swarm(self, x, y, *, color=None, size=None, alpha=None,
+              horizontal=False, label=None, **kwargs):
+        """Add a swarm plot layer (non-overlapping points along a categorical axis).
+
+        x is the grouping column (categorical). y is the values column (numeric).
+
+        y may be a list of column names for wide-form DataFrames — each column
+        becomes its own swarm without requiring pd.melt().
+        """
+        self._layers.append(Layer(
+            mark_type="swarm", x=x, y=y,
+            encodings={
+                "color": color, "size": size, "alpha": alpha,
+                "horizontal": horizontal, "label": label,
+            },
             kwargs=kwargs,
         ))
         return self

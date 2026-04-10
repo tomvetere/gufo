@@ -1,5 +1,30 @@
 # Changelog
 
+## Unreleased (v0.4)
+
+**New chart types**
+- KDE (kernel density estimation): `.kde("x")` — standalone density plot with optional fill, categorical color grouping, configurable bandwidth. Requires scipy.
+- Strip plot: `.strip("x", "y")` — individual data points with random jitter along a categorical axis. Supports horizontal mode and wide-form data.
+- Swarm plot: `.swarm("x", "y")` — beeswarm layout that avoids overlapping points along a categorical axis. Requires scipy.
+
+**New features**
+- Regression overlay: pass `fit=cerno.regression()` to `.scatter()` for linear or polynomial fit lines. Supports custom degree, color, linestyle, linewidth, and label. Uses numpy only (no scipy required).
+- KDE histogram overlay: pass `kde=cerno.kde()` to `.histogram()` to overlay a density curve scaled to the histogram's y-axis.
+- scipy optional dependency: `pip install cerno[scipy]` for KDE and swarm plot support.
+
+**Internal improvements**
+- Config object pattern: `Regression` and `KDE` are frozen dataclasses passed as parameters to existing marks, following the same pattern as `Grid`.
+- `Layer.__post_init__` filters None values from encodings so `enc.get("key", default)` works correctly.
+- Shared `render_categorical_scatter()` helper in `_base.py` eliminates duplication between strip and swarm renderers via pluggable `offset_fn` callback.
+- `resolve_color_list()` utility added to `_base.py` for categorical scatter color resolution.
+- KDE mark uses `dataclasses.replace()` for immutable config handling.
+- `cerno/stats/` module added with `__init__.py` (scipy guard), `regression.py`, and `kde.py`.
+
+**Testing**
+- 282 tests passing
+
+---
+
 ## Unreleased (v0.3)
 
 **New features**

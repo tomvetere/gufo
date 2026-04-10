@@ -24,7 +24,7 @@ cerno/
 │   └── validate.py      # input validation helpers (check_array_lengths, check_numeric, etc.)
 ├── marks/
 │   ├── __init__.py      # render_layer() dispatcher
-│   ├── _base.py         # shared mark utilities (resolve_color, default_colors, apply_label, apply_color, iter_color_groups, is_wide_form, render_wide_form, group_by_x)
+│   ├── _base.py         # shared mark utilities (resolve_color, default_colors, apply_label, apply_color, iter_color_groups, is_wide_form, render_wide_form, group_by_x, resolve_color_list, render_categorical_scatter)
 │   ├── scatter.py       # render(layer, adapter, axes)
 │   ├── line.py
 │   ├── bar.py
@@ -32,13 +32,20 @@ cerno/
 │   ├── violin.py
 │   ├── heatmap.py
 │   ├── area.py
-│   └── histogram.py
+│   ├── histogram.py
+│   ├── kde.py           # standalone KDE density plot
+│   ├── strip.py         # jittered categorical scatter
+│   └── swarm.py         # beeswarm non-overlapping categorical scatter
 ├── data/
 │   ├── adapter.py       # DataAdapter.from_any() — resolves all input types to numpy
 │   └── inference.py     # is_categorical(), is_datetime()
 ├── style/
 │   ├── theme.py         # Theme class, registry, set_theme, theme_context, built-in themes
 │   └── color.py         # Palette dataclass + CERNO_PALETTE
+├── stats/
+│   ├── __init__.py      # scipy guard (_require_scipy)
+│   ├── regression.py    # Regression dataclass — fit overlay for scatter
+│   └── kde.py           # KDE dataclass — density estimation config
 └── layout/
     ├── grid.py          # Grid class — multi-panel layout container
     ├── facet.py         # render_facet() — split data by column into subplots
@@ -62,6 +69,14 @@ Follow [PEP 8](https://peps.python.org/pep-0008/) and [PEP 20 (The Zen of Python
 2. Register it in `cerno/marks/__init__.py` under `_REGISTRY`
 3. Add the method to `Chart` in `cerno/core/chart.py` — it appends a `Layer` and returns `self`
 4. Document it in `README.md` with copy-pasteable examples
+
+### Statistical overlays (regression, KDE)
+
+Overlays are **config object classes** in `cerno/stats/`, passed as parameters to existing marks:
+- `cerno.regression()` → `Regression` dataclass, passed via `fit=` on `.scatter()`
+- `cerno.kde()` → `KDE` dataclass, passed via `kde=` on `.histogram()`, or used standalone via `.kde()`
+
+Each config class has a `render()` method that draws itself onto axes. The mark renderer checks for the config object and delegates rendering. Factory functions in `cerno/__init__.py` create the config instances. This pattern avoids signature bloat and keeps overlay logic separate from mark logic.
 
 ### Data resolution
 
@@ -130,13 +145,14 @@ Core:
 Optional extras:
 - `cerno[pandas]` — `pandas >= 1.3.0`
 - `cerno[polars]` — `polars >= 0.20.0`
+- `cerno[scipy]` — `scipy >= 1.7.0` (required for KDE and swarm)
 - `cerno[all]` — all optional dependencies
 
-Both pandas and polars are guarded with `try/except ImportError` at import time. If neither is installed, cerno still works with dicts, arrays, and lists.
+pandas, polars, and scipy are guarded with `try/except ImportError` at import time. If neither is installed, cerno still works with dicts, arrays, and lists. KDE and swarm raise `ImportError` with install instructions when scipy is missing. Regression uses numpy only.
 
 ## Roadmap
 
 - **v0.1**: scatter, line, bar, histogram, theming, wide-form data, grid layout, faceting, input validation
 - **v0.2**: box, heatmap, area, violin, polars support, two-variable faceting — complete
-- **v0.3**: pair plot
-- **v0.4**: regression overlay, KDE/density plot, strip/swarm plots (scipy optional dependency)
+- **v0.3**: pair plot — complete
+- **v0.4**: regression overlay, KDE/density plot, strip/swarm plots (scipy optional dependency) — complete

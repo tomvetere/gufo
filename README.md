@@ -131,6 +131,12 @@ cerno.chart(df).histogram("income", bins=40).show()
 import numpy as np
 data = np.random.normal(0, 1, 1000)
 cerno.chart().histogram(data).show()
+
+# With a KDE overlay (requires scipy)
+cerno.chart(df).histogram("income", kde=cerno.kde()).show()
+
+# Filled KDE overlay
+cerno.chart(df).histogram("income", kde=cerno.kde(fill=True, alpha=0.3)).show()
 ```
 
 ### Box plot
@@ -189,6 +195,67 @@ cerno.chart(df).area("x", "y", color="steelblue", alpha=0.3).show()
 
 # Grouped by category
 cerno.chart(df).area("x", "y", color="category").show()
+```
+
+### Regression overlay
+
+```python
+# Linear fit on a scatter plot
+cerno.chart(df).scatter("x", "y", fit=cerno.regression()).show()
+
+# Polynomial fit
+cerno.chart(df).scatter("x", "y", fit=cerno.regression(degree=2)).show()
+
+# Styled fit line
+cerno.chart(df).scatter("x", "y", fit=cerno.regression(color="red", linestyle="--")).show()
+
+# Regression with grouped scatter — one line fits all groups
+cerno.chart(df).scatter("x", "y", color="category", fit=cerno.regression()).show()
+```
+
+### KDE (kernel density estimation)
+
+```python
+# Standalone density plot (requires scipy)
+cerno.chart(df).kde("x").show()
+
+# Filled density
+cerno.chart(df).kde("x", fill=True).show()
+
+# Grouped by category
+cerno.chart(df).kde("x", color="category").show()
+```
+
+### Strip plot
+
+```python
+# Jittered points along a categorical axis
+cerno.chart(df).strip("department", "salary").show()
+
+# Horizontal
+cerno.chart(df).strip("department", "salary", horizontal=True).show()
+
+# Custom jitter width and color
+cerno.chart(df).strip("department", "salary", jitter=0.3, color="steelblue").show()
+
+# Wide-form data
+cerno.chart(df).strip(None, ["q1_scores", "q2_scores"]).show()
+```
+
+### Swarm plot
+
+```python
+# Non-overlapping points along a categorical axis (requires scipy)
+cerno.chart(df).swarm("department", "salary").show()
+
+# Horizontal
+cerno.chart(df).swarm("department", "salary", horizontal=True).show()
+
+# Colored
+cerno.chart(df).swarm("department", "salary", color="coral").show()
+
+# Wide-form data
+cerno.chart(df).swarm(None, ["q1_scores", "q2_scores"]).show()
 ```
 
 ### Pair plot
@@ -412,10 +479,11 @@ Cerno charts render inline automatically. Calling `.show()` displays the chart i
 pip install cerno              # core only (matplotlib + numpy)
 pip install cerno[pandas]      # + pandas support
 pip install cerno[polars]      # + polars support
+pip install cerno[scipy]       # + KDE, swarm
 pip install cerno[all]         # everything
 ```
 
-Without pandas or polars, cerno works with dicts, numpy arrays, and raw lists.
+Without pandas or polars, cerno works with dicts, numpy arrays, and raw lists. KDE and swarm plots require scipy.
 
 ## PyData stack compatibility
 
@@ -424,6 +492,7 @@ Without pandas or polars, cerno works with dicts, numpy arrays, and raw lists.
 | pandas  | `cerno[pandas]` | Full support |
 | numpy   | (included) | Full support |
 | polars  | `cerno[polars]` | Full support |
+| scipy   | `cerno[scipy]` | KDE, swarm |
 
 ---
 
@@ -448,4 +517,4 @@ pytest tests/ -v
 
 **v0.3** — pair plot
 
-**v0.4** — regression overlay, KDE/density plot, strip/swarm plots (scipy optional dependency)
+**v0.4** — regression overlay, KDE/density plot, strip/swarm plots (scipy optional dependency) ✓

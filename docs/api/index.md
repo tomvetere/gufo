@@ -10,4 +10,5 @@ chart
 theme
 layout
 data
+stats
 ```

@@ -16,13 +16,17 @@ def render(layer, adapter, axes):
     color_value = resolve_color(adapter, enc.get("color"))
     groups = iter_color_groups(color_value)
 
+    patches = None
     if groups is not None:
         alpha = kwargs.pop("alpha", 0.6)
         for cat, color, mask in groups:
             axes.hist(x[mask], color=color, label=cat, alpha=alpha, **kwargs)
-        return
+    else:
+        apply_label(kwargs, enc)
+        apply_color(kwargs, adapter, enc)
+        _, _, patches = axes.hist(x, **kwargs)
 
-    apply_label(kwargs, enc)
-    apply_color(kwargs, adapter, enc)
-
-    axes.hist(x, **kwargs)
+    kde_config = enc.get("kde")
+    if kde_config is not None:
+        flat_patches = list(patches) if patches is not None else None
+        kde_config.render(x, axes, scale_to_hist=True, hist_patches=flat_patches)

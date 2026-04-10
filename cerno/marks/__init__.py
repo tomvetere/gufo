@@ -1,12 +1,15 @@
 """Mark rendering — one module per chart type."""
-from .scatter import render as _scatter
-from .line import render as _line
-from .bar import render as _bar
-from .histogram import render as _histogram
-from .boxplot import render as _boxplot
-from .violin import render as _violin
-from .heatmap import render as _heatmap
 from .area import render as _area
+from .bar import render as _bar
+from .boxplot import render as _boxplot
+from .heatmap import render as _heatmap
+from .histogram import render as _histogram
+from .kde import render as _kde
+from .line import render as _line
+from .scatter import render as _scatter
+from .strip import render as _strip
+from .swarm import render as _swarm
+from .violin import render as _violin
 
 _REGISTRY = {
     "scatter": _scatter,
@@ -17,6 +20,9 @@ _REGISTRY = {
     "violin": _violin,
     "heatmap": _heatmap,
     "area": _area,
+    "kde": _kde,
+    "strip": _strip,
+    "swarm": _swarm,
 }
 
 

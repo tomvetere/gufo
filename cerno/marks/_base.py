@@ -1,5 +1,7 @@
 """Shared utilities for mark renderers."""
-from ..core.validate import check_array_lengths
+import numpy as np
+
+from ..core.validate import check_array_lengths, warn_nan_inf
 from ..data.inference import is_categorical
 from ..style.color import CERNO_PALETTE
 
@@ -90,3 +92,88 @@ def iter_color_groups(color_value):
     categories = list(dict.fromkeys(color_value))
     colors = default_colors(len(categories))
     return [(cat, colors[i], color_value == cat) for i, cat in enumerate(categories)]
+
+
+def resolve_color_list(adapter, enc, n):
+    """Resolve a color encoding to a list of n colors.
+
+    If enc["color"] is a literal color string, repeat it n times.
+    Otherwise return n default palette colors.
+    """
+    color = resolve_color(adapter, enc.get("color"))
+    if color is not None and isinstance(color, str):
+        return [color] * n
+    return default_colors(n)
+
+
+def render_categorical_scatter(layer, adapter, axes, offset_fn, mark_name,
+                               default_alpha=0.6, default_size=20):
+    """Shared renderer for strip and swarm plots.
+
+    offset_fn(values, enc) -> array of categorical-axis offsets per group.
+    """
+    enc = layer.encodings
+
+    if is_wide_form(layer.y):
+        _render_categorical_wide(layer, adapter, axes, enc, offset_fn,
+                                 default_alpha, default_size)
+        return
+
+    x = adapter.resolve(layer.x)
+    y = adapter.resolve(layer.y)
+    kwargs = dict(layer.kwargs)
+
+    check_array_lengths({"x": x, "y": y}, mark_name)
+    warn_nan_inf(y, "y", mark_name)
+
+    unique_x, grouped, positions = group_by_x(x, y)
+
+    size = enc.get("size", default_size)
+    alpha = enc.get("alpha", default_alpha)
+    horizontal = enc.get("horizontal", False)
+    colors = resolve_color_list(adapter, enc, len(unique_x))
+
+    apply_label(kwargs, enc)
+
+    for i, (pos, vals) in enumerate(zip(positions, grouped)):
+        offsets = offset_fn(vals, enc)
+        if horizontal:
+            axes.scatter(vals, pos + offsets, s=size, alpha=alpha,
+                         color=colors[i], **kwargs)
+        else:
+            axes.scatter(pos + offsets, vals, s=size, alpha=alpha,
+                         color=colors[i], **kwargs)
+
+    if horizontal:
+        axes.set_yticks(positions, labels=unique_x)
+    else:
+        axes.set_xticks(positions, labels=unique_x)
+
+
+def _render_categorical_wide(layer, adapter, axes, enc, offset_fn,
+                              default_alpha, default_size):
+    """Wide-form path for render_categorical_scatter."""
+    series = adapter.resolve(layer.y)
+    positions = list(range(1, len(layer.y) + 1))
+    kwargs = dict(layer.kwargs)
+
+    size = enc.get("size", default_size)
+    alpha = enc.get("alpha", default_alpha)
+    horizontal = enc.get("horizontal", False)
+    colors = default_colors(len(layer.y))
+
+    apply_label(kwargs, enc)
+
+    for i, (pos, vals) in enumerate(zip(positions, series)):
+        offsets = offset_fn(vals, enc)
+        if horizontal:
+            axes.scatter(vals, pos + offsets, s=size, alpha=alpha,
+                         color=colors[i], **kwargs)
+        else:
+            axes.scatter(pos + offsets, vals, s=size, alpha=alpha,
+                         color=colors[i], **kwargs)
+
+    if horizontal:
+        axes.set_yticks(positions, labels=layer.y)
+    else:
+        axes.set_xticks(positions, labels=layer.y)

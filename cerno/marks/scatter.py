@@ -7,6 +7,18 @@ from ._base import (
 )
 
 
+def _render_fit(layer, adapter, axes, enc):
+    """Draw regression fit line if configured."""
+    fit = enc.get("fit")
+    if fit is None:
+        return
+    if is_wide_form(layer.y):
+        return
+    x = adapter.resolve(layer.x)
+    y = adapter.resolve(layer.y)
+    fit.render(x, y, axes)
+
+
 def _draw_scatter(axes, x, y_data, **kwargs):
     axes.scatter(x, y_data, **kwargs)
 
@@ -44,19 +56,20 @@ def render(layer, adapter, axes):
             if sz is not None:
                 scatter_kwargs["s"] = _normalize_size(sz[mask])
             axes.scatter(x[mask], y[mask], color=color, **scatter_kwargs)
-        return
+    else:
+        if color_value is not None:
+            if hasattr(color_value, "__len__") and len(color_value) == len(x):
+                kwargs["c"] = color_value
+            else:
+                kwargs["color"] = color_value
 
-    if color_value is not None:
-        if hasattr(color_value, "__len__") and len(color_value) == len(x):
-            kwargs["c"] = color_value
-        else:
-            kwargs["color"] = color_value
+        if size_enc is not None:
+            sz = adapter.resolve(size_enc)
+            kwargs["s"] = _normalize_size(sz)
 
-    if size_enc is not None:
-        sz = adapter.resolve(size_enc)
-        kwargs["s"] = _normalize_size(sz)
+        axes.scatter(x, y, **kwargs)
 
-    axes.scatter(x, y, **kwargs)
+    _render_fit(layer, adapter, axes, enc)
 
 
 def _normalize_size(arr, min_size=20, max_size=400):

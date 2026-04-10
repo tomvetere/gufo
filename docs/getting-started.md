@@ -6,6 +6,7 @@
 pip install cerno              # core only (matplotlib + numpy)
 pip install cerno[pandas]      # + pandas support
 pip install cerno[polars]      # + polars support
+pip install cerno[scipy]       # + KDE and swarm plots
 pip install cerno[all]         # everything
 ```
 
@@ -31,7 +32,7 @@ cerno.chart(df).scatter("gdp_per_capita", "life_expectancy").show()
 Every cerno chart follows the same structure:
 
 1. **Create a chart** with `cerno.chart(data)` — pass your data once here.
-2. **Add marks** — `.scatter()`, `.line()`, `.bar()`, `.histogram()`, `.boxplot()`, `.violin()`, `.heatmap()`, `.area()`.
+2. **Add marks** — `.scatter()`, `.line()`, `.bar()`, `.histogram()`, `.boxplot()`, `.violin()`, `.heatmap()`, `.area()`, `.kde()`, `.strip()`, `.swarm()`.
 3. **Describe the chart** — `.title()`, `.xlabel()`, `.ylabel()`, `.legend()`.
 4. **Output** — `.show()` to display, `.save("file.png")` to write to disk.
 
