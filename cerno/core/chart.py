@@ -198,6 +198,7 @@ class Chart:
         """Add a heatmap layer.
 
         Two usage modes:
+
         - Matrix form: cerno.chart(pivot_df).heatmap() — DataFrame is the matrix.
         - Long-form: cerno.chart(df).heatmap("x", "y", color="value") — pivoted
           internally.

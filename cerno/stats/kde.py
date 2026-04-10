@@ -37,8 +37,10 @@ class KDE:
 
         Parameters
         ----------
-        x : numpy array — the data to estimate density for.
-        axes : matplotlib Axes.
+        x : numpy array
+            The data to estimate density for.
+        axes : matplotlib Axes
+            Target axes to draw on.
         scale_to_hist : bool
             If True, scale the KDE to match histogram bar heights.
         hist_patches : list or None
