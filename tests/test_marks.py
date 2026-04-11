@@ -163,6 +163,61 @@ class TestBarMark:
         cerno.chart(sample_df).bar("x", ["series_a", "series_b"], horizontal=True).save(tmp_path / "b.png")
 
 
+# ── Bar grouped/stacked ───────────────────────────────────────────
+
+class TestBarGrouped:
+    @pytest.fixture
+    def grouped_df(self):
+        return pd.DataFrame({
+            "quarter": ["Q1", "Q2", "Q1", "Q2"],
+            "revenue": [100, 150, 200, 250],
+            "region": ["East", "East", "West", "West"],
+        })
+
+    def test_bar_dodged_by_color(self, grouped_df):
+        c = cerno.chart(grouped_df).bar("quarter", "revenue", color="region")
+        _, axes = c._render()
+        # 2 quarters × 2 regions = 4 patches
+        assert len(axes.patches) == 4
+
+    def test_bar_stacked_by_color(self, grouped_df):
+        c = cerno.chart(grouped_df).bar("quarter", "revenue", color="region", stacked=True)
+        _, axes = c._render()
+        # 2 quarters × 2 regions = 4 patches
+        assert len(axes.patches) == 4
+
+    def test_bar_dodged_horizontal(self, grouped_df, tmp_path):
+        cerno.chart(grouped_df).bar("quarter", "revenue", color="region", horizontal=True).save(tmp_path / "b.png")
+
+    def test_bar_stacked_horizontal(self, grouped_df, tmp_path):
+        cerno.chart(grouped_df).bar("quarter", "revenue", color="region", stacked=True, horizontal=True).save(tmp_path / "b.png")
+
+    def test_bar_dodged_with_dict_data(self, tmp_path):
+        data = {
+            "quarter": ["Q1", "Q2", "Q1", "Q2"],
+            "revenue": [100, 150, 200, 250],
+            "region": ["East", "East", "West", "West"],
+        }
+        cerno.chart(data).bar("quarter", "revenue", color="region").save(tmp_path / "b.png")
+
+    def test_bar_stacked_values_correct(self, grouped_df):
+        c = cerno.chart(grouped_df).bar("quarter", "revenue", color="region", stacked=True)
+        _, axes = c._render()
+        # Stacked bars: Q1 = 100 + 200 = 300, Q2 = 150 + 250 = 400
+        # The top of the stack should equal the total
+        heights = [p.get_height() for p in axes.patches]
+        # First 2 patches are East (100, 150), next 2 are West (200, 250)
+        assert heights == [100.0, 150.0, 200.0, 250.0]
+
+    def test_bar_dodged_legend_labels(self, grouped_df):
+        c = cerno.chart(grouped_df).bar("quarter", "revenue", color="region").legend()
+        _, axes = c._render()
+        legend = axes.get_legend()
+        labels = [t.get_text() for t in legend.get_texts()]
+        assert "East" in labels
+        assert "West" in labels
+
+
 # ── Histogram ───────────────────────────────────────────────────────
 
 class TestHistogramMark:

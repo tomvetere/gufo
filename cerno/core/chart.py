@@ -96,19 +96,22 @@ class Chart:
         ))
         return self
 
-    def bar(self, x, y, *, color=None, horizontal=False, label=None,
-            y_error=None, x_error=None, **kwargs):
+    def bar(self, x, y, *, color=None, horizontal=False, stacked=False,
+            label=None, y_error=None, x_error=None, **kwargs):
         """Add a bar chart layer.
 
         y may be a list of column names for wide-form DataFrames — each column
         becomes a grouped bar without requiring pd.melt().
+
+        When color is a categorical column, bars are grouped (dodged) by
+        default. Set stacked=True to stack bars instead.
 
         y_error / x_error accept a column name or array for error bars.
         """
         self._layers.append(Layer(
             mark_type="bar", x=x, y=y,
             encodings={"color": color, "horizontal": horizontal,
-                       "label": label,
+                       "stacked": stacked, "label": label,
                        "y_error": y_error, "x_error": x_error},
             kwargs=kwargs,
         ))

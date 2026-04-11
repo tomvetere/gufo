@@ -1,5 +1,39 @@
 # Changelog
 
+## Unreleased (v0.6)
+
+**New features**
+- Stacked/dodged bar grouping: `.bar("x", "y", color="category")` now groups bars by category (dodged by default). Set `stacked=True` to stack bars instead.
+
+**Bug fixes**
+- DataAdapter now detects pandas and polars DataFrames even when the module-level import fails, using `type(data).__module__` as a fallback. Fixes a bug where `cerno.chart(df)` raised `TypeError: Unsupported data type: DataFrame` in certain environment configurations (e.g., Jupyter notebooks with separate venvs).
+
+**Documentation**
+- Pair plot moved from "Chart types" to "Layout" section in README and Sphinx docs, since `cerno.pairplot()` returns a `Grid`, not a `Chart`.
+
+**Testing**
+- 326 tests passing
+
+---
+
+## Unreleased (v0.5)
+
+**New chart types**
+- Countplot: `.countplot("x")` — bar chart of value counts, with optional categorical color grouping for side-by-side bars.
+- ECDF: `.ecdf("x")` — empirical cumulative distribution function, with optional categorical color grouping.
+- Rug plot: `.rug("x")` — tick marks along an axis, with configurable height and alpha. Useful as a layer on histograms or KDE plots.
+
+**New features**
+- Categorical color on box/violin: `.boxplot("x", "y", color="category")` and `.violin("x", "y", color="category")` now group by a third variable.
+- Error bars: `.scatter()`, `.line()`, and `.bar()` accept `y_error` and `x_error` parameters (column name or array).
+- Reference lines and bands: `.hline()`, `.vline()`, `.hband()`, `.vband()` for adding reference markers with optional labels and styling.
+- Color palette API: `.palette("colorblind")` or `.palette(["#e63946", "#457b9d"])` to set named or custom palettes per chart. Built-in palettes: `cerno`, `pastel`, `bold`, `colorblind`.
+
+**Testing**
+- 319 tests passing
+
+---
+
 ## Unreleased (v0.4)
 
 **New chart types**

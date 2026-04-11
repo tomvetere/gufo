@@ -121,6 +121,12 @@ cerno.chart(df).bar("region", "sales", horizontal=True).show()
 # Colored by category
 cerno.chart(df).bar("region", "sales", color="region").show()
 
+# Grouped (dodged) bars by category
+cerno.chart(df).bar("quarter", "revenue", color="region").legend().show()
+
+# Stacked bars
+cerno.chart(df).bar("quarter", "revenue", color="region", stacked=True).legend().show()
+
 # Grouped bars from wide-form data
 cerno.chart(df).bar("quarter", ["product_a", "product_b"]).show()
 
@@ -619,3 +625,5 @@ pytest tests/ -v
 **v0.4** — regression overlay, KDE/density plot, strip/swarm plots (scipy optional dependency) ✓
 
 **v0.5** — categorical color on box/violin, countplot, error bars, rugplot, ECDF, color palette API, reference lines/bands ✓
+
+**v0.6** — stacked/dodged bar grouping by categorical color
