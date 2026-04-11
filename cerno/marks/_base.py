@@ -22,11 +22,11 @@ def resolve_color(adapter, color_enc):
         return color_enc
 
 
-def default_colors(n):
-    """Return n colors from the cerno palette, cycling if needed."""
-    palette = CERNO_PALETTE.categorical
-    k = len(palette)
-    return [palette[i % k] for i in range(n)]
+def default_colors(n, palette=None):
+    """Return n colors from the palette, cycling if needed."""
+    colors = palette if palette is not None else CERNO_PALETTE.categorical
+    k = len(colors)
+    return [colors[i % k] for i in range(n)]
 
 
 def apply_label(kwargs, enc):
@@ -59,7 +59,7 @@ def render_wide_form(layer, adapter, axes, draw_fn, **extra_kwargs):
         check_array_lengths({"x": x, layer.y[0]: series[0]}, layer.mark_type)
 
     kwargs = dict(layer.kwargs, **extra_kwargs)
-    colors = default_colors(len(series))
+    colors = default_colors(len(series), palette=layer.palette)
 
     for i, (name, y_data) in enumerate(zip(layer.y, series)):
         series_kwargs = dict(kwargs, label=name, color=colors[i])
@@ -78,7 +78,7 @@ def group_by_x(x, y):
     return unique_x, grouped, positions
 
 
-def iter_color_groups(color_value):
+def iter_color_groups(color_value, palette=None):
     """Yield (category, color, mask) for each group in a categorical color array.
 
     Returns None if color_value is not categorical, allowing callers to
@@ -90,11 +90,11 @@ def iter_color_groups(color_value):
             or not is_categorical(color_value)):
         return None
     categories = list(dict.fromkeys(color_value))
-    colors = default_colors(len(categories))
+    colors = default_colors(len(categories), palette=palette)
     return [(cat, colors[i], color_value == cat) for i, cat in enumerate(categories)]
 
 
-def resolve_color_list(adapter, enc, n):
+def resolve_color_list(adapter, enc, n, palette=None):
     """Resolve a color encoding to a list of n colors.
 
     If enc["color"] is a literal color string, repeat it n times.
@@ -103,7 +103,18 @@ def resolve_color_list(adapter, enc, n):
     color = resolve_color(adapter, enc.get("color"))
     if color is not None and isinstance(color, str):
         return [color] * n
-    return default_colors(n)
+    return default_colors(n, palette=palette)
+
+
+def resolve_errors(adapter, enc):
+    """Resolve y_error / x_error encodings to arrays or None."""
+    yerr = enc.get("y_error")
+    xerr = enc.get("x_error")
+    if yerr is not None:
+        yerr = adapter.resolve(yerr) if isinstance(yerr, str) else np.asarray(yerr)
+    if xerr is not None:
+        xerr = adapter.resolve(xerr) if isinstance(xerr, str) else np.asarray(xerr)
+    return yerr, xerr
 
 
 def render_categorical_scatter(layer, adapter, axes, offset_fn, mark_name,
@@ -131,7 +142,8 @@ def render_categorical_scatter(layer, adapter, axes, offset_fn, mark_name,
     size = enc.get("size", default_size)
     alpha = enc.get("alpha", default_alpha)
     horizontal = enc.get("horizontal", False)
-    colors = resolve_color_list(adapter, enc, len(unique_x))
+    colors = resolve_color_list(adapter, enc, len(unique_x),
+                                palette=layer.palette)
 
     apply_label(kwargs, enc)
 
@@ -160,7 +172,7 @@ def _render_categorical_wide(layer, adapter, axes, enc, offset_fn,
     size = enc.get("size", default_size)
     alpha = enc.get("alpha", default_alpha)
     horizontal = enc.get("horizontal", False)
-    colors = default_colors(len(layer.y))
+    colors = default_colors(len(layer.y), palette=layer.palette)
 
     apply_label(kwargs, enc)
 

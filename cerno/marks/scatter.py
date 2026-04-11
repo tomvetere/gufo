@@ -3,7 +3,8 @@ import numpy as np
 
 from ..core.validate import check_array_lengths, warn_nan_inf
 from ._base import (
-    apply_label, is_wide_form, render_wide_form, resolve_color, iter_color_groups,
+    apply_label, is_wide_form, render_wide_form, resolve_color,
+    resolve_errors, iter_color_groups,
 )
 
 
@@ -45,10 +46,21 @@ def render(layer, adapter, axes):
         kwargs["alpha"] = enc["alpha"]
     apply_label(kwargs, enc)
 
+    yerr, xerr = resolve_errors(adapter, enc)
+
+    if yerr is not None or xerr is not None:
+        color_value = resolve_color(adapter, enc.get("color"))
+        if color_value is not None and isinstance(color_value, str):
+            kwargs["color"] = color_value
+        kwargs.setdefault("fmt", "o")
+        axes.errorbar(x, y, yerr=yerr, xerr=xerr, **kwargs)
+        _render_fit(layer, adapter, axes, enc)
+        return
+
     size_enc = enc.get("size")
     color_value = resolve_color(adapter, enc.get("color"))
 
-    groups = iter_color_groups(color_value)
+    groups = iter_color_groups(color_value, palette=layer.palette)
     if groups is not None:
         sz = adapter.resolve(size_enc) if size_enc is not None else None
         for cat, color, mask in groups:

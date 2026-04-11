@@ -292,6 +292,7 @@ class TestLayer:
         layer = Layer(mark_type="scatter", x="x", y="y")
         assert layer.encodings == {}
         assert layer.kwargs == {}
+        assert layer.palette is None
 
     def test_layer_stores_fields(self):
         layer = Layer(
@@ -304,5 +305,57 @@ class TestLayer:
         assert layer.y == "b"
         assert layer.encodings["color"] == "red"
         assert layer.kwargs["linewidth"] == 2
+
+
+# ── Reference lines and bands ────────────────────────────────────
+
+class TestReferenceLines:
+    def test_hline(self, sample_df, tmp_path):
+        (cerno.chart(sample_df)
+         .scatter("x", "y")
+         .hline(3)
+         .save(tmp_path / "r.png"))
+
+    def test_vline(self, sample_df, tmp_path):
+        (cerno.chart(sample_df)
+         .scatter("x", "y")
+         .vline(2.5)
+         .save(tmp_path / "r.png"))
+
+    def test_hband(self, sample_df, tmp_path):
+        (cerno.chart(sample_df)
+         .scatter("x", "y")
+         .hband(2, 4, color="blue", alpha=0.1)
+         .save(tmp_path / "r.png"))
+
+    def test_vband(self, sample_df, tmp_path):
+        (cerno.chart(sample_df)
+         .scatter("x", "y")
+         .vband(1.5, 3.5)
+         .save(tmp_path / "r.png"))
+
+    def test_reference_with_label(self, sample_df, tmp_path):
+        (cerno.chart(sample_df)
+         .scatter("x", "y")
+         .hline(3, label="threshold", color="red")
+         .legend()
+         .save(tmp_path / "r.png"))
+
+    def test_multiple_references(self, sample_df, tmp_path):
+        (cerno.chart(sample_df)
+         .scatter("x", "y")
+         .hline(2)
+         .hline(4)
+         .vline(3)
+         .hband(1, 2, alpha=0.1)
+         .save(tmp_path / "r.png"))
+
+    def test_reference_chaining(self, sample_df, tmp_path):
+        c = (cerno.chart(sample_df)
+             .scatter("x", "y")
+             .hline(3)
+             .vline(2))
+        assert len(c._references) == 2
+        c.save(tmp_path / "r.png")
 
 

@@ -1,7 +1,8 @@
 """Line mark — supports single series, multi-series (wide-form), and color grouping."""
 from ..core.validate import check_array_lengths, check_stroke_dash, warn_nan_inf
 from ._base import (
-    apply_label, is_wide_form, render_wide_form, resolve_color, iter_color_groups,
+    apply_label, is_wide_form, render_wide_form, resolve_color,
+    resolve_errors, iter_color_groups,
 )
 
 _DASH_STYLES = {
@@ -38,8 +39,18 @@ def render(layer, adapter, axes):
     warn_nan_inf(x, "x", "line")
     warn_nan_inf(y, "y", "line")
 
+    yerr, xerr = resolve_errors(adapter, enc)
+    if yerr is not None or xerr is not None:
+        color_value = resolve_color(adapter, color_enc)
+        if color_value is not None and isinstance(color_value, str):
+            kwargs["color"] = color_value
+        kwargs.pop("linestyle", None)
+        kwargs.setdefault("fmt", "-")
+        axes.errorbar(x, y, yerr=yerr, xerr=xerr, **kwargs)
+        return
+
     color_value = resolve_color(adapter, color_enc)
-    groups = iter_color_groups(color_value)
+    groups = iter_color_groups(color_value, palette=layer.palette)
     if groups is not None:
         for cat, color, mask in groups:
             series_kwargs = dict(kwargs, label=cat, color=color)

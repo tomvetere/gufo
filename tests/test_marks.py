@@ -367,3 +367,153 @@ class TestAreaMark:
         c = cerno.chart().area(x, y)
         with pytest.warns(UserWarning, match="NaN"):
             c.save(tmp_path / "a.png")
+
+
+# ── Boxplot categorical color ─────────────────────────────────────
+
+class TestBoxplotCategoricalColor:
+    def test_boxplot_grouped_by_color(self, tmp_path):
+        df = pd.DataFrame({
+            "group": ["A", "A", "A", "B", "B", "B"] * 2,
+            "value": [1, 2, 3, 4, 5, 6, 2, 3, 4, 5, 6, 7],
+            "hue": ["x", "x", "x", "x", "x", "x", "y", "y", "y", "y", "y", "y"],
+        })
+        (cerno.chart(df)
+         .boxplot("group", "value", color="hue")
+         .save(tmp_path / "b.png"))
+
+    def test_boxplot_grouped_horizontal(self, tmp_path):
+        df = pd.DataFrame({
+            "group": ["A", "A", "B", "B"],
+            "value": [1, 2, 3, 4],
+            "hue": ["x", "y", "x", "y"],
+        })
+        (cerno.chart(df)
+         .boxplot("group", "value", color="hue", horizontal=True)
+         .save(tmp_path / "b.png"))
+
+
+# ── Violin categorical color ──────────────────────────────────────
+
+class TestViolinCategoricalColor:
+    def test_violin_grouped_by_color(self, tmp_path):
+        rng = np.random.default_rng(0)
+        df = pd.DataFrame({
+            "group": ["A"] * 20 + ["B"] * 20,
+            "value": rng.normal(size=40),
+            "hue": (["x"] * 10 + ["y"] * 10) * 2,
+        })
+        (cerno.chart(df)
+         .violin("group", "value", color="hue")
+         .save(tmp_path / "v.png"))
+
+
+# ── Countplot ─────────────────────────────────────────────────────
+
+class TestCountplot:
+    def test_basic_countplot(self, sample_df, tmp_path):
+        cerno.chart(sample_df).countplot("cat").save(tmp_path / "c.png")
+
+    def test_countplot_horizontal(self, sample_df, tmp_path):
+        cerno.chart(sample_df).countplot("cat", horizontal=True).save(tmp_path / "c.png")
+
+    def test_countplot_with_literal_color(self, sample_df, tmp_path):
+        cerno.chart(sample_df).countplot("cat", color="coral").save(tmp_path / "c.png")
+
+    def test_countplot_grouped(self, tmp_path):
+        df = pd.DataFrame({
+            "animal": ["cat", "dog", "cat", "dog", "cat", "dog"],
+            "color": ["black", "black", "white", "white", "black", "white"],
+        })
+        (cerno.chart(df)
+         .countplot("animal", color="color")
+         .save(tmp_path / "c.png"))
+
+
+# ── ECDF ──────────────────────────────────────────────────────────
+
+class TestEcdf:
+    def test_basic_ecdf(self, sample_df, tmp_path):
+        cerno.chart(sample_df).ecdf("y").save(tmp_path / "e.png")
+
+    def test_ecdf_with_color(self, sample_df, tmp_path):
+        cerno.chart(sample_df).ecdf("y", color="steelblue").save(tmp_path / "e.png")
+
+    def test_ecdf_categorical_color(self, sample_df, tmp_path):
+        cerno.chart(sample_df).ecdf("y", color="cat").save(tmp_path / "e.png")
+
+    def test_ecdf_with_nan(self, tmp_path):
+        data = {"v": [1.0, 2.0, np.nan, 4.0]}
+        c = cerno.chart(data).ecdf("v")
+        with pytest.warns(UserWarning, match="NaN"):
+            c.save(tmp_path / "e.png")
+
+    def test_ecdf_with_label(self, sample_df, tmp_path):
+        (cerno.chart(sample_df)
+         .ecdf("y", label="values")
+         .legend()
+         .save(tmp_path / "e.png"))
+
+
+# ── Rugplot ───────────────────────────────────────────────────────
+
+class TestRug:
+    def test_basic_rug(self, sample_df, tmp_path):
+        cerno.chart(sample_df).rug("x").save(tmp_path / "r.png")
+
+    def test_rug_with_color(self, sample_df, tmp_path):
+        cerno.chart(sample_df).rug("x", color="red").save(tmp_path / "r.png")
+
+    def test_rug_categorical_color(self, sample_df, tmp_path):
+        cerno.chart(sample_df).rug("x", color="cat").save(tmp_path / "r.png")
+
+    def test_rug_custom_height_alpha(self, sample_df, tmp_path):
+        cerno.chart(sample_df).rug("x", height=0.1, alpha=0.8).save(tmp_path / "r.png")
+
+    def test_rug_layered_with_histogram(self, sample_df, tmp_path):
+        (cerno.chart(sample_df)
+         .histogram("y")
+         .rug("y")
+         .save(tmp_path / "r.png"))
+
+
+# ── Error bars ────────────────────────────────────────────────────
+
+class TestErrorBars:
+    def test_scatter_yerr(self, tmp_path):
+        (cerno.chart()
+         .scatter([1, 2, 3], [4, 5, 6], y_error=[0.5, 0.3, 0.4])
+         .save(tmp_path / "e.png"))
+
+    def test_scatter_xerr(self, tmp_path):
+        (cerno.chart()
+         .scatter([1, 2, 3], [4, 5, 6], x_error=[0.1, 0.2, 0.1])
+         .save(tmp_path / "e.png"))
+
+    def test_scatter_both_errors(self, tmp_path):
+        (cerno.chart()
+         .scatter([1, 2, 3], [4, 5, 6], y_error=[0.5, 0.3, 0.4],
+                  x_error=[0.1, 0.2, 0.1])
+         .save(tmp_path / "e.png"))
+
+    def test_line_yerr(self, tmp_path):
+        (cerno.chart()
+         .line([1, 2, 3], [4, 5, 6], y_error=[0.5, 0.3, 0.4])
+         .save(tmp_path / "e.png"))
+
+    def test_bar_yerr(self, tmp_path):
+        df = pd.DataFrame({"x": ["a", "b", "c"], "y": [4, 5, 6],
+                           "err": [0.5, 0.3, 0.4]})
+        (cerno.chart(df)
+         .bar("x", "y", y_error="err")
+         .save(tmp_path / "e.png"))
+
+    def test_bar_yerr_from_column(self, tmp_path):
+        df = pd.DataFrame({
+            "x": ["a", "b", "c"],
+            "y": [4, 5, 6],
+            "err": [0.5, 0.3, 0.4],
+        })
+        (cerno.chart(df)
+         .bar("x", "y", y_error="err")
+         .save(tmp_path / "e.png"))

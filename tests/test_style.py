@@ -133,3 +133,39 @@ class TestChartTheme:
          .scatter("x", "y")
          .theme(custom)
          .save(tmp_path / "custom.png"))
+
+
+# ── Palette API ────────────────────────────────────────────────────
+
+class TestPaletteAPI:
+    def test_palette_with_list(self, sample_df, tmp_path):
+        (cerno.chart(sample_df)
+         .scatter("x", "y", color="cat")
+         .palette(["red", "blue"])
+         .legend()
+         .save(tmp_path / "p.png"))
+
+    def test_palette_with_name(self, sample_df, tmp_path):
+        (cerno.chart(sample_df)
+         .scatter("x", "y", color="cat")
+         .palette("colorblind")
+         .legend()
+         .save(tmp_path / "p.png"))
+
+    def test_palette_unknown_name_raises(self, sample_df):
+        c = (cerno.chart(sample_df)
+             .scatter("x", "y", color="cat")
+             .palette("nonexistent"))
+        with pytest.raises(ValueError, match="Unknown palette"):
+            c.save("/dev/null")
+
+    def test_palette_none_uses_default(self, sample_df, tmp_path):
+        (cerno.chart(sample_df)
+         .bar("x", ["series_a", "series_b"])
+         .save(tmp_path / "p.png"))
+
+    def test_palette_applies_to_wide_form_bar(self, sample_df, tmp_path):
+        (cerno.chart(sample_df)
+         .bar("x", ["series_a", "series_b"])
+         .palette(["coral", "teal"])
+         .save(tmp_path / "p.png"))

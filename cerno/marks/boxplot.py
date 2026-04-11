@@ -1,6 +1,11 @@
 """Box plot mark."""
+import numpy as np
+
 from ..core.validate import check_array_lengths, warn_nan_inf
-from ._base import apply_label, default_colors, group_by_x, is_wide_form, resolve_color
+from ._base import (
+    apply_label, default_colors, group_by_x, is_wide_form,
+    iter_color_groups, resolve_color,
+)
 
 
 def render(layer, adapter, axes):
@@ -17,6 +22,13 @@ def render(layer, adapter, axes):
     check_array_lengths({"x": x, "y": y}, "boxplot")
     warn_nan_inf(y, "y", "boxplot")
 
+    color_value = resolve_color(adapter, enc.get("color"))
+    groups = iter_color_groups(color_value, palette=layer.palette)
+
+    if groups is not None:
+        _render_grouped(x, y, color_value, groups, axes, enc, kwargs)
+        return
+
     unique_x, grouped, _ = group_by_x(x, y)
 
     kwargs["patch_artist"] = True
@@ -25,14 +37,52 @@ def render(layer, adapter, axes):
     if enc.get("horizontal"):
         kwargs["orientation"] = "horizontal"
 
-    color = resolve_color(adapter, enc.get("color"))
-    if color is not None and isinstance(color, str):
-        kwargs.setdefault("boxprops", {})["facecolor"] = color
+    if color_value is not None and isinstance(color_value, str):
+        kwargs.setdefault("boxprops", {})["facecolor"] = color_value
         kwargs.setdefault("medianprops", {})["color"] = "black"
 
     apply_label(kwargs, enc)
 
     axes.boxplot(grouped, **kwargs)
+
+
+def _render_grouped(x, y, color_value, groups, axes, enc, extra_kwargs):
+    """Render side-by-side grouped boxes for categorical color."""
+    x = np.asarray(x)
+    y = np.asarray(y, dtype=float)
+    color_value = np.asarray(color_value)
+
+    unique_x = list(dict.fromkeys(x))
+    n_colors = len(groups)
+    sub_width = 0.6 / n_colors
+    horizontal = enc.get("horizontal", False)
+
+    for i, (cat, color, _) in enumerate(groups):
+        data = []
+        positions = []
+        for j, x_val in enumerate(unique_x):
+            mask = (x == x_val) & (color_value == cat)
+            data.append(y[mask])
+            base = j + 1
+            positions.append(base + (i - n_colors / 2 + 0.5) * sub_width)
+
+        kwargs = dict(extra_kwargs, patch_artist=True,
+                      widths=sub_width * 0.8, manage_ticks=False)
+        kwargs.setdefault("medianprops", {})["color"] = "black"
+        if horizontal:
+            kwargs["orientation"] = "horizontal"
+
+        bp = axes.boxplot(data, positions=positions, **kwargs)
+        for box in bp["boxes"]:
+            box.set_facecolor(color)
+
+        axes.plot([], [], color=color, label=cat, linewidth=6)
+
+    tick_positions = list(range(1, len(unique_x) + 1))
+    if horizontal:
+        axes.set_yticks(tick_positions, labels=unique_x)
+    else:
+        axes.set_xticks(tick_positions, labels=unique_x)
 
 
 def _render_wide_form(layer, adapter, axes, enc):
@@ -49,6 +99,6 @@ def _render_wide_form(layer, adapter, axes, enc):
 
     bp = axes.boxplot(series, **kwargs)
 
-    colors = default_colors(len(layer.y))
+    colors = default_colors(len(layer.y), palette=layer.palette)
     for box, color in zip(bp["boxes"], colors):
         box.set_facecolor(color)

@@ -1,6 +1,9 @@
 """
 Cerno — data visualization for humans.
 
+"Cerno" (Classical Latin: /ˈker.noː/, KEHR-noh) means
+"I discern, I perceive, I distinguish."
+
 A Pythonic, matplotlib-based chart library for researchers,
 data explorers, and anyone making reports.
 """

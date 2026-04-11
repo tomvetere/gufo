@@ -2,10 +2,13 @@
 from .area import render as _area
 from .bar import render as _bar
 from .boxplot import render as _boxplot
+from .countplot import render as _countplot
+from .ecdf import render as _ecdf
 from .heatmap import render as _heatmap
 from .histogram import render as _histogram
 from .kde import render as _kde
 from .line import render as _line
+from .rug import render as _rug
 from .scatter import render as _scatter
 from .strip import render as _strip
 from .swarm import render as _swarm
@@ -23,6 +26,9 @@ _REGISTRY = {
     "kde": _kde,
     "strip": _strip,
     "swarm": _swarm,
+    "countplot": _countplot,
+    "ecdf": _ecdf,
+    "rug": _rug,
 }
 
 

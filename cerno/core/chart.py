@@ -5,6 +5,7 @@ from ..data.adapter import DataAdapter
 from ..layout.facet import render_facet
 from ..marks import render_layer
 from ..stats.kde import KDE
+from ..style.color import resolve_palette
 from ..style.theme import _resolve_theme
 from .canvas import Canvas
 from .layer import Layer
@@ -49,6 +50,8 @@ class Chart:
         self._facet_column = None
         self._facet_row = None
         self._facet_cols = None
+        self._palette = None
+        self._references = []
         self._apply_funcs = []
         self._canvas = Canvas()
 
@@ -57,45 +60,56 @@ class Chart:
     # ------------------------------------------------------------------
 
     def scatter(self, x, y, *, color=None, size=None, alpha=None, label=None,
-                fit=None, **kwargs):
+                fit=None, y_error=None, x_error=None, **kwargs):
         """Add a scatter plot layer.
 
         y may be a list of column names for wide-form DataFrames — each column
         becomes its own series without requiring pd.melt().
 
         fit accepts a cerno.regression() config object to overlay a fit line.
+        y_error / x_error accept a column name or array for error bars.
         """
         self._layers.append(Layer(
             mark_type="scatter", x=x, y=y,
             encodings={"color": color, "size": size, "alpha": alpha,
-                       "label": label, "fit": fit},
+                       "label": label, "fit": fit,
+                       "y_error": y_error, "x_error": x_error},
             kwargs=kwargs,
         ))
         return self
 
-    def line(self, x, y, *, color=None, stroke_dash=None, label=None, **kwargs):
-        """
-        Add a line plot layer.
+    def line(self, x, y, *, color=None, stroke_dash=None, label=None,
+             y_error=None, x_error=None, **kwargs):
+        """Add a line plot layer.
 
         y may be a list of column names for wide-form DataFrames — each column
         becomes its own series without requiring pd.melt().
+
+        y_error / x_error accept a column name or array for error bars.
         """
         self._layers.append(Layer(
             mark_type="line", x=x, y=y,
-            encodings={"color": color, "stroke_dash": stroke_dash, "label": label},
+            encodings={"color": color, "stroke_dash": stroke_dash,
+                       "label": label,
+                       "y_error": y_error, "x_error": x_error},
             kwargs=kwargs,
         ))
         return self
 
-    def bar(self, x, y, *, color=None, horizontal=False, label=None, **kwargs):
+    def bar(self, x, y, *, color=None, horizontal=False, label=None,
+            y_error=None, x_error=None, **kwargs):
         """Add a bar chart layer.
 
         y may be a list of column names for wide-form DataFrames — each column
         becomes a grouped bar without requiring pd.melt().
+
+        y_error / x_error accept a column name or array for error bars.
         """
         self._layers.append(Layer(
             mark_type="bar", x=x, y=y,
-            encodings={"color": color, "horizontal": horizontal, "label": label},
+            encodings={"color": color, "horizontal": horizontal,
+                       "label": label,
+                       "y_error": y_error, "x_error": x_error},
             kwargs=kwargs,
         ))
         return self
@@ -223,6 +237,34 @@ class Chart:
         ))
         return self
 
+    def countplot(self, x, *, color=None, horizontal=False, label=None, **kwargs):
+        """Add a count plot layer — bars showing frequency of each x category."""
+        self._layers.append(Layer(
+            mark_type="countplot", x=x, y=None,
+            encodings={"color": color, "horizontal": horizontal, "label": label},
+            kwargs=kwargs,
+        ))
+        return self
+
+    def ecdf(self, x, *, color=None, label=None, **kwargs):
+        """Add an ECDF (empirical cumulative distribution function) layer."""
+        self._layers.append(Layer(
+            mark_type="ecdf", x=x, y=None,
+            encodings={"color": color, "label": label},
+            kwargs=kwargs,
+        ))
+        return self
+
+    def rug(self, x, *, color=None, height=0.05, alpha=0.5, label=None, **kwargs):
+        """Add a rug plot layer — tick marks along the x axis."""
+        self._layers.append(Layer(
+            mark_type="rug", x=x, y=None,
+            encodings={"color": color, "height": height, "alpha": alpha,
+                       "label": label},
+            kwargs=kwargs,
+        ))
+        return self
+
     # ------------------------------------------------------------------
     # Labels and annotations
     # ------------------------------------------------------------------
@@ -326,6 +368,47 @@ class Chart:
         self._apply_funcs.append(func)
         return self
 
+    def palette(self, colors):
+        """Set the color palette for this chart.
+
+        Accepts a list of color strings or a named palette
+        ('cerno', 'pastel', 'bold', 'colorblind').
+        """
+        self._palette = colors
+        return self
+
+    # ------------------------------------------------------------------
+    # Reference lines and bands
+    # ------------------------------------------------------------------
+
+    def hline(self, y, *, color="black", linestyle="--", linewidth=1,
+              alpha=0.8, label=None, **kwargs):
+        """Add a horizontal reference line."""
+        self._references.append(("hline", {"y": y, "color": color,
+            "linestyle": linestyle, "linewidth": linewidth, "alpha": alpha,
+            "label": label, **kwargs}))
+        return self
+
+    def vline(self, x, *, color="black", linestyle="--", linewidth=1,
+              alpha=0.8, label=None, **kwargs):
+        """Add a vertical reference line."""
+        self._references.append(("vline", {"x": x, "color": color,
+            "linestyle": linestyle, "linewidth": linewidth, "alpha": alpha,
+            "label": label, **kwargs}))
+        return self
+
+    def hband(self, y1, y2, *, color="gray", alpha=0.2, label=None, **kwargs):
+        """Add a horizontal reference band."""
+        self._references.append(("hband", {"y1": y1, "y2": y2, "color": color,
+            "alpha": alpha, "label": label, **kwargs}))
+        return self
+
+    def vband(self, x1, x2, *, color="gray", alpha=0.2, label=None, **kwargs):
+        """Add a vertical reference band."""
+        self._references.append(("vband", {"x1": x1, "x2": x2, "color": color,
+            "alpha": alpha, "label": label, **kwargs}))
+        return self
+
     def size(self, width, height):
         self._canvas = Canvas(figsize=(width, height))
         return self
@@ -367,18 +450,10 @@ class Chart:
                                 facet_row=self._facet_row)
 
         theme = _resolve_theme(self._theme_override)
-        adapter = DataAdapter.from_any(self._data)
 
         with theme.as_context():
             fig, axes = self._canvas.build()
-
-            for layer in self._layers:
-                render_layer(layer, adapter, axes)
-
-            self._apply_decorators(fig, axes)
-
-            for func in self._apply_funcs:
-                func(fig, axes)
+            self._render_onto(fig, axes)
 
         return fig, axes
 
@@ -392,8 +467,11 @@ class Chart:
         if adapter is None:
             adapter = DataAdapter.from_any(self._data)
 
+        resolved_palette = resolve_palette(self._palette)
+
         with theme.as_context():
             for layer in self._layers:
+                layer.palette = resolved_palette
                 render_layer(layer, adapter, axes)
             self._apply_decorators(figure, axes)
             for func in self._apply_funcs:
@@ -410,6 +488,7 @@ class Chart:
         if self._ylim:
             axes.set_ylim(*self._ylim)
 
+        self._apply_references(axes)
         self._apply_subtitle(fig)
         self._apply_caption(fig)
         self._apply_ticks(axes, "x", self._xticks)
@@ -442,6 +521,18 @@ class Chart:
             axes.annotate(ann["text"], xy=ann["xy"],
                           xytext=(15, 15), textcoords="offset points",
                           arrowprops={"arrowstyle": "->", "color": "black"})
+
+    def _apply_references(self, axes):
+        for kind, opts in self._references:
+            kw = {k: v for k, v in opts.items() if v is not None}
+            if kind == "hline":
+                axes.axhline(kw.pop("y"), **kw)
+            elif kind == "vline":
+                axes.axvline(kw.pop("x"), **kw)
+            elif kind == "hband":
+                axes.axhspan(kw.pop("y1"), kw.pop("y2"), **kw)
+            elif kind == "vband":
+                axes.axvspan(kw.pop("x1"), kw.pop("x2"), **kw)
 
     def _apply_legend(self, axes):
         if not self._legend_opts:

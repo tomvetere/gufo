@@ -6,7 +6,9 @@
 
 **Data visualization for humans.**
 
-Cerno is a Python data visualization library built on matplotlib. It is designed for researchers, data explorers, and anyone making charts for reports or presentations who wants results fast without fighting their tools.
+*Cerno* (Classical Latin: /ˈker.noː/, **KEHR-noh**) — "I discern, I perceive, I distinguish."
+
+A Python data visualization library built on matplotlib. Designed for researchers, data explorers, and anyone making charts for reports or presentations who wants results fast without fighting their tools.
 
 ```python
 import cerno
@@ -78,6 +80,10 @@ cerno.chart(df).scatter("x", "y", alpha=0.4).show()
 
 # Multiple series from wide-form data — no pd.melt() needed
 cerno.chart(df).scatter("x", ["series_a", "series_b"]).show()
+
+# Error bars
+cerno.chart(df).scatter("x", "y", y_error="y_std").show()
+cerno.chart(df).scatter("x", "y", y_error="y_std", x_error="x_std").show()
 ```
 
 ### Line
@@ -99,6 +105,9 @@ cerno.chart(long_df).line("year", "revenue", color="product").show()
 
 # Dashed line style
 cerno.chart(df).line("year", "forecast", stroke_dash="dashed").show()
+
+# Error bars / confidence band
+cerno.chart(df).line("year", "revenue", y_error="revenue_std").show()
 ```
 
 ### Bar
@@ -117,6 +126,9 @@ cerno.chart(df).bar("quarter", ["product_a", "product_b"]).show()
 
 # Grouped bars, horizontal
 cerno.chart(df).bar("quarter", ["product_a", "product_b"], horizontal=True).show()
+
+# Error bars
+cerno.chart(df).bar("region", "sales", y_error="sales_std").show()
 ```
 
 ### Histogram
@@ -150,6 +162,9 @@ cerno.chart(df).boxplot("department", "salary", horizontal=True).show()
 # Colored boxes
 cerno.chart(df).boxplot("department", "salary", color="steelblue").show()
 
+# Grouped by a categorical variable — side-by-side boxes
+cerno.chart(df).boxplot("department", "salary", color="gender").legend().show()
+
 # Multiple columns from wide-form data — each column becomes a box
 cerno.chart(df).boxplot("x", ["q1_scores", "q2_scores", "q3_scores"]).show()
 ```
@@ -164,6 +179,9 @@ cerno.chart(df).violin("department", "salary", horizontal=True).show()
 
 # Colored violins
 cerno.chart(df).violin("department", "salary", color="steelblue").show()
+
+# Grouped by a categorical variable — side-by-side violins
+cerno.chart(df).violin("department", "salary", color="gender").legend().show()
 
 # Multiple columns from wide-form data — each column becomes a violin
 cerno.chart(df).violin("x", ["q1_scores", "q2_scores", "q3_scores"]).show()
@@ -258,6 +276,45 @@ cerno.chart(df).swarm("department", "salary", color="coral").show()
 cerno.chart(df).swarm(None, ["q1_scores", "q2_scores"]).show()
 ```
 
+### Countplot
+
+```python
+# Bar chart of value counts
+cerno.chart(df).countplot("department").show()
+
+# Horizontal
+cerno.chart(df).countplot("department", horizontal=True).show()
+
+# Grouped by a second categorical variable
+cerno.chart(df).countplot("department", color="gender").legend().show()
+```
+
+### ECDF
+
+```python
+# Empirical cumulative distribution function
+cerno.chart(df).ecdf("income").show()
+
+# Grouped by category
+cerno.chart(df).ecdf("income", color="region").legend().show()
+```
+
+### Rugplot
+
+```python
+# Tick marks showing individual data points along the x axis
+cerno.chart(df).rug("income").show()
+
+# Commonly layered with a histogram or KDE
+cerno.chart(df).histogram("income").rug("income").show()
+
+# Custom height and transparency
+cerno.chart(df).rug("income", height=0.1, alpha=0.8).show()
+
+# Colored by category
+cerno.chart(df).rug("income", color="region").legend().show()
+```
+
 ### Pair plot
 
 ```python
@@ -288,6 +345,49 @@ Multiple marks can be added to the same chart. Each call registers a new layer r
     .legend()
     .show()
 )
+```
+
+---
+
+## Reference lines and bands
+
+```python
+# Horizontal reference line
+cerno.chart(df).scatter("x", "y").hline(50, label="Target").legend().show()
+
+# Vertical reference line
+cerno.chart(df).line("year", "revenue").vline(2020, color="red", label="Launch").legend().show()
+
+# Horizontal band (shaded region)
+cerno.chart(df).scatter("x", "y").hband(40, 60, color="green", alpha=0.1).show()
+
+# Vertical band
+cerno.chart(df).line("year", "gdp").vband(2008, 2009, label="Recession").show()
+
+# Combine multiple references
+(
+    cerno.chart(df)
+    .scatter("x", "y")
+    .hline(50, label="Mean")
+    .hband(40, 60, color="blue", alpha=0.1)
+    .vline(3, color="red", linestyle=":")
+    .legend()
+    .show()
+)
+```
+
+---
+
+## Color palette
+
+```python
+# Set a named palette
+cerno.chart(df).scatter("x", "y", color="category").palette("colorblind").show()
+
+# Available named palettes: 'cerno' (default), 'pastel', 'bold', 'colorblind'
+
+# Custom palette — pass a list of color strings
+cerno.chart(df).bar("quarter", ["q1", "q2", "q3"]).palette(["#e63946", "#457b9d", "#2a9d8f"]).show()
 ```
 
 ---
@@ -446,9 +546,8 @@ When you need something cerno does not support natively, `.apply()` gives you di
 ```python
 (
     cerno.chart(df)
-    .line("year", "gdp")
-    .apply(lambda figure, axes: axes.axvspan(2008, 2009, alpha=0.15, color="gray"))
-    .title("GDP with Recession Band")
+    .scatter("x", "y")
+    .apply(lambda figure, axes: axes.axhline(y=0, color="gray", linewidth=0.5))
     .show()
 )
 ```
@@ -456,14 +555,14 @@ When you need something cerno does not support natively, `.apply()` gives you di
 For more complex operations, use a named function:
 
 ```python
-def add_recession_bands(figure, axes):
-    for start, end in [(2001, 2001), (2008, 2009), (2020, 2020)]:
-        axes.axvspan(start, end, alpha=0.15, color="gray")
+def add_custom_annotations(figure, axes):
+    for x_val in [2001, 2008, 2020]:
+        axes.axvline(x_val, color="red", alpha=0.3, linewidth=0.8)
 
-cerno.chart(df).line("year", "gdp").apply(add_recession_bands).show()
+cerno.chart(df).line("year", "gdp").apply(add_custom_annotations).show()
 ```
 
-`.apply()` is intentionally the only escape hatch in v0.1. If you find yourself using it for the same thing repeatedly, it is a good candidate for a native cerno feature — open an issue.
+`.apply()` is the escape hatch for anything cerno does not yet cover natively. If you find yourself using it for the same thing repeatedly, it is a good candidate for a native cerno feature — open an issue.
 
 ---
 
@@ -519,4 +618,4 @@ pytest tests/ -v
 
 **v0.4** — regression overlay, KDE/density plot, strip/swarm plots (scipy optional dependency) ✓
 
-**v0.5** — categorical color on box/violin, countplot, error bars, rugplot, ECDF, color palette API, reference lines/bands
+**v0.5** — categorical color on box/violin, countplot, error bars, rugplot, ECDF, color palette API, reference lines/bands ✓

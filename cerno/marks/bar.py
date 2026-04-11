@@ -2,7 +2,7 @@
 import numpy as np
 
 from ..core.validate import check_array_lengths, warn_nan_inf
-from ._base import apply_label, apply_color, default_colors, is_wide_form
+from ._base import apply_label, apply_color, default_colors, is_wide_form, resolve_errors
 
 
 def render(layer, adapter, axes):
@@ -22,6 +22,12 @@ def render(layer, adapter, axes):
     apply_label(kwargs, enc)
     apply_color(kwargs, adapter, enc)
 
+    yerr, xerr = resolve_errors(adapter, enc)
+    if yerr is not None:
+        kwargs["yerr"] = yerr
+    if xerr is not None:
+        kwargs["xerr"] = xerr
+
     if enc.get("horizontal"):
         axes.barh(x, y, **kwargs)
     else:
@@ -38,7 +44,7 @@ def _render_wide_form(layer, adapter, axes, enc):
         check_array_lengths({"x": x_raw, layer.y[0]: series[0]}, "bar")
 
     kwargs = dict(layer.kwargs)
-    colors = default_colors(n_series)
+    colors = default_colors(n_series, palette=layer.palette)
     x_pos = np.arange(len(x_raw))
     width = 0.8 / n_series
 

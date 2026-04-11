@@ -14,7 +14,7 @@ def render(layer, adapter, axes):
     kwargs["bins"] = enc.get("bins", "auto")
 
     color_value = resolve_color(adapter, enc.get("color"))
-    groups = iter_color_groups(color_value)
+    groups = iter_color_groups(color_value, palette=layer.palette)
 
     patches = None
     if groups is not None:

@@ -24,7 +24,7 @@ cerno/
 │   └── validate.py      # input validation helpers (check_array_lengths, check_numeric, etc.)
 ├── marks/
 │   ├── __init__.py      # render_layer() dispatcher
-│   ├── _base.py         # shared mark utilities (resolve_color, default_colors, apply_label, apply_color, iter_color_groups, is_wide_form, render_wide_form, group_by_x, resolve_color_list, render_categorical_scatter)
+│   ├── _base.py         # shared mark utilities (resolve_color, default_colors, apply_label, apply_color, iter_color_groups, is_wide_form, render_wide_form, group_by_x, resolve_color_list, resolve_errors, render_categorical_scatter)
 │   ├── scatter.py       # render(layer, adapter, axes)
 │   ├── line.py
 │   ├── bar.py
@@ -35,13 +35,16 @@ cerno/
 │   ├── histogram.py
 │   ├── kde.py           # standalone KDE density plot
 │   ├── strip.py         # jittered categorical scatter
-│   └── swarm.py         # beeswarm non-overlapping categorical scatter
+│   ├── swarm.py         # beeswarm non-overlapping categorical scatter
+│   ├── countplot.py     # bar chart of value counts
+│   ├── ecdf.py          # empirical cumulative distribution function
+│   └── rug.py           # tick marks along an axis
 ├── data/
 │   ├── adapter.py       # DataAdapter.from_any() — resolves all input types to numpy
 │   └── inference.py     # is_categorical(), is_datetime()
 ├── style/
 │   ├── theme.py         # Theme class, registry, set_theme, theme_context, built-in themes
-│   └── color.py         # Palette dataclass + CERNO_PALETTE
+│   └── color.py         # Palette dataclass, CERNO_PALETTE, NAMED_PALETTES, resolve_palette()
 ├── stats/
 │   ├── __init__.py      # scipy guard (_require_scipy)
 │   ├── regression.py    # Regression dataclass — fit overlay for scatter
@@ -89,11 +92,13 @@ Themes are immutable. `.merge(overrides)` returns a new `Theme`. Use `plt.rc_con
 ### Rendering pipeline (in `Chart._render()`)
 
 1. Resolve theme → enter `theme.as_context()`
-2. Create `DataAdapter` once for the chart's data (not per layer)
-3. `Canvas.build()` creates fig/axes
-4. Each `Layer` dispatched via `render_layer(layer, adapter, axes)`
-5. `_apply_decorators()` sets titles, labels, axis options, legend
-6. Each `.apply()` function called as `func(figure, axes)`
+2. `Canvas.build()` creates fig/axes
+3. Delegate to `_render_onto(fig, axes)`:
+   a. Create `DataAdapter` once for the chart's data (not per layer)
+   b. Resolve palette via `resolve_palette()`; stamp on each `Layer`
+   c. Each `Layer` dispatched via `render_layer(layer, adapter, axes)`
+   d. `_apply_decorators()` sets references, titles, labels, axis options, legend
+   e. Each `.apply()` function called as `func(figure, axes)`
 
 Grid rendering is handled by `Grid._render()` in `layout/grid.py`:
 1. `plt.subplots(rows, cols)` inside theme context
@@ -156,4 +161,4 @@ pandas, polars, and scipy are guarded with `try/except ImportError` at import ti
 - **v0.2**: box, heatmap, area, violin, polars support, two-variable faceting — complete
 - **v0.3**: pair plot — complete
 - **v0.4**: regression overlay, KDE/density plot, strip/swarm plots (scipy optional dependency) — complete
-- **v0.5**: categorical color on box/violin, countplot, error bars, rugplot, ECDF, color palette API, reference lines/bands
+- **v0.5**: categorical color on box/violin, countplot, error bars, rugplot, ECDF, color palette API, reference lines/bands — complete

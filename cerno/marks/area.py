@@ -24,7 +24,7 @@ def render(layer, adapter, axes):
 
     color_enc = enc.get("color")
     color_value = resolve_color(adapter, color_enc)
-    groups = iter_color_groups(color_value)
+    groups = iter_color_groups(color_value, palette=layer.palette)
 
     if groups is not None:
         for cat, color, mask in groups:
@@ -47,6 +47,6 @@ def _render_wide_form(layer, adapter, axes, enc):
 
     kwargs = dict(layer.kwargs)
     kwargs.setdefault("alpha", enc.get("alpha", 0.7))
-    colors = default_colors(len(layer.y))
+    colors = default_colors(len(layer.y), palette=layer.palette)
 
     axes.stackplot(x, *series, labels=layer.y, colors=colors, **kwargs)
