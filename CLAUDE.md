@@ -41,7 +41,7 @@ cerno/
 │   └── rug.py           # tick marks along an axis
 ├── data/
 │   ├── adapter.py       # DataAdapter.from_any() — resolves all input types to numpy
-│   └── inference.py     # is_categorical(), is_datetime()
+│   └── inference.py     # is_categorical()
 ├── style/
 │   ├── theme.py         # Theme class, registry, set_theme, theme_context, built-in themes
 │   └── color.py         # Palette dataclass, CERNO_PALETTE, NAMED_PALETTES, resolve_palette()
@@ -52,7 +52,8 @@ cerno/
 └── layout/
     ├── grid.py          # Grid class — multi-panel layout container
     ├── facet.py         # render_facet() — split data by column into subplots
-    └── pairplot.py      # pairplot() — NxN scatter/histogram grid
+    ├── pairplot.py      # pairplot() — NxN scatter/histogram grid
+    └── jointplot.py     # jointplot() — scatter with marginal distributions
 ```
 
 ## Style

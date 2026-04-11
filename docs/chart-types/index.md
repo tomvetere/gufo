@@ -1,6 +1,6 @@
 # Chart types
 
-Cerno supports eleven chart types plus statistical overlays. Each adds a
+Cerno supports fourteen chart types plus statistical overlays. Each adds a
 layer to the chart — you can combine multiple types on the same axes.
 
 ```{toctree}
@@ -17,5 +17,8 @@ area
 kde
 strip
 swarm
+countplot
+ecdf
+rug
 regression
 ```

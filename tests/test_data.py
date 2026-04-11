@@ -5,7 +5,7 @@ import polars as pl
 import pytest
 
 from cerno.data.adapter import DataAdapter
-from cerno.data.inference import is_categorical, is_datetime
+from cerno.data.inference import is_categorical
 
 
 # ── DataAdapter construction ────────────────────────────────────────
@@ -152,19 +152,6 @@ class TestIsCategorical:
     def test_empty_numpy_array(self):
         assert not is_categorical(np.array([]))
 
-
-# ── is_datetime ─────────────────────────────────────────────────────
-
-class TestIsDatetime:
-    def test_datetime64_array(self):
-        arr = np.array(["2024-01-01", "2024-01-02"], dtype="datetime64")
-        assert is_datetime(arr)
-
-    def test_numeric_array(self):
-        assert not is_datetime(np.array([1, 2, 3]))
-
-    def test_plain_list(self):
-        assert not is_datetime([1, 2, 3])
 
 
 # ── Polars end-to-end ──────────────────────────────────────────────

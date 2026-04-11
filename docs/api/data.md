@@ -13,6 +13,4 @@
 
 ```{eval-rst}
 .. autofunction:: cerno.data.inference.is_categorical
-
-.. autofunction:: cerno.data.inference.is_datetime
 ```

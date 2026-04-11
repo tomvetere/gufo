@@ -514,6 +514,22 @@ cerno.pairplot(df, columns=["col_a", "col_b", "col_c"]).show()
 cerno.pairplot(df, color="species").title("Iris").save("pairs.png")
 ```
 
+### Joint plot
+
+```python
+# Scatter with marginal histograms
+cerno.jointplot(df, "x", "y").show()
+
+# Color by a categorical column
+cerno.jointplot(df, "x", "y", color="species").show()
+
+# KDE marginals instead of histograms
+cerno.jointplot(df, "x", "y", marginal="kde").show()
+
+# Returns a Grid — all grid methods work
+cerno.jointplot(df, "x", "y").title("Joint").save("joint.png")
+```
+
 ### Two-variable faceting
 
 ```python
