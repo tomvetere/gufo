@@ -13,6 +13,9 @@ def render(layer, adapter, axes):
 
     kwargs["bins"] = enc.get("bins", "auto")
 
+    if enc.get("horizontal"):
+        kwargs["orientation"] = "horizontal"
+
     color_value = resolve_color(adapter, enc.get("color"))
     groups = iter_color_groups(color_value, palette=layer.palette)
 

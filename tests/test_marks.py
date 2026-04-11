@@ -104,6 +104,45 @@ class TestScatterMark:
         cerno.chart(sample_df).scatter("x", ["series_a", "series_b"], alpha=0.5).save(tmp_path / "s.png")
 
 
+# ── Scatter continuous color ───────────────────────────────────────
+
+class TestScatterContinuousColor:
+    @pytest.fixture
+    def cont_df(self):
+        return pd.DataFrame({
+            "x": [1, 2, 3, 4, 5],
+            "y": [2, 4, 1, 5, 3],
+            "temp": [10.0, 20.0, 30.0, 40.0, 50.0],
+            "cat": ["a", "b", "a", "b", "a"],
+        })
+
+    def test_scatter_continuous_color(self, cont_df, tmp_path):
+        cerno.chart(cont_df).scatter("x", "y", color="temp").save(tmp_path / "s.png")
+
+    def test_scatter_cmap(self, cont_df, tmp_path):
+        cerno.chart(cont_df).scatter("x", "y", color="temp", cmap="coolwarm").save(tmp_path / "s.png")
+
+    def test_scatter_vmin_vmax(self, cont_df, tmp_path):
+        cerno.chart(cont_df).scatter("x", "y", color="temp", vmin=0, vmax=100).save(tmp_path / "s.png")
+
+    def test_scatter_colorbar_present(self, cont_df):
+        c = cerno.chart(cont_df).scatter("x", "y", color="temp")
+        fig, axes = c._render()
+        # Colorbar adds an extra axes to the figure
+        assert len(fig.axes) == 2
+
+    def test_scatter_colorbar_disabled(self, cont_df):
+        c = cerno.chart(cont_df).scatter("x", "y", color="temp", colorbar=False)
+        fig, axes = c._render()
+        assert len(fig.axes) == 1
+
+    def test_scatter_categorical_no_colorbar(self, cont_df):
+        c = cerno.chart(cont_df).scatter("x", "y", color="cat")
+        fig, axes = c._render()
+        # Categorical color should not produce a colorbar
+        assert len(fig.axes) == 1
+
+
 # ── Line ────────────────────────────────────────────────────────────
 
 class TestLineMark:

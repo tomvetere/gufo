@@ -70,8 +70,13 @@ def render(layer, adapter, axes):
             axes.scatter(x[mask], y[mask], color=color, **scatter_kwargs)
     else:
         if color_value is not None:
-            if hasattr(color_value, "__len__") and len(color_value) == len(x):
+            if (not isinstance(color_value, str)
+                    and hasattr(color_value, "__len__")
+                    and len(color_value) == len(x)):
                 kwargs["c"] = color_value
+                for key in ("cmap", "vmin", "vmax"):
+                    if enc.get(key) is not None:
+                        kwargs[key] = enc[key]
             else:
                 kwargs["color"] = color_value
 
@@ -79,7 +84,10 @@ def render(layer, adapter, axes):
             sz = adapter.resolve(size_enc)
             kwargs["s"] = _normalize_size(sz)
 
-        axes.scatter(x, y, **kwargs)
+        mappable = axes.scatter(x, y, **kwargs)
+
+        if "c" in kwargs and enc.get("colorbar", True):
+            axes.figure.colorbar(mappable, ax=axes)
 
     _render_fit(layer, adapter, axes, enc)
 

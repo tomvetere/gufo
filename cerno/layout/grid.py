@@ -14,10 +14,13 @@ class Grid:
     Panels are assigned with g[row, col] = cerno.chart(data).mark(...).
     """
 
-    def __init__(self, rows, cols, figsize=None):
+    def __init__(self, rows, cols, figsize=None, *,
+                 width_ratios=None, height_ratios=None):
         self._rows = rows
         self._cols = cols
         self._figsize = figsize
+        self._width_ratios = width_ratios
+        self._height_ratios = height_ratios
         self._panels = {}
         self._title = None
         self._theme_override = None
@@ -40,10 +43,15 @@ class Grid:
         )
 
     def title(self, text):
+        """Set the overall grid title (displayed above all panels)."""
         self._title = text
         return self
 
     def theme(self, name_or_theme):
+        """Set the theme for the entire grid.
+
+        Accepts a theme name or a ``Theme`` instance.
+        """
         self._theme_override = name_or_theme
         return self
 
@@ -74,7 +82,15 @@ class Grid:
         theme = _resolve_theme(self._theme_override)
 
         with theme.as_context():
-            fig, axs = plt.subplots(self._rows, self._cols, figsize=self._figsize)
+            gridspec_kw = {}
+            if self._width_ratios is not None:
+                gridspec_kw["width_ratios"] = self._width_ratios
+            if self._height_ratios is not None:
+                gridspec_kw["height_ratios"] = self._height_ratios
+            fig, axs = plt.subplots(
+                self._rows, self._cols, figsize=self._figsize,
+                gridspec_kw=gridspec_kw or None,
+            )
             axs = np.atleast_2d(np.array(axs)).reshape(self._rows, self._cols)
 
             assigned = set()

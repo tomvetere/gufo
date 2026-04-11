@@ -1,5 +1,6 @@
 """Tests for cerno grid layout."""
 import numpy as np
+import pandas as pd
 import pytest
 import matplotlib.pyplot as plt
 
@@ -115,3 +116,72 @@ class TestGridOutput:
         g = cerno.grid(1, 1)
         g[0, 0] = cerno.chart(sample_df).scatter("x", "y")
         g.save(tmp_path / "grid_dpi.png", dpi=300)
+
+
+# ── Grid ratios ────────────────────────────────────────────────────
+
+class TestGridRatios:
+    def test_grid_width_height_ratios(self, sample_df, tmp_path):
+        g = cerno.grid(2, 2, width_ratios=[3, 1], height_ratios=[1, 3])
+        g[0, 0] = cerno.chart(sample_df).scatter("x", "y")
+        g[1, 0] = cerno.chart(sample_df).line("x", "y")
+        g.save(tmp_path / "ratios.png")
+        assert (tmp_path / "ratios.png").exists()
+
+    def test_grid_ratios_none_by_default(self, sample_df, tmp_path):
+        g = cerno.grid(1, 2)
+        g[0, 0] = cerno.chart(sample_df).scatter("x", "y")
+        g[0, 1] = cerno.chart(sample_df).line("x", "y")
+        g.save(tmp_path / "no_ratios.png")
+        assert (tmp_path / "no_ratios.png").exists()
+
+
+# ── Jointplot ──────────────────────────────────────────────────────
+
+class TestJointplot:
+    @pytest.fixture
+    def joint_df(self):
+        return pd.DataFrame({
+            "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            "y": [2, 4, 1, 5, 3, 6, 8, 7, 9, 10],
+            "cat": ["a", "b"] * 5,
+        })
+
+    def test_jointplot_returns_grid(self, joint_df):
+        g = cerno.jointplot(joint_df, "x", "y")
+        assert isinstance(g, Grid)
+
+    def test_jointplot_saves(self, joint_df, tmp_path):
+        cerno.jointplot(joint_df, "x", "y").save(tmp_path / "j.png")
+        assert (tmp_path / "j.png").exists()
+
+    def test_jointplot_with_color(self, joint_df, tmp_path):
+        cerno.jointplot(joint_df, "x", "y", color="cat").save(tmp_path / "j.png")
+
+    def test_jointplot_kde_marginals(self, joint_df, tmp_path):
+        cerno.jointplot(joint_df, "x", "y", marginal="kde").save(tmp_path / "j.png")
+
+    def test_jointplot_title(self, joint_df):
+        g = cerno.jointplot(joint_df, "x", "y").title("My Joint")
+        fig, _ = g._render()
+        assert fig._suptitle.get_text() == "My Joint"
+
+    def test_jointplot_three_visible_axes(self, joint_df):
+        g = cerno.jointplot(joint_df, "x", "y")
+        fig, axs = g._render()
+        visible = [ax for ax in fig.axes if ax.get_visible()]
+        # 3 panels visible (center, top, right), corner hidden
+        assert len(visible) == 3
+
+
+# ── Histogram horizontal ──────────────────────────────────────────
+
+class TestHistogramHorizontal:
+    def test_histogram_horizontal(self, sample_df, tmp_path):
+        cerno.chart(sample_df).histogram("x", horizontal=True).save(tmp_path / "h.png")
+
+    def test_histogram_horizontal_renders(self, sample_df):
+        c = cerno.chart(sample_df).histogram("x", horizontal=True)
+        _, axes = c._render()
+        # Horizontal histogram has patches
+        assert len(axes.patches) > 0

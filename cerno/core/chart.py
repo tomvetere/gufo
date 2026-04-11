@@ -60,11 +60,15 @@ class Chart:
     # ------------------------------------------------------------------
 
     def scatter(self, x, y, *, color=None, size=None, alpha=None, label=None,
+                cmap=None, vmin=None, vmax=None, colorbar=True,
                 fit=None, y_error=None, x_error=None, **kwargs):
         """Add a scatter plot layer.
 
         y may be a list of column names for wide-form DataFrames — each column
         becomes its own series without requiring pd.melt().
+
+        When color is a numeric column, cmap/vmin/vmax control the colormap
+        and range. A colorbar is shown by default (set colorbar=False to hide).
 
         fit accepts a cerno.regression() config object to overlay a fit line.
         y_error / x_error accept a column name or array for error bars.
@@ -72,7 +76,9 @@ class Chart:
         self._layers.append(Layer(
             mark_type="scatter", x=x, y=y,
             encodings={"color": color, "size": size, "alpha": alpha,
-                       "label": label, "fit": fit,
+                       "label": label, "cmap": cmap, "vmin": vmin,
+                       "vmax": vmax, "colorbar": colorbar,
+                       "fit": fit,
                        "y_error": y_error, "x_error": x_error},
             kwargs=kwargs,
         ))
@@ -117,15 +123,17 @@ class Chart:
         ))
         return self
 
-    def histogram(self, x, *, bins="auto", color=None, label=None, kde=None,
-                  **kwargs):
+    def histogram(self, x, *, bins="auto", color=None, horizontal=False,
+                  label=None, kde=None, **kwargs):
         """Add a histogram layer.
 
+        Set horizontal=True to orient the histogram sideways.
         kde accepts a cerno.kde() config object to overlay a density curve.
         """
         self._layers.append(Layer(
             mark_type="histogram", x=x, y=None,
-            encodings={"bins": bins, "color": color, "label": label, "kde": kde},
+            encodings={"bins": bins, "color": color, "horizontal": horizontal,
+                       "label": label, "kde": kde},
             kwargs=kwargs,
         ))
         return self
@@ -273,26 +281,40 @@ class Chart:
     # ------------------------------------------------------------------
 
     def title(self, text):
+        """Set the chart title."""
         self._title = text
         return self
 
     def subtitle(self, text):
+        """Set a subtitle displayed below the title in smaller gray text."""
         self._subtitle = text
         return self
 
     def xlabel(self, text):
+        """Set the x-axis label."""
         self._xlabel = text
         return self
 
     def ylabel(self, text):
+        """Set the y-axis label."""
         self._ylabel = text
         return self
 
     def caption(self, text):
+        """Set a caption displayed below the chart in small gray text."""
         self._caption = text
         return self
 
     def annotate(self, text, xy):
+        """Add a text annotation with an arrow pointing to *xy*.
+
+        Parameters
+        ----------
+        text : str
+            The annotation text.
+        xy : tuple of float
+            The (x, y) data coordinates the arrow points to.
+        """
         self._annotations.append({"text": text, "xy": xy})
         return self
 
@@ -301,26 +323,52 @@ class Chart:
     # ------------------------------------------------------------------
 
     def xlim(self, low, high):
+        """Set the x-axis limits."""
         self._xlim = (low, high)
         return self
 
     def ylim(self, low, high):
+        """Set the y-axis limits."""
         self._ylim = (low, high)
         return self
 
     def xscale(self, scale):
+        """Set the x-axis scale (e.g. ``"log"``, ``"symlog"``)."""
         self._xscale = scale
         return self
 
     def yscale(self, scale):
+        """Set the y-axis scale (e.g. ``"log"``, ``"symlog"``)."""
         self._yscale = scale
         return self
 
     def xticks(self, ticks=None, labels=None, rotation=None):
+        """Configure x-axis tick positions, labels, and rotation.
+
+        Parameters
+        ----------
+        ticks : list or None
+            Explicit tick positions.
+        labels : list or None
+            Labels corresponding to *ticks*.
+        rotation : float or None
+            Rotation angle in degrees for tick labels.
+        """
         self._xticks = {"ticks": ticks, "labels": labels, "rotation": rotation}
         return self
 
     def yticks(self, ticks=None, labels=None, rotation=None):
+        """Configure y-axis tick positions, labels, and rotation.
+
+        Parameters
+        ----------
+        ticks : list or None
+            Explicit tick positions.
+        labels : list or None
+            Labels corresponding to *ticks*.
+        rotation : float or None
+            Rotation angle in degrees for tick labels.
+        """
         self._yticks = {"ticks": ticks, "labels": labels, "rotation": rotation}
         return self
 
@@ -329,10 +377,26 @@ class Chart:
     # ------------------------------------------------------------------
 
     def legend(self, *, position="best", title=None, hide=False):
+        """Configure the legend.
+
+        Parameters
+        ----------
+        position : str
+            Legend location (any matplotlib loc string). Default ``"best"``.
+        title : str or None
+            Optional legend title.
+        hide : bool
+            If True, suppress the legend entirely.
+        """
         self._legend_opts = {"position": position, "title": title, "hide": hide}
         return self
 
     def theme(self, name_or_theme):
+        """Set the theme for this chart.
+
+        Accepts a theme name (``"cerno_modern"``, ``"cerno_clean"``, etc.)
+        or a ``Theme`` instance.
+        """
         self._theme_override = name_or_theme
         return self
 
@@ -413,6 +477,7 @@ class Chart:
         return self
 
     def size(self, width, height):
+        """Set the figure size in inches as (width, height)."""
         self._canvas = Canvas(figsize=(width, height))
         return self
 

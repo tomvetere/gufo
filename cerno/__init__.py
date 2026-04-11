@@ -11,15 +11,17 @@ data explorers, and anyone making reports.
 from ._version import __version__
 from .core.chart import chart
 from .layout.grid import Grid
+from .layout.jointplot import jointplot
 from .layout.pairplot import pairplot
 from .stats.kde import KDE
 from .stats.regression import Regression
 from .style.theme import set_theme, get_theme, register_theme, theme_context
 
 
-def grid(rows, cols, figsize=None):
+def grid(rows, cols, figsize=None, *, width_ratios=None, height_ratios=None):
     """Create a multi-panel grid layout."""
-    return Grid(rows, cols, figsize=figsize)
+    return Grid(rows, cols, figsize=figsize,
+                width_ratios=width_ratios, height_ratios=height_ratios)
 
 
 def regression(degree=1, *, color=None, linestyle="-", linewidth=2.0,
@@ -45,6 +47,7 @@ __all__ = [
     "__version__",
     "chart",
     "grid",
+    "jointplot",
     "pairplot",
     "Grid",
     "set_theme",

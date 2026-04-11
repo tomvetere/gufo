@@ -35,6 +35,7 @@ what you want. Nothing is drawn until you call `.show()` or `.save()`.
 :caption: Getting started
 
 getting-started
+gallery
 ```
 
 ```{toctree}
