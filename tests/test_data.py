@@ -40,6 +40,21 @@ class TestDataAdapterConstruction:
         adapter = DataAdapter(df)
         assert adapter._type == "polars"
 
+    def test_fallback_detection_pandas(self, sample_df, monkeypatch):
+        """DataFrame detection works even when module-level pd is None."""
+        import cerno.data.adapter as mod
+        monkeypatch.setattr(mod, "pd", None)
+        adapter = DataAdapter(sample_df)
+        assert adapter._type == "dataframe"
+
+    def test_fallback_detection_polars(self, monkeypatch):
+        """Polars detection works even when module-level pl is None."""
+        import cerno.data.adapter as mod
+        monkeypatch.setattr(mod, "pl", None)
+        df = pl.DataFrame({"x": [1, 2, 3]})
+        adapter = DataAdapter(df)
+        assert adapter._type == "polars"
+
 
 # ── DataAdapter.resolve ─────────────────────────────────────────────
 

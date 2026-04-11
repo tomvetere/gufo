@@ -315,22 +315,6 @@ cerno.chart(df).rug("income", height=0.1, alpha=0.8).show()
 cerno.chart(df).rug("income", color="region").legend().show()
 ```
 
-### Pair plot
-
-```python
-# All numeric columns — scatter matrix with histograms on diagonal
-cerno.pairplot(df).show()
-
-# Color by a categorical column
-cerno.pairplot(df, color="species").show()
-
-# Subset of columns
-cerno.pairplot(df, columns=["col_a", "col_b", "col_c"]).show()
-
-# Returns a Grid — all grid methods work
-cerno.pairplot(df, color="species").title("Iris").save("pairs.png")
-```
-
 ---
 
 ## Layering
@@ -507,6 +491,22 @@ cerno.chart(df).scatter("gdp", "life_exp").facet("continent", cols=4).show()
 `facet()` takes a categorical column name and creates one panel per unique value,
 each showing the same layers with only that subset of data. Chart-level `.title()`
 becomes a super-title above all panels. Empty cells are hidden automatically.
+
+### Pair plot
+
+```python
+# All numeric columns — scatter matrix with histograms on diagonal
+cerno.pairplot(df).show()
+
+# Color by a categorical column
+cerno.pairplot(df, color="species").show()
+
+# Subset of columns
+cerno.pairplot(df, columns=["col_a", "col_b", "col_c"]).show()
+
+# Returns a Grid — all grid methods work
+cerno.pairplot(df, color="species").title("Iris").save("pairs.png")
+```
 
 ### Two-variable faceting
 

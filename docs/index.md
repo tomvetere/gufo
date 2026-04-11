@@ -51,6 +51,7 @@ chart-types/index
 guides/data-formats
 guides/theming
 guides/layout
+guides/pairplot
 guides/matplotlib-escape-hatch
 ```
 

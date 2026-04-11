@@ -77,6 +77,17 @@ cerno.chart(df).scatter("gdp", "life_exp").facet(row="income_group").show()
 
 Chart-level `.title()` becomes a super-title above all panels. Empty cells are hidden automatically.
 
+## Pair plot
+
+`cerno.pairplot()` generates an N×N grid of scatter plots and histograms for all numeric columns. It returns a `Grid`, so all grid methods work.
+
+```python
+cerno.pairplot(df).show()
+cerno.pairplot(df, color="species").title("Iris Dataset").save("pairs.png")
+```
+
+See {doc}`pairplot` for full details.
+
 ## API reference
 
 See {py:class}`cerno.layout.grid.Grid` — specifically `.__setitem__`, `.title()`, `.theme()`, `.apply()`, `.show()`, `.save()`.

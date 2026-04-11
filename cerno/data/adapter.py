@@ -51,13 +51,17 @@ class DataAdapter:
             return "dataframe"
         if pl is not None and isinstance(data, pl.DataFrame):
             return "polars"
+        # Fallback: detect by module name when library import failed
+        cls_module = type(data).__module__ or ""
+        cls_name = type(data).__qualname__
+        if cls_name == "DataFrame":
+            if cls_module.startswith("pandas"):
+                return "dataframe"
+            if cls_module.startswith("polars"):
+                return "polars"
         if isinstance(data, dict):
             return "dict"
-        supported = ["dict", "None"]
-        if pd is not None:
-            supported.insert(0, "pandas DataFrame")
-        if pl is not None:
-            supported.insert(0, "Polars DataFrame")
+        supported = ["pandas DataFrame", "Polars DataFrame", "dict", "None"]
         raise TypeError(
             f"Unsupported data type: {type(data).__name__}. "
             f"Pass a {', '.join(supported[:-1])}, or {supported[-1]}."
