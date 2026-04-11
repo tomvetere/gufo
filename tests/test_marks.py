@@ -611,3 +611,51 @@ class TestErrorBars:
         (cerno.chart(df)
          .bar("x", "y", y_error="err")
          .save(tmp_path / "e.png"))
+
+
+# ── Pointplot ─────────────────────────────────────────────────────
+
+class TestPointplot:
+    @pytest.fixture
+    def point_df(self):
+        return pd.DataFrame({
+            "day": ["Mon", "Mon", "Mon", "Tue", "Tue", "Tue",
+                    "Wed", "Wed", "Wed"],
+            "tip": [3.0, 4.0, 5.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
+            "sex": ["M", "F", "M", "F", "M", "F", "M", "F", "M"],
+        })
+
+    def test_basic(self, point_df, tmp_path):
+        (cerno.chart(point_df)
+         .pointplot("day", "tip")
+         .save(tmp_path / "p.png"))
+        assert (tmp_path / "p.png").exists()
+
+    def test_grouped(self, point_df, tmp_path):
+        (cerno.chart(point_df)
+         .pointplot("day", "tip", color="sex")
+         .save(tmp_path / "p.png"))
+
+    def test_horizontal(self, point_df, tmp_path):
+        (cerno.chart(point_df)
+         .pointplot("day", "tip", horizontal=True)
+         .save(tmp_path / "p.png"))
+
+    def test_renders_errorbars(self, point_df):
+        c = cerno.chart(point_df).pointplot("day", "tip")
+        _, axes = c._render()
+        # errorbar creates Line2D objects (means + error lines)
+        assert len(axes.lines) > 0
+
+    def test_has_three_tick_labels(self, point_df):
+        c = cerno.chart(point_df).pointplot("day", "tip")
+        _, axes = c._render()
+        labels = [t.get_text() for t in axes.get_xticklabels()]
+        assert "Mon" in labels
+        assert "Tue" in labels
+        assert "Wed" in labels
+
+    def test_chaining(self, point_df):
+        from cerno.core.chart import Chart
+        c = cerno.chart(point_df).pointplot("day", "tip").title("Points")
+        assert isinstance(c, Chart)

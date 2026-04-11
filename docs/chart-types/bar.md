@@ -47,6 +47,17 @@ Pass a list of column names to `y` for grouped bars from wide-form data.
 cerno.chart(df).bar("quarter", ["product_a", "product_b"]).show()
 ```
 
+## Data labels
+
+Add value labels to bars with `.label()`.
+
+```python
+cerno.chart(df).bar("region", "sales").label().show()
+
+# Custom formatting
+cerno.chart(df).bar("region", "sales").label(fmt=".1f").show()
+```
+
 ## API reference
 
 See {py:meth}`cerno.core.chart.Chart.bar`.

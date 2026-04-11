@@ -185,7 +185,12 @@ def _render_categorical_wide(layer, adapter, axes, enc, offset_fn,
             axes.scatter(pos + offsets, vals, s=size, alpha=alpha,
                          color=colors[i], **kwargs)
 
+    set_category_ticks(axes, positions, layer.y, horizontal)
+
+
+def set_category_ticks(axes, positions, labels, horizontal):
+    """Set tick positions and labels, respecting orientation."""
     if horizontal:
-        axes.set_yticks(positions, labels=layer.y)
+        axes.set_yticks(positions, labels=labels)
     else:
-        axes.set_xticks(positions, labels=layer.y)
+        axes.set_xticks(positions, labels=labels)

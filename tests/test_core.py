@@ -359,3 +359,72 @@ class TestReferenceLines:
         c.save(tmp_path / "r.png")
 
 
+# ── Data labels ───────────────────────────────────────────────────
+
+class TestDataLabels:
+    def test_label_bar(self, sample_df, tmp_path):
+        (cerno.chart(sample_df)
+         .bar("cat", "x")
+         .label()
+         .save(tmp_path / "l.png"))
+        assert (tmp_path / "l.png").exists()
+
+    def test_label_bar_fmt(self, sample_df, tmp_path):
+        (cerno.chart(sample_df)
+         .bar("cat", "x")
+         .label(fmt=".1f")
+         .save(tmp_path / "l.png"))
+
+    def test_label_scatter_column(self, tmp_path):
+        df = {"x": [1, 2, 3], "y": [4, 5, 6], "name": ["a", "b", "c"]}
+        (cerno.chart(df)
+         .scatter("x", "y")
+         .label("name")
+         .save(tmp_path / "l.png"))
+
+    def test_label_returns_self(self, sample_df):
+        c = cerno.chart(sample_df).bar("cat", "x").label()
+        assert isinstance(c, Chart)
+
+    def test_label_with_fontsize(self, sample_df, tmp_path):
+        (cerno.chart(sample_df)
+         .bar("cat", "x")
+         .label(fontsize=8)
+         .save(tmp_path / "l.png"))
+
+
+# ── Legend outside ────────────────────────────────────────────────
+
+class TestLegendOutside:
+    def test_outside_right(self, sample_df, tmp_path):
+        (cerno.chart(sample_df)
+         .scatter("x", "y", color="cat")
+         .legend(position="outside right")
+         .save(tmp_path / "l.png"))
+        assert (tmp_path / "l.png").exists()
+
+    def test_outside_bottom(self, sample_df, tmp_path):
+        (cerno.chart(sample_df)
+         .scatter("x", "y", color="cat")
+         .legend(position="outside bottom")
+         .save(tmp_path / "l.png"))
+
+    def test_outside_top(self, sample_df, tmp_path):
+        (cerno.chart(sample_df)
+         .scatter("x", "y", color="cat")
+         .legend(position="outside top")
+         .save(tmp_path / "l.png"))
+
+    def test_outside_left(self, sample_df, tmp_path):
+        (cerno.chart(sample_df)
+         .scatter("x", "y", color="cat")
+         .legend(position="outside left")
+         .save(tmp_path / "l.png"))
+
+    def test_regular_position_still_works(self, sample_df, tmp_path):
+        (cerno.chart(sample_df)
+         .scatter("x", "y", color="cat")
+         .legend(position="upper left")
+         .save(tmp_path / "l.png"))
+
+

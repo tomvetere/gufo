@@ -1,18 +1,54 @@
 # Changelog
 
+## Unreleased (v0.7)
+
+**New chart types**
+- Point plot: `.pointplot("x", "y")` — connected category means with 95% CI error bars. Supports categorical color grouping (dodged) and horizontal mode.
+
+**New features**
+- Data labels: `.label()` adds value labels to bar charts (via `bar_label()`) or scatter points (via column name). Supports `fmt`, `fontsize`, and `offset` options.
+- LOWESS smoothing: `fit=cerno.lowess()` on `.scatter()` adds a non-parametric smooth curve. Requires statsmodels (`pip install cerno[stats]`).
+- Facet axis sharing: `.facet("col", sharex=False, sharey=False)` allows independent axis ranges per panel. Default is shared (preserving existing behavior).
+- Legend outside positioning: `.legend(position="outside right")` places the legend outside the plot area. Supports `outside right`, `outside left`, `outside top`, `outside bottom`.
+
+**Internal**
+- Consolidated `set_category_ticks()` into `marks/_base.py` — bar, pointplot, strip, and swarm all share the same helper.
+- Vectorized `_aggregate` in pointplot with `np.bincount` instead of per-category boolean masking.
+- `_apply_labels` receives the existing `DataAdapter` from the render pipeline instead of constructing a new one.
+
+**Testing**
+- 363 tests passing
+
+---
+
 ## Unreleased (v0.6)
 
 **New features**
 - Stacked/dodged bar grouping: `.bar("x", "y", color="category")` now groups bars by category (dodged by default). Set `stacked=True` to stack bars instead.
+- Continuous color scales on scatter: pass a numeric column as `color=` with `cmap=`, `vmin=`, `vmax=` to get a colormap + automatic colorbar. Set `colorbar=False` to hide.
+- Joint plot: `cerno.jointplot(df, "x", "y")` creates a scatter with marginal histograms or KDE on the edges. Returns a `Grid`.
+- Grid width/height ratios: `cerno.grid(2, 2, width_ratios=[3, 1], height_ratios=[1, 3])` for non-uniform panel sizing.
+- Horizontal histogram: `.histogram("x", horizontal=True)`.
 
 **Bug fixes**
 - DataAdapter now detects pandas and polars DataFrames even when the module-level import fails, using `type(data).__module__` as a fallback. Fixes a bug where `cerno.chart(df)` raised `TypeError: Unsupported data type: DataFrame` in certain environment configurations (e.g., Jupyter notebooks with separate venvs).
+- Scatter continuous color detection no longer misfires on single-character color strings like `"r"`.
+- Removed unused `is_datetime()` from `cerno/data/inference.py`.
 
 **Documentation**
-- Pair plot moved from "Chart types" to "Layout" section in README and Sphinx docs, since `cerno.pairplot()` returns a `Grid`, not a `Chart`.
+- Complete docstrings added to all public Chart methods (title, subtitle, xlabel, ylabel, caption, annotate, xlim, ylim, xscale, yscale, xticks, yticks, legend, theme, size) and Grid methods (title, theme).
+- Visual gallery with 19 rendered chart examples at `docs/gallery.md`.
+- Getting-started tutorial expanded with a 6-step walkthrough.
+- Sphinx doc pages added for countplot, ecdf, and rug.
+- Pair plot moved from "Chart types" to "Layout" section.
+- Joint plot added to README.
+
+**Internal**
+- Extracted shared `_draw_dodged()` and `_aggregate_by_x()` helpers in `bar.py`, replacing duplicated logic between grouped-color and wide-form bar rendering.
+- Replaced O(n*u*g) boolean masking in bar color groups with vectorized `np.bincount`.
 
 **Testing**
-- 326 tests passing
+- 339 tests passing
 
 ---
 

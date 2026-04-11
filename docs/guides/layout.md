@@ -77,6 +77,30 @@ cerno.chart(df).scatter("gdp", "life_exp").facet(row="income_group").show()
 
 Chart-level `.title()` becomes a super-title above all panels. Empty cells are hidden automatically.
 
+### Shared / independent axes
+
+By default, facet panels share axis ranges. Set `sharex=False` or `sharey=False`
+to let each panel scale independently — useful when groups have very different ranges.
+
+```python
+cerno.chart(df).scatter("x", "y").facet("group", sharey=False).show()
+```
+
+## Joint plot
+
+`cerno.jointplot()` creates a scatter plot with marginal distributions
+(histograms or KDE) on the top and right edges. It returns a `Grid`.
+
+```python
+cerno.jointplot(df, "x", "y").show()
+
+# KDE marginals
+cerno.jointplot(df, "x", "y", marginal="kde").show()
+
+# Color by category
+cerno.jointplot(df, "x", "y", color="species").show()
+```
+
 ## Pair plot
 
 `cerno.pairplot()` generates an N×N grid of scatter plots and histograms for all numeric columns. It returns a `Grid`, so all grid methods work.

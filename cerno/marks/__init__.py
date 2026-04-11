@@ -8,6 +8,7 @@ from .heatmap import render as _heatmap
 from .histogram import render as _histogram
 from .kde import render as _kde
 from .line import render as _line
+from .pointplot import render as _pointplot
 from .rug import render as _rug
 from .scatter import render as _scatter
 from .strip import render as _strip
@@ -29,6 +30,7 @@ _REGISTRY = {
     "countplot": _countplot,
     "ecdf": _ecdf,
     "rug": _rug,
+    "pointplot": _pointplot,
 }
 
 

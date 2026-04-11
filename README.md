@@ -237,6 +237,16 @@ cerno.chart(df).scatter("x", "y", fit=cerno.regression(color="red", linestyle="-
 cerno.chart(df).scatter("x", "y", color="category", fit=cerno.regression()).show()
 ```
 
+### LOWESS smoothing
+
+```python
+# Non-parametric smooth on a scatter plot (requires statsmodels)
+cerno.chart(df).scatter("x", "y", fit=cerno.lowess()).show()
+
+# Custom smoothing fraction
+cerno.chart(df).scatter("x", "y", fit=cerno.lowess(frac=0.3)).show()
+```
+
 ### KDE (kernel density estimation)
 
 ```python
@@ -319,6 +329,31 @@ cerno.chart(df).rug("income", height=0.1, alpha=0.8).show()
 
 # Colored by category
 cerno.chart(df).rug("income", color="region").legend().show()
+```
+
+### Point plot
+
+```python
+# Mean + 95% CI per category
+cerno.chart(df).pointplot("day", "total_bill").show()
+
+# Grouped by a second variable
+cerno.chart(df).pointplot("day", "total_bill", color="sex").legend().show()
+```
+
+---
+
+## Data labels
+
+```python
+# Label bars with their values
+cerno.chart(df).bar("region", "sales").label().show()
+
+# Custom formatting
+cerno.chart(df).bar("region", "sales").label(fmt=".1f").show()
+
+# Label scatter points with a column
+cerno.chart(df).scatter("x", "y").label("name").show()
 ```
 
 ---
@@ -414,6 +449,25 @@ cerno.chart(df).scatter("x", "y").annotate("Outlier", xy=(42, 180)).show()
     .xticks(rotation=45)
     .show()
 )
+```
+
+---
+
+## Legend
+
+```python
+# Basic legend
+cerno.chart(df).scatter("x", "y", color="cat").legend().show()
+
+# With title
+cerno.chart(df).scatter("x", "y", color="cat").legend(title="Category").show()
+
+# Positioned outside the axes
+cerno.chart(df).scatter("x", "y", color="cat").legend(position="outside right").show()
+cerno.chart(df).scatter("x", "y", color="cat").legend(position="outside bottom").show()
+
+# Hidden
+cerno.chart(df).scatter("x", "y", color="cat").legend(hide=True).show()
 ```
 
 ---
@@ -601,10 +655,11 @@ pip install cerno              # core only (matplotlib + numpy)
 pip install cerno[pandas]      # + pandas support
 pip install cerno[polars]      # + polars support
 pip install cerno[scipy]       # + KDE, swarm
+pip install cerno[stats]       # + LOWESS smoothing
 pip install cerno[all]         # everything
 ```
 
-Without pandas or polars, cerno works with dicts, numpy arrays, and raw lists. KDE and swarm plots require scipy.
+Without pandas or polars, cerno works with dicts, numpy arrays, and raw lists. KDE and swarm plots require scipy. LOWESS smoothing requires statsmodels.
 
 ## PyData stack compatibility
 
@@ -614,6 +669,7 @@ Without pandas or polars, cerno works with dicts, numpy arrays, and raw lists. K
 | numpy   | (included) | Full support |
 | polars  | `cerno[polars]` | Full support |
 | scipy   | `cerno[scipy]` | KDE, swarm |
+| statsmodels | `cerno[stats]` | LOWESS smoothing |
 
 ---
 
@@ -642,4 +698,6 @@ pytest tests/ -v
 
 **v0.5** — categorical color on box/violin, countplot, error bars, rugplot, ECDF, color palette API, reference lines/bands ✓
 
-**v0.6** — stacked/dodged bar grouping by categorical color
+**v0.6** — stacked/dodged bar grouping, continuous color scales on scatter, jointplot, Grid width/height ratios, horizontal histogram, complete docstrings, visual gallery, tutorial ✓
+
+**v0.7** — data labels, pointplot, LOWESS smoothing, facet sharex/sharey, legend outside positioning

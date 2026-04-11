@@ -60,6 +60,26 @@ cerno.chart(df).scatter(
 
 See [Regression overlay](regression.md) for full details.
 
+## LOWESS smoothing
+
+Pass a `cerno.lowess()` config to the `fit` parameter for a non-parametric smooth.
+Requires statsmodels (`pip install cerno[stats]`).
+
+```python
+cerno.chart(df).scatter("x", "y", fit=cerno.lowess()).show()
+
+# Custom smoothing fraction (lower = more wiggly)
+cerno.chart(df).scatter("x", "y", fit=cerno.lowess(frac=0.3)).show()
+```
+
+## Data labels
+
+Label each point with values from a column.
+
+```python
+cerno.chart(df).scatter("x", "y").label("name").show()
+```
+
 ## API reference
 
 See {py:meth}`cerno.core.chart.Chart.scatter`.

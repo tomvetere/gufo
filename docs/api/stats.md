@@ -12,6 +12,10 @@ Statistical overlay configuration classes and their factory functions.
 .. autofunction:: cerno.kde
 ```
 
+```{eval-rst}
+.. autofunction:: cerno.lowess
+```
+
 ## Config classes
 
 ```{eval-rst}
@@ -22,6 +26,12 @@ Statistical overlay configuration classes and their factory functions.
 
 ```{eval-rst}
 .. autoclass:: cerno.stats.kde.KDE
+   :members:
+   :undoc-members: False
+```
+
+```{eval-rst}
+.. autoclass:: cerno.stats.lowess.Lowess
    :members:
    :undoc-members: False
 ```

@@ -24,7 +24,7 @@ cerno/
 │   └── validate.py      # input validation helpers (check_array_lengths, check_numeric, etc.)
 ├── marks/
 │   ├── __init__.py      # render_layer() dispatcher
-│   ├── _base.py         # shared mark utilities (resolve_color, default_colors, apply_label, apply_color, iter_color_groups, is_wide_form, render_wide_form, group_by_x, resolve_color_list, resolve_errors, render_categorical_scatter)
+│   ├── _base.py         # shared mark utilities (resolve_color, default_colors, apply_label, apply_color, iter_color_groups, is_wide_form, render_wide_form, group_by_x, resolve_color_list, resolve_errors, render_categorical_scatter, set_category_ticks)
 │   ├── scatter.py       # render(layer, adapter, axes)
 │   ├── line.py
 │   ├── bar.py
@@ -38,7 +38,8 @@ cerno/
 │   ├── swarm.py         # beeswarm non-overlapping categorical scatter
 │   ├── countplot.py     # bar chart of value counts
 │   ├── ecdf.py          # empirical cumulative distribution function
-│   └── rug.py           # tick marks along an axis
+│   ├── rug.py           # tick marks along an axis
+│   └── pointplot.py     # connected category means with CI
 ├── data/
 │   ├── adapter.py       # DataAdapter.from_any() — resolves all input types to numpy
 │   └── inference.py     # is_categorical()
@@ -48,7 +49,8 @@ cerno/
 ├── stats/
 │   ├── __init__.py      # scipy guard (_require_scipy)
 │   ├── regression.py    # Regression dataclass — fit overlay for scatter
-│   └── kde.py           # KDE dataclass — density estimation config
+│   ├── kde.py           # KDE dataclass — density estimation config
+│   └── lowess.py        # Lowess dataclass — LOWESS smoothing overlay
 └── layout/
     ├── grid.py          # Grid class — multi-panel layout container
     ├── facet.py         # render_facet() — split data by column into subplots
@@ -79,6 +81,7 @@ Follow [PEP 8](https://peps.python.org/pep-0008/) and [PEP 20 (The Zen of Python
 Overlays are **config object classes** in `cerno/stats/`, passed as parameters to existing marks:
 - `cerno.regression()` → `Regression` dataclass, passed via `fit=` on `.scatter()`
 - `cerno.kde()` → `KDE` dataclass, passed via `kde=` on `.histogram()`, or used standalone via `.kde()`
+- `cerno.lowess()` → `Lowess` dataclass, passed via `fit=` on `.scatter()`
 
 Each config class has a `render()` method that draws itself onto axes. The mark renderer checks for the config object and delegates rendering. Factory functions in `cerno/__init__.py` create the config instances. This pattern avoids signature bloat and keeps overlay logic separate from mark logic.
 
@@ -152,9 +155,10 @@ Optional extras:
 - `cerno[pandas]` — `pandas >= 1.3.0`
 - `cerno[polars]` — `polars >= 0.20.0`
 - `cerno[scipy]` — `scipy >= 1.7.0` (required for KDE and swarm)
+- `cerno[stats]` — `statsmodels >= 0.13.0` (required for LOWESS smoothing)
 - `cerno[all]` — all optional dependencies
 
-pandas, polars, and scipy are guarded with `try/except ImportError` at import time. If neither is installed, cerno still works with dicts, arrays, and lists. KDE and swarm raise `ImportError` with install instructions when scipy is missing. Regression uses numpy only.
+pandas, polars, scipy, and statsmodels are guarded with `try/except ImportError` at import time. If neither is installed, cerno still works with dicts, arrays, and lists. KDE and swarm raise `ImportError` with install instructions when scipy is missing. LOWESS raises `ImportError` when statsmodels is missing. Regression uses numpy only.
 
 ## Roadmap
 
@@ -163,4 +167,5 @@ pandas, polars, and scipy are guarded with `try/except ImportError` at import ti
 - **v0.3**: pair plot — complete
 - **v0.4**: regression overlay, KDE/density plot, strip/swarm plots (scipy optional dependency) — complete
 - **v0.5**: categorical color on box/violin, countplot, error bars, rugplot, ECDF, color palette API, reference lines/bands — complete
-- **v0.6**: stacked/dodged bar grouping by categorical color — in progress
+- **v0.6**: stacked/dodged bar grouping, continuous color scales on scatter, jointplot, Grid ratios, horizontal histogram, docstrings, gallery, tutorial — complete
+- **v0.7**: data labels, pointplot, LOWESS smoothing, facet sharex/sharey, legend outside — in progress

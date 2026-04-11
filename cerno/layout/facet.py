@@ -9,7 +9,8 @@ from ..data.inference import is_categorical
 from ..style.theme import _resolve_theme
 
 
-def render_facet(chart, facet_column, wrap_cols=3, *, facet_row=None):
+def render_facet(chart, facet_column, wrap_cols=3, *, facet_row=None,
+                 sharex=True, sharey=True):
     """Render a Chart as a faceted grid of subplots.
 
     Parameters
@@ -24,6 +25,10 @@ def render_facet(chart, facet_column, wrap_cols=3, *, facet_row=None):
     facet_row : str or None
         Column name for the row dimension. When combined with
         facet_column, creates a rows × cols grid.
+    sharex : bool
+        Share x-axis range across panels. Default True.
+    sharey : bool
+        Share y-axis range across panels. Default True.
 
     Returns
     -------
@@ -33,11 +38,14 @@ def render_facet(chart, facet_column, wrap_cols=3, *, facet_row=None):
     adapter = DataAdapter.from_any(chart._data)
 
     if facet_row is not None:
-        return _render_two_variable(chart, adapter, facet_column, facet_row)
-    return _render_one_variable(chart, adapter, facet_column, wrap_cols)
+        return _render_two_variable(chart, adapter, facet_column, facet_row,
+                                    sharex=sharex, sharey=sharey)
+    return _render_one_variable(chart, adapter, facet_column, wrap_cols,
+                                sharex=sharex, sharey=sharey)
 
 
-def _render_one_variable(chart, adapter, facet_column, wrap_cols):
+def _render_one_variable(chart, adapter, facet_column, wrap_cols, *,
+                         sharex=True, sharey=True):
     """Single-variable faceting — wrap panels into rows."""
     col_data = adapter.resolve(facet_column)
     _check_categorical(col_data, facet_column)
@@ -50,7 +58,8 @@ def _render_one_variable(chart, adapter, facet_column, wrap_cols):
     theme = _resolve_theme(chart._theme_override)
 
     with theme.as_context():
-        fig, axes_grid = plt.subplots(rows, cols, figsize=_facet_figsize(rows, cols))
+        fig, axes_grid = plt.subplots(rows, cols, figsize=_facet_figsize(rows, cols),
+                                      sharex=sharex, sharey=sharey)
         axes_grid = np.atleast_2d(axes_grid).reshape(rows, cols)
 
         for i, category in enumerate(categories):
@@ -72,7 +81,8 @@ def _render_one_variable(chart, adapter, facet_column, wrap_cols):
     return fig, axes_grid
 
 
-def _render_two_variable(chart, adapter, facet_column, facet_row):
+def _render_two_variable(chart, adapter, facet_column, facet_row, *,
+                         sharex=True, sharey=True):
     """Two-variable faceting — row categories × column categories."""
     row_data = adapter.resolve(facet_row)
     _check_categorical(row_data, facet_row)
@@ -92,7 +102,8 @@ def _render_two_variable(chart, adapter, facet_column, facet_row):
 
     with theme.as_context():
         fig, axes_grid = plt.subplots(
-            n_rows, n_cols, figsize=_facet_figsize(n_rows, n_cols))
+            n_rows, n_cols, figsize=_facet_figsize(n_rows, n_cols),
+            sharex=sharex, sharey=sharey)
         axes_grid = np.atleast_2d(axes_grid).reshape(n_rows, n_cols)
 
         for ri, row_val in enumerate(row_cats):

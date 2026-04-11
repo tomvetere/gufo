@@ -265,3 +265,36 @@ class TestScipyGuard:
         fig, ax = plt.subplots()
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         k.render(x, ax)
+
+
+# ── LOWESS ────────────────────────────────────────────────────────
+
+class TestLowess:
+    def test_lowess_factory(self):
+        lo = cerno.lowess(frac=0.5, color="red")
+        assert lo.frac == 0.5
+        assert lo.color == "red"
+
+    def test_lowess_default_frac(self):
+        lo = cerno.lowess()
+        assert abs(lo.frac - 0.6667) < 0.001
+
+    def test_lowess_dataclass_fields(self):
+        lo = cerno.lowess()
+        assert lo.linestyle == "-"
+        assert lo.linewidth == 2.0
+        assert lo.label is None
+
+    @pytest.mark.skipif(
+        not hasattr(cerno.Lowess, "render"),
+        reason="Lowess not fully available"
+    )
+    def test_lowess_render_without_statsmodels(self, monkeypatch):
+        import cerno.stats.lowess as lowess_mod
+        monkeypatch.setattr(lowess_mod, "sm_lowess", None)
+        lo = cerno.lowess()
+        fig, ax = plt.subplots()
+        x = np.array([1.0, 2.0, 3.0, 4.0])
+        y = np.array([2.0, 4.0, 3.0, 5.0])
+        with pytest.raises(ImportError, match="statsmodels"):
+            lo.render(x, y, ax)

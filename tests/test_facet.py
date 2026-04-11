@@ -238,3 +238,49 @@ class TestTwoVariableFacet:
         fig, axs = c._render()
         assert fig._suptitle.get_text() == "Two-var"
         plt.close(fig)
+
+
+# ── Facet sharex/sharey ──────────────────────────────────────────
+
+class TestFacetShareAxes:
+    @pytest.fixture
+    def share_df(self):
+        return pd.DataFrame({
+            "x": [1, 2, 3, 100, 200, 300],
+            "y": [10, 20, 30, 1000, 2000, 3000],
+            "group": ["A", "A", "A", "B", "B", "B"],
+        })
+
+    def test_sharey_false_allows_independent_y(self, share_df, tmp_path):
+        c = (chart(share_df).scatter("x", "y")
+             .facet("group", sharey=False))
+        fig, axs = c._render()
+        y0 = axs[0, 0].get_ylim()
+        y1 = axs[0, 1].get_ylim()
+        # With sharey=False, panel B should have a much larger y range
+        assert y1[1] > y0[1] * 5
+        plt.close(fig)
+
+    def test_sharex_false(self, share_df, tmp_path):
+        c = (chart(share_df).scatter("x", "y")
+             .facet("group", sharex=False))
+        fig, axs = c._render()
+        x0 = axs[0, 0].get_xlim()
+        x1 = axs[0, 1].get_xlim()
+        assert x1[1] > x0[1] * 5
+        plt.close(fig)
+
+    def test_default_shared(self, share_df):
+        c = (chart(share_df).scatter("x", "y").facet("group"))
+        fig, axs = c._render()
+        # Default: shared axes — same limits
+        y0 = axs[0, 0].get_ylim()
+        y1 = axs[0, 1].get_ylim()
+        assert y0 == y1
+        plt.close(fig)
+
+    def test_sharex_false_saves(self, share_df, tmp_path):
+        (chart(share_df).scatter("x", "y")
+         .facet("group", sharex=False)
+         .save(tmp_path / "f.png"))
+        assert (tmp_path / "f.png").exists()

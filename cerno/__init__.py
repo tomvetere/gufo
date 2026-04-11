@@ -14,6 +14,7 @@ from .layout.grid import Grid
 from .layout.jointplot import jointplot
 from .layout.pairplot import pairplot
 from .stats.kde import KDE
+from .stats.lowess import Lowess
 from .stats.regression import Regression
 from .style.theme import set_theme, get_theme, register_theme, theme_context
 
@@ -43,6 +44,18 @@ def kde(*, bw_method=None, color=None, linestyle="-", linewidth=2.0,
     )
 
 
+def lowess(frac=0.6667, *, color=None, linestyle="-", linewidth=2.0,
+           label=None):
+    """Create a LOWESS smoothing configuration for scatter plots.
+
+    Requires statsmodels. Install with: ``pip install cerno[stats]``.
+    """
+    return Lowess(
+        frac=frac, color=color, linestyle=linestyle,
+        linewidth=linewidth, label=label,
+    )
+
+
 __all__ = [
     "__version__",
     "chart",
@@ -58,4 +71,6 @@ __all__ = [
     "Regression",
     "kde",
     "KDE",
+    "lowess",
+    "Lowess",
 ]

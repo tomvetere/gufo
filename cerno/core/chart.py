@@ -50,8 +50,11 @@ class Chart:
         self._facet_column = None
         self._facet_row = None
         self._facet_cols = None
+        self._facet_sharex = True
+        self._facet_sharey = True
         self._palette = None
         self._references = []
+        self._label_config = None
         self._apply_funcs = []
         self._canvas = Canvas()
 
@@ -276,6 +279,25 @@ class Chart:
         ))
         return self
 
+    def pointplot(self, x, y, *, color=None, horizontal=False, label=None,
+                  **kwargs):
+        """Add a point plot layer — connected category means with 95% CI.
+
+        Shows the mean of y for each unique x value, connected by lines,
+        with error bars representing the 95% confidence interval (via
+        standard error). When color is set, groups are dodged.
+
+        x is the grouping column (categorical). y is the values column
+        (numeric).
+        """
+        self._layers.append(Layer(
+            mark_type="pointplot", x=x, y=y,
+            encodings={"color": color, "horizontal": horizontal,
+                       "label": label},
+            kwargs=kwargs,
+        ))
+        return self
+
     # ------------------------------------------------------------------
     # Labels and annotations
     # ------------------------------------------------------------------
@@ -316,6 +338,32 @@ class Chart:
             The (x, y) data coordinates the arrow points to.
         """
         self._annotations.append({"text": text, "xy": xy})
+        return self
+
+    def label(self, column=None, *, fmt=None, fontsize=None, offset=None):
+        """Add data labels to bars or scatter points.
+
+        For bar charts, labels are placed at the end of each bar using
+        ``axes.bar_label()``. For scatter plots, pass a column name to
+        label each point with that column's value.
+
+        Parameters
+        ----------
+        column : str or None
+            Column name whose values label each point (scatter only).
+            For bar charts, omit or pass None to label with bar heights.
+        fmt : str or None
+            Format string (e.g. ``".1f"``, ``".0%"``). For bars, passed
+            directly to ``bar_label(fmt=...)``.
+        fontsize : int or str or None
+            Font size for the labels.
+        offset : float or None
+            Padding in points between the bar end and the label.
+        """
+        self._label_config = {
+            "column": column, "fmt": fmt,
+            "fontsize": fontsize, "offset": offset,
+        }
         return self
 
     # ------------------------------------------------------------------
@@ -382,7 +430,10 @@ class Chart:
         Parameters
         ----------
         position : str
-            Legend location (any matplotlib loc string). Default ``"best"``.
+            Legend location. Any matplotlib loc string (e.g. ``"best"``,
+            ``"upper right"``) or one of ``"outside right"``,
+            ``"outside left"``, ``"outside top"``, ``"outside bottom"``
+            to place the legend outside the axes.
         title : str or None
             Optional legend title.
         hide : bool
@@ -400,13 +451,27 @@ class Chart:
         self._theme_override = name_or_theme
         return self
 
-    def facet(self, column=None, *, row=None, cols=3):
+    def facet(self, column=None, *, row=None, cols=3,
+              sharex=True, sharey=True):
         """Split the chart into subplots by one or two categorical columns.
 
         With column only, panels wrap after cols columns. With row, panels
         form a grid where row categories go down and column categories go
         across. With row only, each row category gets one panel in a
         single column.
+
+        Parameters
+        ----------
+        column : str or None
+            Column for horizontal faceting.
+        row : str or None
+            Column for vertical faceting.
+        cols : int
+            Max columns before wrapping (single-variable faceting only).
+        sharex : bool
+            Share x-axis range across panels. Default True.
+        sharey : bool
+            Share y-axis range across panels. Default True.
         """
         if self._data is None:
             raise ValueError(
@@ -420,6 +485,8 @@ class Chart:
         self._facet_column = column
         self._facet_row = row
         self._facet_cols = cols
+        self._facet_sharex = sharex
+        self._facet_sharey = sharey
         return self
 
     def apply(self, func):
@@ -515,7 +582,9 @@ class Chart:
         """
         if self._facet_column is not None or self._facet_row is not None:
             return render_facet(self, self._facet_column, self._facet_cols,
-                                facet_row=self._facet_row)
+                                facet_row=self._facet_row,
+                                sharex=self._facet_sharex,
+                                sharey=self._facet_sharey)
 
         theme = _resolve_theme(self._theme_override)
 
@@ -541,11 +610,11 @@ class Chart:
             for layer in self._layers:
                 layer.palette = resolved_palette
                 render_layer(layer, adapter, axes)
-            self._apply_decorators(figure, axes)
+            self._apply_decorators(figure, axes, adapter)
             for func in self._apply_funcs:
                 func(figure, axes)
 
-    def _apply_decorators(self, fig, axes):
+    def _apply_decorators(self, fig, axes, adapter=None):
         for attr, method in self._SIMPLE_SETTERS:
             value = getattr(self, attr)
             if value is not None:
@@ -562,7 +631,46 @@ class Chart:
         self._apply_ticks(axes, "x", self._xticks)
         self._apply_ticks(axes, "y", self._yticks)
         self._apply_annotations(axes)
+        self._apply_labels(axes, adapter)
         self._apply_legend(axes)
+
+    def _apply_labels(self, axes, adapter=None):
+        if not self._label_config:
+            return
+        cfg = self._label_config
+        fmt = cfg.get("fmt")
+        fontsize = cfg.get("fontsize")
+        offset = cfg.get("offset")
+        column = cfg.get("column")
+
+        containers = axes.containers
+        if containers:
+            for container in containers:
+                kw = {}
+                if fmt is not None:
+                    kw["fmt"] = f"%{fmt}"
+                if fontsize is not None:
+                    kw["fontsize"] = fontsize
+                if offset is not None:
+                    kw["padding"] = offset
+                axes.bar_label(container, **kw)
+        elif column is not None:
+            if adapter is None:
+                adapter = DataAdapter.from_any(self._data)
+            labels = adapter.resolve(column)
+            for collection in axes.collections:
+                offsets = collection.get_offsets()
+                if len(offsets) == len(labels):
+                    kw = {}
+                    if fontsize is not None:
+                        kw["fontsize"] = fontsize
+                    text_offset = offset if offset is not None else 5
+                    for (px, py), lbl in zip(offsets, labels):
+                        axes.annotate(str(lbl), (px, py),
+                                      textcoords="offset points",
+                                      xytext=(0, text_offset),
+                                      ha="center", **kw)
+                    break
 
     def _apply_subtitle(self, fig):
         if self._subtitle:
@@ -602,12 +710,25 @@ class Chart:
             elif kind == "vband":
                 axes.axvspan(kw.pop("x1"), kw.pop("x2"), **kw)
 
+    _OUTSIDE_LEGEND = {
+        "outside right": {"bbox_to_anchor": (1.02, 0.5), "loc": "center left"},
+        "outside left": {"bbox_to_anchor": (-0.02, 0.5), "loc": "center right"},
+        "outside top": {"bbox_to_anchor": (0.5, 1.12), "loc": "lower center"},
+        "outside bottom": {"bbox_to_anchor": (0.5, -0.12), "loc": "upper center"},
+    }
+
     def _apply_legend(self, axes):
         if not self._legend_opts:
             return
-        if not self._legend_opts.get("hide"):
-            axes.legend(loc=self._legend_opts.get("position", "best"),
-                        title=self._legend_opts.get("title"))
+        if self._legend_opts.get("hide"):
+            return
+        position = self._legend_opts.get("position", "best")
+        title = self._legend_opts.get("title")
+        outside = self._OUTSIDE_LEGEND.get(position)
+        if outside is not None:
+            axes.legend(title=title, **outside)
+        else:
+            axes.legend(loc=position, title=title)
 
 
 def chart(data=None):

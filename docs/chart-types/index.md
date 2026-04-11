@@ -1,6 +1,6 @@
 # Chart types
 
-Cerno supports fourteen chart types plus statistical overlays. Each adds a
+Cerno supports fifteen chart types plus statistical overlays. Each adds a
 layer to the chart — you can combine multiple types on the same axes.
 
 ```{toctree}
@@ -20,5 +20,6 @@ swarm
 countplot
 ecdf
 rug
+pointplot
 regression
 ```

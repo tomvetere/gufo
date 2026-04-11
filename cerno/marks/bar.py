@@ -4,7 +4,7 @@ import numpy as np
 from ..core.validate import check_array_lengths, warn_nan_inf
 from ._base import (
     apply_label, apply_color, default_colors, is_wide_form,
-    resolve_color, resolve_errors, iter_color_groups,
+    resolve_color, resolve_errors, iter_color_groups, set_category_ticks,
 )
 
 
@@ -61,14 +61,6 @@ def _draw_dodged(axes, x_pos, series_list, horizontal, extra_kwargs):
             axes.bar(offset, heights, width=width, **kw)
 
 
-def _set_category_ticks(axes, x_pos, labels, horizontal):
-    """Set tick positions and labels for categorical bars."""
-    if horizontal:
-        axes.set_yticks(x_pos, labels=labels)
-    else:
-        axes.set_xticks(x_pos, labels=labels)
-
-
 def _aggregate_by_x(x, y, mask, unique_x, x_indices):
     """Sum y values per unique x category, optionally filtered by mask."""
     if mask is not None:
@@ -105,7 +97,7 @@ def _render_color_groups(x, y, groups, axes, enc, extra_kwargs):
                   for cat, color, mask in groups]
         _draw_dodged(axes, x_pos, series, horizontal, extra_kwargs)
 
-    _set_category_ticks(axes, x_pos, unique_x, horizontal)
+    set_category_ticks(axes, x_pos, unique_x, horizontal)
 
 
 def _render_wide_form(layer, adapter, axes, enc):
@@ -124,4 +116,4 @@ def _render_wide_form(layer, adapter, axes, enc):
     series_list = [(y_data, name, colors[i])
                    for i, (name, y_data) in enumerate(zip(layer.y, series))]
     _draw_dodged(axes, x_pos, series_list, horizontal, layer.kwargs)
-    _set_category_ticks(axes, x_pos, x_raw, horizontal)
+    set_category_ticks(axes, x_pos, x_raw, horizontal)
