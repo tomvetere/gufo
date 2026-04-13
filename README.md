@@ -546,11 +546,16 @@ cerno.chart(df).scatter("gdp", "life_exp").facet("continent").show()
 
 # Control the number of columns before wrapping
 cerno.chart(df).scatter("gdp", "life_exp").facet("continent", cols=4).show()
+
+# Independent axes per panel (default is shared across all panels)
+cerno.chart(df).scatter("gdp", "life_exp").facet("continent", sharex=False, sharey=False).show()
 ```
 
 `facet()` takes a categorical column name and creates one panel per unique value,
 each showing the same layers with only that subset of data. Chart-level `.title()`
 becomes a super-title above all panels. Empty cells are hidden automatically.
+`sharex` and `sharey` both default to `True`; set either to `False` for
+independent per-panel scales.
 
 ### Pair plot
 
