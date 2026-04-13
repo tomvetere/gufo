@@ -108,6 +108,9 @@ cerno.chart(df).line("year", "forecast", stroke_dash="dashed").show()
 
 # Error bars / confidence band
 cerno.chart(df).line("year", "revenue", y_error="revenue_std").show()
+
+# Gradient line colored by a numeric variable (with automatic colorbar)
+cerno.chart(df).line("x", "y", color="speed", cmap="viridis").show()
 ```
 
 ### Bar
@@ -219,6 +222,9 @@ cerno.chart(df).area("x", "y", color="steelblue", alpha=0.3).show()
 
 # Grouped by category
 cerno.chart(df).area("x", "y", color="category").show()
+
+# Error band around the top edge
+cerno.chart(df).area("x", "y", y_error="y_std").show()
 ```
 
 ### Regression overlay
@@ -354,6 +360,12 @@ cerno.chart(df).bar("region", "sales").label(fmt=".1f").show()
 
 # Label scatter points with a column
 cerno.chart(df).scatter("x", "y").label("name").show()
+
+# Label each point on a line chart
+cerno.chart(df).line("month", "revenue").label(fmt=".0f").show()
+
+# Label pointplot means with a format string
+cerno.chart(df).pointplot("day", "tip").label(fmt=".2f").show()
 ```
 
 ---
@@ -557,6 +569,12 @@ becomes a super-title above all panels. Empty cells are hidden automatically.
 `sharex` and `sharey` both default to `True`; set either to `False` for
 independent per-panel scales.
 
+When a faceted chart uses continuous color (`scatter`/`line` with a numeric
+color column), a single figure-level colorbar is drawn with the global data
+range, so panel colors are directly comparable. When `.legend()` is called on
+a faceted chart, a single figure-level legend is drawn (deduped by label)
+instead of one legend per panel.
+
 ### Pair plot
 
 ```python
@@ -693,16 +711,18 @@ pytest tests/ -v
 
 ## Roadmap
 
-**v0.1** — scatter, line, bar, histogram, theming, wide-form data, grid layout, faceting, input validation
+**v0.0.1** — scatter, line, bar, histogram, theming, wide-form data, grid layout, faceting, input validation
 
-**v0.2** — box plot, heatmap, area chart, violin plot, polars support
+**v0.0.2** — box plot, heatmap, area chart, violin plot, polars support
 
-**v0.3** — pair plot
+**v0.0.3** — pair plot
 
-**v0.4** — regression overlay, KDE/density plot, strip/swarm plots (scipy optional dependency) ✓
+**v0.0.4** — regression overlay, KDE/density plot, strip/swarm plots (scipy optional dependency) ✓
 
-**v0.5** — categorical color on box/violin, countplot, error bars, rugplot, ECDF, color palette API, reference lines/bands ✓
+**v0.0.5** — categorical color on box/violin, countplot, error bars, rugplot, ECDF, color palette API, reference lines/bands ✓
 
-**v0.6** — stacked/dodged bar grouping, continuous color scales on scatter, jointplot, Grid width/height ratios, horizontal histogram, complete docstrings, visual gallery, tutorial ✓
+**v0.0.6** — stacked/dodged bar grouping, continuous color scales on scatter, jointplot, Grid width/height ratios, horizontal histogram, complete docstrings, visual gallery, tutorial ✓
 
-**v0.7** — data labels, pointplot, LOWESS smoothing, facet sharex/sharey, legend outside positioning
+**v0.0.7** — data labels, pointplot, LOWESS smoothing, facet sharex/sharey, legend outside positioning ✓
+
+**v0.0.8** — shared colorbar/legend on faceted charts, continuous color on line, `.label()` on line and pointplot, error bands on area ✓

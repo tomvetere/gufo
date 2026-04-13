@@ -659,3 +659,148 @@ class TestPointplot:
         from cerno.core.chart import Chart
         c = cerno.chart(point_df).pointplot("day", "tip").title("Points")
         assert isinstance(c, Chart)
+
+
+# ── v0.0.8: continuous color on line ───────────────────────────────
+
+class TestLineContinuousColor:
+    @pytest.fixture
+    def line_df(self):
+        return pd.DataFrame({
+            "x": np.linspace(0, 10, 20),
+            "y": np.sin(np.linspace(0, 10, 20)),
+            "z": np.linspace(0, 1, 20),
+        })
+
+    def test_renders_as_line_collection(self, line_df):
+        c = cerno.chart(line_df).line("x", "y", color="z", cmap="viridis")
+        fig, ax = c._render()
+        # Continuous-color line uses LineCollection, not plain Line2D
+        assert len(ax.collections) == 1
+        from matplotlib.collections import LineCollection
+        assert isinstance(ax.collections[0], LineCollection)
+        plt.close(fig)
+
+    def test_colorbar_drawn_by_default(self, line_df):
+        c = cerno.chart(line_df).line("x", "y", color="z", cmap="viridis")
+        fig, ax = c._render()
+        # fig.axes includes the main axes plus the colorbar axes
+        assert len(fig.axes) == 2
+        plt.close(fig)
+
+    def test_colorbar_false_hides_colorbar(self, line_df):
+        c = cerno.chart(line_df).line(
+            "x", "y", color="z", cmap="viridis", colorbar=False
+        )
+        fig, ax = c._render()
+        assert len(fig.axes) == 1
+        plt.close(fig)
+
+    def test_vmin_vmax_respected(self, line_df):
+        c = cerno.chart(line_df).line(
+            "x", "y", color="z", cmap="viridis", vmin=-1, vmax=2
+        )
+        fig, ax = c._render()
+        lc = ax.collections[0]
+        assert lc.norm.vmin == -1
+        assert lc.norm.vmax == 2
+        plt.close(fig)
+
+    def test_categorical_color_still_grouped(self, line_df):
+        df = line_df.copy()
+        df["kind"] = ["a"] * 10 + ["b"] * 10
+        c = cerno.chart(df).line("x", "y", color="kind")
+        fig, ax = c._render()
+        # Categorical should use the existing per-group Line2D path
+        assert len(ax.lines) == 2
+        assert len(ax.collections) == 0
+        plt.close(fig)
+
+
+# ── v0.0.8: .label() on line and pointplot ─────────────────────────
+
+class TestLabelOnLine:
+    @pytest.fixture
+    def line_df(self):
+        return pd.DataFrame({
+            "x": [1, 2, 3, 4],
+            "y": [10.0, 25.0, 13.0, 40.0],
+            "name": ["A", "B", "C", "D"],
+        })
+
+    def test_label_line_with_column(self, line_df):
+        c = cerno.chart(line_df).line("x", "y").label("name")
+        fig, ax = c._render()
+        texts = [t.get_text() for t in ax.texts]
+        assert texts == ["A", "B", "C", "D"]
+        plt.close(fig)
+
+    def test_label_line_without_column_uses_y(self, line_df):
+        c = cerno.chart(line_df).line("x", "y").label(fmt=".1f")
+        fig, ax = c._render()
+        texts = [t.get_text() for t in ax.texts]
+        assert texts == ["10.0", "25.0", "13.0", "40.0"]
+        plt.close(fig)
+
+    def test_line_label_does_not_touch_references(self, line_df):
+        c = (cerno.chart(line_df)
+             .line("x", "y")
+             .label("name")
+             .hline(20))
+        fig, ax = c._render()
+        texts = [t.get_text() for t in ax.texts]
+        assert texts == ["A", "B", "C", "D"]
+        plt.close(fig)
+
+    def test_label_pointplot_uses_means(self):
+        df = pd.DataFrame({
+            "cat": ["a", "a", "b", "b", "c", "c"],
+            "val": [1.0, 3.0, 5.0, 7.0, 9.0, 11.0],
+        })
+        c = cerno.chart(df).pointplot("cat", "val").label(fmt=".1f")
+        fig, ax = c._render()
+        texts = [t.get_text() for t in ax.texts]
+        # Means: a=2, b=6, c=10
+        assert texts == ["2.0", "6.0", "10.0"]
+        plt.close(fig)
+
+
+# ── v0.0.8: area error bands ───────────────────────────────────────
+
+class TestAreaErrorBand:
+    @pytest.fixture
+    def area_df(self):
+        return pd.DataFrame({
+            "x": list(range(6)),
+            "y": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+            "err": [0.5] * 6,
+        })
+
+    def test_error_band_adds_second_collection(self, area_df):
+        c = cerno.chart(area_df).area("x", "y", y_error="err")
+        fig, ax = c._render()
+        # fill_between adds PolyCollection; base area + error band = 2
+        assert len(ax.collections) == 2
+        plt.close(fig)
+
+    def test_no_error_band_without_param(self, area_df):
+        c = cerno.chart(area_df).area("x", "y")
+        fig, ax = c._render()
+        assert len(ax.collections) == 1
+        plt.close(fig)
+
+    def test_error_array_accepted(self, area_df):
+        err = np.full(6, 0.25)
+        c = cerno.chart(area_df).area("x", "y", y_error=err)
+        fig, ax = c._render()
+        assert len(ax.collections) == 2
+        plt.close(fig)
+
+    def test_error_band_within_bounds(self, area_df):
+        c = cerno.chart(area_df).area("x", "y", y_error="err")
+        fig, ax = c._render()
+        band = ax.collections[1]
+        ys = band.get_paths()[0].vertices[:, 1]
+        # Error band spans y ± 0.5 → overall y range [0.5, 6.5]
+        assert ys.min() >= 0.4 and ys.max() <= 6.6
+        plt.close(fig)

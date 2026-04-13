@@ -1,6 +1,28 @@
 # Changelog
 
-## Unreleased (v0.7)
+## Unreleased (v0.0.8)
+
+**Correctness fixes — faceted charts**
+- Shared colorbar: faceted charts with continuous color (`scatter`/`line`) now draw a single figure-level colorbar using the global data range across all panels. Previously each panel produced its own colorbar with a per-subset scale, making colors incomparable across panels.
+- Shared legend: when `.legend()` is called on a faceted chart, a single figure-level legend is drawn (deduped by label) instead of one duplicate legend per panel.
+
+**Mark feature parity**
+- Line: `color=` now accepts a numeric column for a gradient line drawn via `LineCollection`. Supports `cmap`, `vmin`, `vmax`, `colorbar` — mirrors `.scatter()`'s continuous-color API.
+- `.label()` on line and pointplot: per-point labels on line charts (optionally from a column) and on pointplot means (formatted with `fmt`).
+- Area: new `y_error` parameter draws a lighter fill band around the top edge of the area.
+
+**Internal**
+- `Chart._render_onto` gains a `suppress_legend` kwarg so facet rendering can draw one figure-level legend after panels.
+- `Chart._apply_labels` split into `_label_bar_containers`, `_label_scatter_offsets`, and `_label_line_points` helpers, routed by layer mark types.
+- Label application now runs before reference lines in `_apply_decorators`, so `axes.lines` contains only mark-created lines when labels are placed.
+- Facet rendering switched from `tight_layout()` to `layout="constrained"` for correct spacing with figure-level colorbars and legends.
+
+**Testing**
+- 384 tests passing
+
+---
+
+## Unreleased (v0.0.7)
 
 **New chart types**
 - Point plot: `.pointplot("x", "y")` — connected category means with 95% CI error bars. Supports categorical color grouping (dodged) and horizontal mode.
@@ -21,7 +43,7 @@
 
 ---
 
-## Unreleased (v0.6)
+## Unreleased (v0.0.6)
 
 **New features**
 - Stacked/dodged bar grouping: `.bar("x", "y", color="category")` now groups bars by category (dodged by default). Set `stacked=True` to stack bars instead.
@@ -52,7 +74,7 @@
 
 ---
 
-## Unreleased (v0.5)
+## Unreleased (v0.0.5)
 
 **New chart types**
 - Countplot: `.countplot("x")` — bar chart of value counts, with optional categorical color grouping for side-by-side bars.
@@ -70,7 +92,7 @@
 
 ---
 
-## Unreleased (v0.4)
+## Unreleased (v0.0.4)
 
 **New chart types**
 - KDE (kernel density estimation): `.kde("x")` — standalone density plot with optional fill, categorical color grouping, configurable bandwidth. Requires scipy.
@@ -95,7 +117,7 @@
 
 ---
 
-## Unreleased (v0.3)
+## Unreleased (v0.0.3)
 
 **New features**
 - Pair plot: `cerno.pairplot(df)` generates an NxN grid of scatter plots (off-diagonal) and histograms (diagonal) for all numeric columns. Supports `color` for categorical grouping and `columns` to select a subset. Returns a `Grid`.
@@ -111,7 +133,7 @@
 
 ---
 
-## v0.2
+## v0.0.2
 
 **New chart types**
 - Box plot: `.boxplot("x", "y")` — grouped boxes, horizontal mode, wide-form support
@@ -127,7 +149,7 @@
 **Breaking changes**
 - `Grid` is now a standalone class in `cerno/layout/grid.py`, no longer part of `Chart`. `cerno.grid(2, 2)` returns a `Grid` instance (not a `Chart`). The `chart().grid(...)` pattern no longer works.
 
-**Previously shipped features (v0.1 cycle)**
+**Previously shipped features (v0.0.1 cycle)**
 - Faceting: `cerno.chart(df).scatter("x", "y").facet("category")` splits data by a categorical column into subplots. Chart-level `.title()` becomes a super-title; each panel is titled with its category value. Panels wrap after `cols` columns (default 3).
 - Wide-form scatter: `.scatter("x", ["col_a", "col_b"])` renders one series per column with automatic colors and legend labels
 - Wide-form bar: `.bar("x", ["col_a", "col_b"])` renders grouped bars with automatic offset positioning, colors, and legend labels. Supports `horizontal=True`.
@@ -178,7 +200,7 @@
 
 ---
 
-## v0.1.0
+## v0.0.1
 
 Initial release.
 

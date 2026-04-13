@@ -1,8 +1,12 @@
 """Line mark — supports single series, multi-series (wide-form), and color grouping."""
+import numpy as np
+from matplotlib.collections import LineCollection
+from matplotlib.colors import Normalize
+
 from ..core.validate import check_array_lengths, check_stroke_dash, warn_nan_inf
 from ._base import (
-    apply_label, is_wide_form, render_wide_form, resolve_color,
-    resolve_errors, iter_color_groups,
+    apply_label, is_continuous_color, is_wide_form, iter_color_groups,
+    render_wide_form, resolve_color, resolve_color_range, resolve_errors,
 )
 
 _DASH_STYLES = {
@@ -57,7 +61,37 @@ def render(layer, adapter, axes):
             axes.plot(x[mask], y[mask], **series_kwargs)
         return
 
+    if is_continuous_color(color_value, len(x)):
+        _draw_continuous_line(axes, x, y, color_value, enc, kwargs)
+        return
+
     if color_value is not None:
         kwargs["color"] = color_value
 
     axes.plot(x, y, **kwargs)
+
+
+def _draw_continuous_line(axes, x, y, color_value, enc, kwargs):
+    """Draw a line whose segments are colored by a numeric variable."""
+    arr = np.asarray(color_value, dtype=float)
+    vmin, vmax = resolve_color_range(arr, enc.get("vmin"), enc.get("vmax"))
+
+    points = np.array([x, y]).T.reshape(-1, 1, 2)
+    segments = np.concatenate([points[:-1], points[1:]], axis=1)
+    segment_values = (arr[:-1] + arr[1:]) / 2
+
+    lc_kwargs = {"cmap": enc.get("cmap"), "norm": Normalize(vmin=vmin, vmax=vmax)}
+    if kwargs.get("linestyle") is not None:
+        lc_kwargs["linestyles"] = kwargs["linestyle"]
+    if kwargs.get("linewidth") is not None:
+        lc_kwargs["linewidths"] = kwargs["linewidth"]
+    if kwargs.get("label") is not None:
+        lc_kwargs["label"] = kwargs["label"]
+
+    lc = LineCollection(segments, **lc_kwargs)
+    lc.set_array(segment_values)
+    axes.add_collection(lc)
+    axes.autoscale_view()
+
+    if enc.get("colorbar", True):
+        axes.figure.colorbar(lc, ax=axes)

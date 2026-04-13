@@ -88,18 +88,24 @@ class Chart:
         return self
 
     def line(self, x, y, *, color=None, stroke_dash=None, label=None,
+             cmap=None, vmin=None, vmax=None, colorbar=True,
              y_error=None, x_error=None, **kwargs):
         """Add a line plot layer.
 
         y may be a list of column names for wide-form DataFrames — each column
         becomes its own series without requiring pd.melt().
 
+        When color is a numeric column, the line is drawn as a gradient
+        segment-by-segment using cmap/vmin/vmax. A colorbar is shown by
+        default (set colorbar=False to hide).
+
         y_error / x_error accept a column name or array for error bars.
         """
         self._layers.append(Layer(
             mark_type="line", x=x, y=y,
             encodings={"color": color, "stroke_dash": stroke_dash,
-                       "label": label,
+                       "label": label, "cmap": cmap, "vmin": vmin,
+                       "vmax": vmax, "colorbar": colorbar,
                        "y_error": y_error, "x_error": x_error},
             kwargs=kwargs,
         ))
@@ -238,15 +244,20 @@ class Chart:
         ))
         return self
 
-    def area(self, x, y, *, color=None, alpha=None, label=None, **kwargs):
+    def area(self, x, y, *, color=None, alpha=None, label=None,
+             y_error=None, **kwargs):
         """Add an area chart layer.
 
         y may be a list of column names for wide-form DataFrames — each column
         becomes a stacked area without requiring pd.melt().
+
+        y_error accepts a column name or array and draws a lighter error
+        band around the top edge of the area (long-form only).
         """
         self._layers.append(Layer(
             mark_type="area", x=x, y=y,
-            encodings={"color": color, "alpha": alpha, "label": label},
+            encodings={"color": color, "alpha": alpha, "label": label,
+                       "y_error": y_error},
             kwargs=kwargs,
         ))
         return self
@@ -594,11 +605,13 @@ class Chart:
 
         return fig, axes
 
-    def _render_onto(self, figure, axes, adapter=None):
+    def _render_onto(self, figure, axes, adapter=None, suppress_legend=False):
         """Render this chart's layers onto an externally provided axes.
 
         Used by Grid and facet rendering. When adapter is provided, it is
-        used instead of creating one from self._data.
+        used instead of creating one from self._data. When suppress_legend
+        is True, the per-axes legend is skipped — facet rendering uses this
+        to draw a single figure-level legend after all panels are rendered.
         """
         theme = _resolve_theme(self._theme_override)
         if adapter is None:
@@ -610,11 +623,12 @@ class Chart:
             for layer in self._layers:
                 layer.palette = resolved_palette
                 render_layer(layer, adapter, axes)
-            self._apply_decorators(figure, axes, adapter)
+            self._apply_decorators(figure, axes, adapter,
+                                   suppress_legend=suppress_legend)
             for func in self._apply_funcs:
                 func(figure, axes)
 
-    def _apply_decorators(self, fig, axes, adapter=None):
+    def _apply_decorators(self, fig, axes, adapter=None, suppress_legend=False):
         for attr, method in self._SIMPLE_SETTERS:
             value = getattr(self, attr)
             if value is not None:
@@ -625,52 +639,106 @@ class Chart:
         if self._ylim:
             axes.set_ylim(*self._ylim)
 
+        self._apply_labels(axes, adapter)
         self._apply_references(axes)
         self._apply_subtitle(fig)
         self._apply_caption(fig)
         self._apply_ticks(axes, "x", self._xticks)
         self._apply_ticks(axes, "y", self._yticks)
         self._apply_annotations(axes)
-        self._apply_labels(axes, adapter)
-        self._apply_legend(axes)
+        if not suppress_legend:
+            self._apply_legend(axes)
 
     def _apply_labels(self, axes, adapter=None):
         if not self._label_config:
             return
-        cfg = self._label_config
-        fmt = cfg.get("fmt")
-        fontsize = cfg.get("fontsize")
-        offset = cfg.get("offset")
-        column = cfg.get("column")
 
-        containers = axes.containers
-        if containers:
-            for container in containers:
-                kw = {}
-                if fmt is not None:
-                    kw["fmt"] = f"%{fmt}"
-                if fontsize is not None:
-                    kw["fontsize"] = fontsize
-                if offset is not None:
-                    kw["padding"] = offset
-                axes.bar_label(container, **kw)
-        elif column is not None:
+        mark_types = {layer.mark_type for layer in self._layers}
+        line_only = bool(mark_types & {"line", "pointplot"}) and not (
+            mark_types & {"bar", "countplot", "scatter"}
+        )
+
+        if line_only:
+            self._label_line_points(axes, adapter)
+            return
+
+        if axes.containers:
+            self._label_bar_containers(axes)
+            return
+
+        if self._label_config.get("column") is not None:
+            self._label_scatter_offsets(axes, adapter)
+
+    def _label_text_kwargs(self):
+        """Return (annotate_kwargs, text_offset) from the label config."""
+        cfg = self._label_config
+        kw = {}
+        if cfg.get("fontsize") is not None:
+            kw["fontsize"] = cfg["fontsize"]
+        offset = cfg.get("offset")
+        return kw, offset if offset is not None else 5
+
+    def _label_bar_containers(self, axes):
+        cfg = self._label_config
+        kw, _ = self._label_text_kwargs()
+        fmt = cfg.get("fmt")
+        if fmt is not None:
+            kw["fmt"] = f"%{fmt}"
+        if cfg.get("offset") is not None:
+            kw["padding"] = cfg["offset"]
+        for container in axes.containers:
+            axes.bar_label(container, **kw)
+
+    def _label_scatter_offsets(self, axes, adapter):
+        column = self._label_config.get("column")
+        if adapter is None:
+            adapter = DataAdapter.from_any(self._data)
+        labels = adapter.resolve(column)
+        kw, text_offset = self._label_text_kwargs()
+        for collection in axes.collections:
+            offsets = collection.get_offsets()
+            if len(offsets) == len(labels):
+                for (px, py), lbl in zip(offsets, labels):
+                    axes.annotate(str(lbl), (px, py),
+                                  textcoords="offset points",
+                                  xytext=(0, text_offset),
+                                  ha="center", **kw)
+                break
+
+    def _label_line_points(self, axes, adapter):
+        """Label each point on a line or pointplot mark.
+
+        If a column is configured, its values are used as labels; otherwise
+        the y-values are formatted via *fmt* (default two decimals).
+        """
+        data_lines = [ln for ln in axes.lines if len(ln.get_xdata()) > 0]
+        if not data_lines:
+            return
+        cfg = self._label_config
+        column = cfg.get("column")
+        fmt = cfg.get("fmt")
+
+        line = data_lines[0]
+        xs = line.get_xdata()
+        ys = line.get_ydata()
+
+        if column is not None:
             if adapter is None:
                 adapter = DataAdapter.from_any(self._data)
             labels = adapter.resolve(column)
-            for collection in axes.collections:
-                offsets = collection.get_offsets()
-                if len(offsets) == len(labels):
-                    kw = {}
-                    if fontsize is not None:
-                        kw["fontsize"] = fontsize
-                    text_offset = offset if offset is not None else 5
-                    for (px, py), lbl in zip(offsets, labels):
-                        axes.annotate(str(lbl), (px, py),
-                                      textcoords="offset points",
-                                      xytext=(0, text_offset),
-                                      ha="center", **kw)
-                    break
+            if len(labels) != len(xs):
+                return
+            text_values = [str(lbl) for lbl in labels]
+        else:
+            fmt_str = "{:" + fmt + "}" if fmt else "{:.2f}"
+            text_values = [fmt_str.format(y) for y in ys]
+
+        kw, text_offset = self._label_text_kwargs()
+        for px, py, lbl in zip(xs, ys, text_values):
+            axes.annotate(lbl, (px, py),
+                          textcoords="offset points",
+                          xytext=(0, text_offset),
+                          ha="center", **kw)
 
     def _apply_subtitle(self, fig):
         if self._subtitle:

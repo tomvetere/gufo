@@ -1,4 +1,4 @@
-"""Tests for v0.4 statistical marks — regression, KDE, strip, swarm."""
+"""Tests for v0.0.4 statistical marks — regression, KDE, strip, swarm."""
 
 import numpy as np
 import pandas as pd

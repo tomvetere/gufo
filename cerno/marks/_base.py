@@ -106,6 +106,28 @@ def resolve_color_list(adapter, enc, n, palette=None):
     return default_colors(n, palette=palette)
 
 
+def is_continuous_color(color_value, n):
+    """True if color_value is a numeric array aligned with the data."""
+    if color_value is None or isinstance(color_value, str):
+        return False
+    if not hasattr(color_value, "__len__"):
+        return False
+    if len(color_value) != n:
+        return False
+    return not is_categorical(color_value)
+
+
+def resolve_color_range(values, vmin, vmax):
+    """Default vmin/vmax from a numeric array, filtering NaN/inf."""
+    arr = np.asarray(values, dtype=float)
+    finite = arr[np.isfinite(arr)]
+    if vmin is None:
+        vmin = float(finite.min()) if finite.size else 0.0
+    if vmax is None:
+        vmax = float(finite.max()) if finite.size else 1.0
+    return float(vmin), float(vmax)
+
+
 def resolve_errors(adapter, enc):
     """Resolve y_error / x_error encodings to arrays or None."""
     yerr = enc.get("y_error")

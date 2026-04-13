@@ -3,8 +3,8 @@ import numpy as np
 
 from ..core.validate import check_array_lengths, warn_nan_inf
 from ._base import (
-    apply_label, is_wide_form, render_wide_form, resolve_color,
-    resolve_errors, iter_color_groups,
+    apply_label, is_continuous_color, is_wide_form, iter_color_groups,
+    render_wide_form, resolve_color, resolve_errors,
 )
 
 
@@ -70,9 +70,7 @@ def render(layer, adapter, axes):
             axes.scatter(x[mask], y[mask], color=color, **scatter_kwargs)
     else:
         if color_value is not None:
-            if (not isinstance(color_value, str)
-                    and hasattr(color_value, "__len__")
-                    and len(color_value) == len(x)):
+            if is_continuous_color(color_value, len(x)):
                 kwargs["c"] = color_value
                 for key in ("cmap", "vmin", "vmax"):
                     if enc.get(key) is not None:

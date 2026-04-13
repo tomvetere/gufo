@@ -31,6 +31,37 @@ For long-form DataFrames, use `color` to group by a categorical column.
 cerno.chart(long_df).line("year", "revenue", color="product").legend().show()
 ```
 
+## Continuous color
+
+Pass a numeric column as `color` to draw a gradient line whose segments are
+colored by the variable. An automatic colorbar is added.
+
+```python
+cerno.chart(df).line("x", "y", color="speed", cmap="viridis").show()
+
+# Custom range and no colorbar
+cerno.chart(df).line("x", "y", color="speed", vmin=0, vmax=100,
+                     colorbar=False).show()
+```
+
+## Error band
+
+Pass `y_error` (column name or array) to draw error bars or a confidence band
+along the line.
+
+```python
+cerno.chart(df).line("year", "revenue", y_error="revenue_std").show()
+```
+
+## Data labels
+
+Use `.label()` to annotate each point with its y-value or a column.
+
+```python
+cerno.chart(df).line("month", "revenue").label(fmt=".0f").show()
+cerno.chart(df).line("month", "revenue").label("note").show()
+```
+
 ## Line style
 
 ```python

@@ -24,7 +24,7 @@ cerno/
 │   └── validate.py      # input validation helpers (check_array_lengths, check_numeric, etc.)
 ├── marks/
 │   ├── __init__.py      # render_layer() dispatcher
-│   ├── _base.py         # shared mark utilities (resolve_color, default_colors, apply_label, apply_color, iter_color_groups, is_wide_form, render_wide_form, group_by_x, resolve_color_list, resolve_errors, render_categorical_scatter, set_category_ticks)
+│   ├── _base.py         # shared mark utilities (resolve_color, default_colors, apply_label, apply_color, iter_color_groups, is_wide_form, render_wide_form, group_by_x, resolve_color_list, resolve_errors, is_continuous_color, resolve_color_range, render_categorical_scatter, set_category_ticks)
 │   ├── scatter.py       # render(layer, adapter, axes)
 │   ├── line.py
 │   ├── bar.py
@@ -162,10 +162,12 @@ pandas, polars, scipy, and statsmodels are guarded with `try/except ImportError`
 
 ## Roadmap
 
-- **v0.1**: scatter, line, bar, histogram, theming, wide-form data, grid layout, faceting, input validation
-- **v0.2**: box, heatmap, area, violin, polars support, two-variable faceting — complete
-- **v0.3**: pair plot — complete
-- **v0.4**: regression overlay, KDE/density plot, strip/swarm plots (scipy optional dependency) — complete
-- **v0.5**: categorical color on box/violin, countplot, error bars, rugplot, ECDF, color palette API, reference lines/bands — complete
-- **v0.6**: stacked/dodged bar grouping, continuous color scales on scatter, jointplot, Grid ratios, horizontal histogram, docstrings, gallery, tutorial — complete
-- **v0.7**: data labels, pointplot, LOWESS smoothing, facet sharex/sharey, legend outside — in progress
+- **v0.0.1**: scatter, line, bar, histogram, theming, wide-form data, grid layout, faceting, input validation
+- **v0.0.2**: box, heatmap, area, violin, polars support, two-variable faceting — complete
+- **v0.0.3**: pair plot — complete
+- **v0.0.4**: regression overlay, KDE/density plot, strip/swarm plots (scipy optional dependency) — complete
+- **v0.0.5**: categorical color on box/violin, countplot, error bars, rugplot, ECDF, color palette API, reference lines/bands — complete
+- **v0.0.6**: stacked/dodged bar grouping, continuous color scales on scatter, jointplot, Grid ratios, horizontal histogram, docstrings, gallery, tutorial — complete
+- **v0.0.7**: data labels, pointplot, LOWESS smoothing, facet sharex/sharey, legend outside — complete
+- **v0.0.8**: shared colorbar/legend on faceted charts, continuous color on line, `.label()` on line and pointplot, error bands on area — complete
+- **v0.1.0**: target first tagged release

@@ -86,6 +86,14 @@ to let each panel scale independently — useful when groups have very different
 cerno.chart(df).scatter("x", "y").facet("group", sharey=False).show()
 ```
 
+### Shared colorbar and legend
+
+When a faceted chart uses continuous color (a numeric column as `color=` on
+`scatter` or `line`), a single figure-level colorbar is drawn using the
+global data range across all panels, so colors are directly comparable. When
+`.legend()` is called on a faceted chart, a single figure-level legend is
+drawn (deduped by label) instead of one per panel.
+
 ## Joint plot
 
 `cerno.jointplot()` creates a scatter plot with marginal distributions

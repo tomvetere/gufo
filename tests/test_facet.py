@@ -284,3 +284,115 @@ class TestFacetShareAxes:
          .facet("group", sharex=False)
          .save(tmp_path / "f.png"))
         assert (tmp_path / "f.png").exists()
+
+
+# ── Shared colorbar / legend on faceted charts (v0.0.8) ────────────
+
+class TestFacetSharedColorbar:
+    @pytest.fixture
+    def color_df(self):
+        return pd.DataFrame({
+            "x": list(range(12)),
+            "y": list(range(12)),
+            # Global z range [0, 100] — panel A will have [0, 5], panel B [95, 100]
+            "z": [0, 1, 2, 3, 4, 5, 95, 96, 97, 98, 99, 100],
+            "group": ["A"] * 6 + ["B"] * 6,
+        })
+
+    def test_single_colorbar_across_panels(self, color_df):
+        c = (chart(color_df)
+             .scatter("x", "y", color="z", cmap="viridis")
+             .facet("group"))
+        fig, axs = c._render()
+        data_axes = list(axs.flat)
+        colorbar_axes = [ax for ax in fig.axes if ax not in data_axes]
+        assert len(colorbar_axes) == 1
+        plt.close(fig)
+
+    def test_shared_colorbar_uses_global_range(self, color_df):
+        c = (chart(color_df)
+             .scatter("x", "y", color="z", cmap="viridis")
+             .facet("group"))
+        fig, axs = c._render()
+        data_axes = list(axs.flat)
+        cbar_ax = [ax for ax in fig.axes if ax not in data_axes][0]
+        # The colorbar's value range should span the full data [0, 100]
+        ylim = cbar_ax.get_ylim()
+        assert ylim[0] <= 0 and ylim[1] >= 100
+        plt.close(fig)
+
+    def test_suppressed_when_colorbar_false(self, color_df):
+        c = (chart(color_df)
+             .scatter("x", "y", color="z", cmap="viridis", colorbar=False)
+             .facet("group"))
+        fig, axs = c._render()
+        data_axes = list(axs.flat)
+        colorbar_axes = [ax for ax in fig.axes if ax not in data_axes]
+        assert len(colorbar_axes) == 0
+        plt.close(fig)
+
+    def test_categorical_color_does_not_trigger_colorbar(self, color_df):
+        df = color_df.copy()
+        df["kind"] = ["red", "blue"] * 6
+        c = (chart(df)
+             .scatter("x", "y", color="kind")
+             .facet("group"))
+        fig, axs = c._render()
+        data_axes = list(axs.flat)
+        colorbar_axes = [ax for ax in fig.axes if ax not in data_axes]
+        assert len(colorbar_axes) == 0
+        plt.close(fig)
+
+
+class TestFacetSharedLegend:
+    @pytest.fixture
+    def legend_df(self):
+        return pd.DataFrame({
+            "x": list(range(16)),
+            "y": list(range(16)),
+            "kind": (["red", "blue"] * 8),
+            "group": ["A"] * 8 + ["B"] * 8,
+        })
+
+    def test_single_figure_legend(self, legend_df):
+        c = (chart(legend_df)
+             .scatter("x", "y", color="kind")
+             .legend()
+             .facet("group"))
+        fig, axs = c._render()
+        # Per-panel legends should be suppressed
+        per_panel = [ax.get_legend() for ax in axs.flat if ax.get_visible()]
+        assert all(leg is None for leg in per_panel)
+        # Figure-level legend should exist
+        assert fig.legends
+        plt.close(fig)
+
+    def test_legend_deduplicated_across_panels(self, legend_df):
+        c = (chart(legend_df)
+             .scatter("x", "y", color="kind")
+             .legend()
+             .facet("group"))
+        fig, axs = c._render()
+        texts = [t.get_text() for t in fig.legends[0].get_texts()]
+        assert sorted(texts) == ["blue", "red"]
+        plt.close(fig)
+
+    def test_legend_hide_suppresses_figure_legend(self, legend_df):
+        c = (chart(legend_df)
+             .scatter("x", "y", color="kind")
+             .legend(hide=True)
+             .facet("group"))
+        fig, axs = c._render()
+        assert not fig.legends
+        plt.close(fig)
+
+    def test_no_legend_without_explicit_call(self, legend_df):
+        c = (chart(legend_df)
+             .scatter("x", "y", color="kind")
+             .facet("group"))
+        fig, axs = c._render()
+        # No .legend() call → no legend at all
+        assert not fig.legends
+        per_panel = [ax.get_legend() for ax in axs.flat if ax.get_visible()]
+        assert all(leg is None for leg in per_panel)
+        plt.close(fig)

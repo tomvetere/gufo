@@ -24,6 +24,14 @@ cerno.chart(df).area("x", "y", color="steelblue", alpha=0.3).show()
 cerno.chart(df).area("x", "y", color="category").show()
 ```
 
+## Error band
+
+Pass `y_error` to draw a lighter fill band around the top edge of the area.
+
+```python
+cerno.chart(df).area("x", "y", y_error="y_std").show()
+```
+
 ## API reference
 
 See {py:meth}`cerno.core.chart.Chart.area`.

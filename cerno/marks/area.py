@@ -1,8 +1,10 @@
 """Area mark."""
+import numpy as np
+
 from ..core.validate import check_array_lengths, warn_nan_inf
 from ._base import (
     apply_label, apply_color, default_colors, is_wide_form,
-    resolve_color, iter_color_groups,
+    resolve_color, resolve_errors, iter_color_groups,
 )
 
 
@@ -35,6 +37,18 @@ def render(layer, adapter, axes):
     apply_color(kwargs, adapter, enc)
 
     axes.fill_between(x, y, **kwargs)
+
+    yerr, _ = resolve_errors(adapter, enc)
+    if yerr is not None:
+        _draw_error_band(axes, x, y, yerr, kwargs.get("color"))
+
+
+def _draw_error_band(axes, x, y, yerr, color):
+    """Overlay a lighter fill_between(y-err, y+err) to show the error band."""
+    y = np.asarray(y, dtype=float)
+    yerr = np.asarray(yerr, dtype=float)
+    axes.fill_between(x, y - yerr, y + yerr, color=color, alpha=0.25,
+                      linewidth=0)
 
 
 def _render_wide_form(layer, adapter, axes, enc):
