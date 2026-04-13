@@ -4,17 +4,29 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cerno"
-version = "0.1.0"
+dynamic = ["version"]
 description = "A modern, Pythonic data visualization library aimed at usability and aesthetics."
 authors = [
-  { name = "Thomas", email = "thomas@example.com" },
+  { name = "Thomas Vetere", email = "tomvetere@gmail.com" },
 ]
 readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.9"
+keywords = ["visualization", "plotting", "matplotlib", "charts", "dataviz"]
 classifiers = [
-    "Programming Language :: Python :: 3",
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Framework :: Matplotlib",
 ]
 dependencies = [
     "matplotlib>=3.5.0",
@@ -36,5 +48,13 @@ docs = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/thomas/cerno"
+"Homepage" = "https://github.com/tomvetere/cerno"
+"Repository" = "https://github.com/tomvetere/cerno"
+"Issues" = "https://github.com/tomvetere/cerno/issues"
 "Documentation" = "https://cerno.readthedocs.io"
+
+[tool.setuptools.dynamic]
+version = { attr = "cerno._version.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["cerno*"]
