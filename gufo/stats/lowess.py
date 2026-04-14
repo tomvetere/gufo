@@ -15,7 +15,7 @@ except ImportError:
 class Lowess:
     """Configuration for a LOWESS smoothing curve overlaid on a scatter plot.
 
-    Users create instances via cerno.lowess(), never directly.
+    Users create instances via gufo.lowess(), never directly.
     """
 
     frac: float = 0.6667
@@ -36,7 +36,7 @@ class Lowess:
         if sm_lowess is None:
             raise ImportError(
                 "LOWESS smoothing requires statsmodels. "
-                "Install it with: pip install cerno[stats]"
+                "Install it with: pip install gufo[stats]"
             )
 
         mask = np.isfinite(x) & np.isfinite(y)

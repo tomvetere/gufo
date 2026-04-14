@@ -54,7 +54,7 @@ def _resolve_long_form(layer, adapter, enc):
     if color_col is None:
         raise ValueError(
             "Long-form heatmap requires a color encoding. "
-            "Use cerno.chart(df).heatmap('x', 'y', color='value_col')."
+            "Use gufo.chart(df).heatmap('x', 'y', color='value_col')."
         )
 
     x = adapter.resolve(layer.x)

@@ -3,7 +3,7 @@ import numpy as np
 
 from ..core.validate import check_array_lengths, warn_nan_inf
 from ..data.inference import is_categorical
-from ..style.color import CERNO_PALETTE
+from ..style.color import GUFO_PALETTE
 
 
 def resolve_color(adapter, color_enc):
@@ -24,7 +24,7 @@ def resolve_color(adapter, color_enc):
 
 def default_colors(n, palette=None):
     """Return n colors from the palette, cycling if needed."""
-    colors = palette if palette is not None else CERNO_PALETTE.categorical
+    colors = palette if palette is not None else GUFO_PALETTE.categorical
     k = len(colors)
     return [colors[i % k] for i in range(n)]
 

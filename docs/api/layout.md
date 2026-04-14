@@ -3,13 +3,13 @@
 ## Grid
 
 The `Grid` class is a standalone layout container for arranging multiple charts
-in a rows x cols grid. Users create instances via `cerno.grid()`, never by
+in a rows x cols grid. Users create instances via `gufo.grid()`, never by
 instantiating `Grid` directly.
 
 ### Entry point
 
 ```python
-g = cerno.grid(rows=2, cols=2, figsize=(14, 10))
+g = gufo.grid(rows=2, cols=2, figsize=(14, 10))
 ```
 
 ### Key methods

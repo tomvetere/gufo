@@ -13,13 +13,13 @@ from .layer import Layer
 
 class Chart:
     """
-    The main interface for building a cerno chart.
+    The main interface for building a gufo chart.
 
     Methods register layers and options; nothing is drawn until .show() or
     .save() is called. This deferred rendering allows the theme and figure size
     to be finalized before any matplotlib calls are made.
 
-    Users create Chart instances via cerno.chart(), never directly.
+    Users create Chart instances via gufo.chart(), never directly.
     """
 
     _SIMPLE_SETTERS = [
@@ -73,7 +73,7 @@ class Chart:
         When color is a numeric column, cmap/vmin/vmax control the colormap
         and range. A colorbar is shown by default (set colorbar=False to hide).
 
-        fit accepts a cerno.regression() config object to overlay a fit line.
+        fit accepts a gufo.regression() config object to overlay a fit line.
         y_error / x_error accept a column name or array for error bars.
         """
         self._layers.append(Layer(
@@ -137,7 +137,7 @@ class Chart:
         """Add a histogram layer.
 
         Set horizontal=True to orient the histogram sideways.
-        kde accepts a cerno.kde() config object to overlay a density curve.
+        kde accepts a gufo.kde() config object to overlay a density curve.
         """
         self._layers.append(Layer(
             mark_type="histogram", x=x, y=None,
@@ -233,8 +233,8 @@ class Chart:
 
         Two usage modes:
 
-        - Matrix form: cerno.chart(pivot_df).heatmap() — DataFrame is the matrix.
-        - Long-form: cerno.chart(df).heatmap("x", "y", color="value") — pivoted
+        - Matrix form: gufo.chart(pivot_df).heatmap() — DataFrame is the matrix.
+        - Long-form: gufo.chart(df).heatmap("x", "y", color="value") — pivoted
           internally.
         """
         self._layers.append(Layer(
@@ -456,7 +456,7 @@ class Chart:
     def theme(self, name_or_theme):
         """Set the theme for this chart.
 
-        Accepts a theme name (``"cerno_modern"``, ``"cerno_clean"``, etc.)
+        Accepts a theme name (``"gufo_modern"``, ``"gufo_dark"``, etc.)
         or a ``Theme`` instance.
         """
         self._theme_override = name_or_theme
@@ -487,7 +487,7 @@ class Chart:
         if self._data is None:
             raise ValueError(
                 "facet() requires data bound to the chart. "
-                "Pass data to cerno.chart(data)."
+                "Pass data to gufo.chart(data)."
             )
         if column is None and row is None:
             raise ValueError(
@@ -508,7 +508,7 @@ class Chart:
         any matplotlib method on them. Its return value is ignored. The Chart
         is returned so the chain continues.
 
-        Use this for operations cerno does not yet support natively.
+        Use this for operations gufo does not yet support natively.
         """
         self._apply_funcs.append(func)
         return self
@@ -517,7 +517,7 @@ class Chart:
         """Set the color palette for this chart.
 
         Accepts a list of color strings or a named palette
-        ('cerno', 'pastel', 'bold', 'colorblind').
+        ('gufo', 'pastel', 'bold', 'colorblind').
         """
         self._palette = colors
         return self
@@ -800,5 +800,5 @@ class Chart:
 
 
 def chart(data=None):
-    """Create a new Chart. The entry point for all cerno charts."""
+    """Create a new Chart. The entry point for all gufo charts."""
     return Chart(data)

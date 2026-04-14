@@ -1,6 +1,6 @@
 # The matplotlib escape hatch
 
-Cerno covers the most common chart types and customizations. For everything
+Gufo covers the most common chart types and customizations. For everything
 else, `.apply()` gives you direct access to the underlying matplotlib
 `Figure` and `Axes` without leaving the chain.
 
@@ -8,7 +8,7 @@ else, `.apply()` gives you direct access to the underlying matplotlib
 
 ```python
 (
-    cerno.chart(df)
+    gufo.chart(df)
     .line("year", "gdp")
     .apply(lambda fig, ax: ax.axvspan(2008, 2009, alpha=0.15, color="gray"))
     .title("GDP with Recession Band")
@@ -29,7 +29,7 @@ def add_recession_bands(fig, ax):
     for start, end in recessions:
         ax.axvspan(start, end, alpha=0.15, color="gray")
 
-cerno.chart(df).line("year", "gdp").apply(add_recession_bands).show()
+gufo.chart(df).line("year", "gdp").apply(add_recession_bands).show()
 ```
 
 ## Order of execution
@@ -50,7 +50,7 @@ You can chain multiple `.apply()` calls. They run in the order registered.
 
 ```python
 (
-    cerno.chart(df)
+    gufo.chart(df)
     .line("year", "gdp")
     .apply(add_recession_bands)
     .apply(lambda fig, ax: ax.axhline(0, color="black", linewidth=0.8))
@@ -66,12 +66,12 @@ Good candidates for `.apply()`:
 - Custom annotations beyond what `.annotate()` supports
 - `fill_between` for shaded regions
 - Error bars (`errorbar`)
-- Any specialized matplotlib feature not yet in cerno
+- Any specialized matplotlib feature not yet in gufo
 
 If you find yourself using `.apply()` for the same pattern repeatedly,
-[open an issue](https://github.com/thomas/cerno/issues) — it is a candidate
-for a native cerno feature.
+[open an issue](https://github.com/tomvetere/gufo/issues) — it is a candidate
+for a native gufo feature.
 
 ## API reference
 
-See {py:meth}`cerno.core.chart.Chart.apply`.
+See {py:meth}`gufo.core.chart.Chart.apply`.

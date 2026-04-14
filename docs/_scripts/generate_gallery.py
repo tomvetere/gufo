@@ -1,4 +1,4 @@
-"""Generate gallery images for the cerno documentation."""
+"""Generate gallery images for the gufo documentation."""
 import sys
 from pathlib import Path
 
@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-# Ensure cerno is importable from the repo root
+# Ensure gufo is importable from the repo root
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-import cerno
+import gufo
 
 OUT = Path(__file__).resolve().parents[1] / "_static" / "gallery"
 OUT.mkdir(parents=True, exist_ok=True)
@@ -81,7 +81,7 @@ print("Generating gallery images...")
 
 # 1. Scatter with color + size
 (
-    cerno.chart(df)
+    gufo.chart(df)
     .scatter("x", "y", color="category", size="size")
     .title("Scatter — color + size")
     .xlabel("X").ylabel("Y")
@@ -91,7 +91,7 @@ save("scatter.png")
 
 # 2. Line (multi-series)
 (
-    cerno.chart(line_df)
+    gufo.chart(line_df)
     .line("day", "sales", color="channel")
     .title("Line — multi-series")
     .xlabel("Day").ylabel("Sales")
@@ -102,7 +102,7 @@ save("line.png")
 
 # 3. Bar (grouped)
 (
-    cerno.chart(bar_df)
+    gufo.chart(bar_df)
     .bar("fruit", "count", color="region")
     .title("Bar — grouped")
     .save(OUT / "bar_grouped.png")
@@ -111,7 +111,7 @@ save("bar_grouped.png")
 
 # 4. Bar (stacked)
 (
-    cerno.chart(bar_df)
+    gufo.chart(bar_df)
     .bar("fruit", "count", color="region", stacked=True)
     .title("Bar — stacked")
     .save(OUT / "bar_stacked.png")
@@ -120,8 +120,8 @@ save("bar_stacked.png")
 
 # 5. Histogram with KDE
 (
-    cerno.chart(df)
-    .histogram("x", kde=cerno.kde())
+    gufo.chart(df)
+    .histogram("x", kde=gufo.kde())
     .title("Histogram — with KDE overlay")
     .save(OUT / "histogram_kde.png")
 )
@@ -129,7 +129,7 @@ save("histogram_kde.png")
 
 # 6. Boxplot with categorical color
 (
-    cerno.chart(box_df)
+    gufo.chart(box_df)
     .boxplot("group", "value", color="sub")
     .title("Box plot — categorical color")
     .save(OUT / "boxplot.png")
@@ -138,7 +138,7 @@ save("boxplot.png")
 
 # 7. Violin
 (
-    cerno.chart(box_df)
+    gufo.chart(box_df)
     .violin("group", "value", color="sub")
     .title("Violin plot")
     .save(OUT / "violin.png")
@@ -147,7 +147,7 @@ save("violin.png")
 
 # 8. Heatmap (annotated)
 (
-    cerno.chart(heatmap_df)
+    gufo.chart(heatmap_df)
     .heatmap(annotate=True, cmap="YlOrRd")
     .title("Heatmap — annotated")
     .save(OUT / "heatmap.png")
@@ -156,7 +156,7 @@ save("heatmap.png")
 
 # 9. Area (stacked)
 (
-    cerno.chart(area_df)
+    gufo.chart(area_df)
     .area("month", ["product_a", "product_b", "product_c"])
     .title("Area — stacked")
     .xlabel("Month").ylabel("Revenue")
@@ -166,7 +166,7 @@ save("area.png")
 
 # 10. KDE (filled)
 (
-    cerno.chart(df)
+    gufo.chart(df)
     .kde("x", fill=True, color="category")
     .title("KDE — filled density")
     .save(OUT / "kde.png")
@@ -175,7 +175,7 @@ save("kde.png")
 
 # 11. Strip
 (
-    cerno.chart(box_df)
+    gufo.chart(box_df)
     .strip("group", "value", color="sub", alpha=0.6)
     .title("Strip plot")
     .save(OUT / "strip.png")
@@ -184,7 +184,7 @@ save("strip.png")
 
 # 12. Swarm
 (
-    cerno.chart(box_df)
+    gufo.chart(box_df)
     .swarm("group", "value", alpha=0.6)
     .title("Swarm plot")
     .save(OUT / "swarm.png")
@@ -197,7 +197,7 @@ count_df = pd.DataFrame({
     "owner": rng.choice(["Alice", "Bob"], 100),
 })
 (
-    cerno.chart(count_df)
+    gufo.chart(count_df)
     .countplot("animal", color="owner")
     .title("Count plot — grouped")
     .save(OUT / "countplot.png")
@@ -206,7 +206,7 @@ save("countplot.png")
 
 # 14. ECDF
 (
-    cerno.chart(df)
+    gufo.chart(df)
     .ecdf("x", color="category")
     .title("ECDF")
     .save(OUT / "ecdf.png")
@@ -215,7 +215,7 @@ save("ecdf.png")
 
 # 15. Rug (layered with histogram)
 (
-    cerno.chart(df)
+    gufo.chart(df)
     .histogram("x")
     .rug("x", color="red")
     .title("Histogram + rug plot")
@@ -230,16 +230,16 @@ pair_df = pd.DataFrame({
     "c": rng.normal(0, 1, 60),
     "species": rng.choice(["x", "y"], 60),
 })
-cerno.pairplot(pair_df, ["a", "b", "c"], color="species").save(OUT / "pairplot.png")
+gufo.pairplot(pair_df, ["a", "b", "c"], color="species").save(OUT / "pairplot.png")
 save("pairplot.png")
 
 # 17. Jointplot
-cerno.jointplot(df, "x", "y").save(OUT / "jointplot.png")
+gufo.jointplot(df, "x", "y").save(OUT / "jointplot.png")
 save("jointplot.png")
 
 # 18. Scatter with continuous color + colorbar
 (
-    cerno.chart(df)
+    gufo.chart(df)
     .scatter("x", "y", color="value", cmap="viridis")
     .title("Scatter — continuous color")
     .save(OUT / "scatter_continuous.png")
@@ -248,7 +248,7 @@ save("scatter_continuous.png")
 
 # 19. Faceted scatter
 (
-    cerno.chart(df)
+    gufo.chart(df)
     .scatter("x", "y")
     .facet("category")
     .title("Scatter — faceted")

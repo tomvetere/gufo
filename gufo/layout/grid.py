@@ -10,8 +10,8 @@ class Grid:
     """
     A layout container that arranges multiple Charts in a grid.
 
-    Users create Grid instances via cerno.grid(), never directly.
-    Panels are assigned with g[row, col] = cerno.chart(data).mark(...).
+    Users create Grid instances via gufo.grid(), never directly.
+    Panels are assigned with g[row, col] = gufo.chart(data).mark(...).
     """
 
     def __init__(self, rows, cols, figsize=None, *,
@@ -39,7 +39,7 @@ class Grid:
     def __getitem__(self, idx):
         raise TypeError(
             "Grid cells are write-only. "
-            "Use: g[0, 0] = cerno.chart(df).scatter('x', 'y')"
+            "Use: g[0, 0] = gufo.chart(df).scatter('x', 'y')"
         )
 
     def title(self, text):

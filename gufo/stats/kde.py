@@ -18,9 +18,9 @@ class KDE:
     """Configuration for a KDE curve.
 
     Used both as a standalone mark via .kde() and as an overlay
-    parameter on .histogram(kde=cerno.kde()).
+    parameter on .histogram(kde=gufo.kde()).
 
-    Users create instances via cerno.kde(), never directly.
+    Users create instances via gufo.kde(), never directly.
     """
 
     bw_method: Optional[object] = None

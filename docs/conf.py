@@ -1,13 +1,13 @@
-"""Sphinx configuration for cerno documentation."""
+"""Sphinx configuration for gufo documentation."""
 
 import importlib.metadata
 
 # -- Project information -----------------------------------------------------
 
-project = "cerno"
+project = "gufo"
 author = "Thomas"
 copyright = "2026, Thomas"
-release = importlib.metadata.version("cerno")
+release = importlib.metadata.version("gufo")
 version = ".".join(release.split(".")[:2])  # "0.1" from "0.1.0"
 
 # -- General configuration ---------------------------------------------------
@@ -59,15 +59,15 @@ html_theme = "pydata_sphinx_theme"
 
 html_theme_options = {
     "logo": {
-        "image_light": "_static/cerno_logo.png",
-        "image_dark": "_static/cerno_logo.png",
+        "image_light": "_static/gufo_logo.png",
+        "image_dark": "_static/gufo_logo.png",
     },
-    "github_url": "https://github.com/thomas/cerno",
+    "github_url": "https://github.com/tomvetere/gufo",
     "navbar_align": "left",
     "navigation_with_keys": True,
 }
 
-html_title = "cerno"
+html_title = "gufo"
 html_static_path = ["_static"]
 
 # -- Copybutton --------------------------------------------------------------

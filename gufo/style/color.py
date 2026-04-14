@@ -9,7 +9,7 @@ class Palette:
     diverging: list[str]
 
 
-CERNO_PALETTE = Palette(
+GUFO_PALETTE = Palette(
     categorical=["#4C72B0", "#DD8452", "#55A868", "#C44E52",
                  "#8172B3", "#937860", "#DA8BC3", "#8C8C8C"],
     sequential=["#f7fbff", "#c6dbef", "#6baed6", "#2171b5", "#08306b"],
@@ -18,7 +18,7 @@ CERNO_PALETTE = Palette(
 )
 
 NAMED_PALETTES = {
-    "cerno": CERNO_PALETTE.categorical,
+    "gufo": GUFO_PALETTE.categorical,
     "pastel": ["#A1C9F4", "#FFB482", "#8DE5A1", "#FF9F9B",
                "#D0BBFF", "#DEBB9B", "#FAB0E4", "#CFCFCF"],
     "bold": ["#1B9E77", "#D95F02", "#7570B3", "#E7298A",
@@ -31,11 +31,11 @@ NAMED_PALETTES = {
 def resolve_palette(palette):
     """Resolve a palette argument to a list of color strings.
 
-    Accepts None (default cerno palette), a string name from
+    Accepts None (default gufo palette), a string name from
     NAMED_PALETTES, or a list of color strings passed through directly.
     """
     if palette is None:
-        return CERNO_PALETTE.categorical
+        return GUFO_PALETTE.categorical
     if isinstance(palette, str):
         if palette not in NAMED_PALETTES:
             raise ValueError(

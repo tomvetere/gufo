@@ -75,7 +75,7 @@ class DataAdapter:
             return list(self._data.keys())
         raise ValueError(
             "Cannot list columns — no columnar data was provided. "
-            "Pass a DataFrame or dict to cerno.chart(data)."
+            "Pass a DataFrame or dict to gufo.chart(data)."
         )
 
     def resolve(self, key):
@@ -102,7 +102,7 @@ class DataAdapter:
         if self._type == "none":
             raise ValueError(
                 "Cannot subset data — no DataFrame or dict was provided. "
-                "Faceting requires bound columnar data passed to cerno.chart(data)."
+                "Faceting requires bound columnar data passed to gufo.chart(data)."
             )
         if self._type == "dataframe":
             return DataAdapter(self._data[mask].reset_index(drop=True))
@@ -119,5 +119,5 @@ class DataAdapter:
             return self._data[name].to_numpy()
         raise ValueError(
             f"Cannot resolve column '{name}' — no DataFrame or dict was provided. "
-            "Pass data to cerno.chart(data) or pass arrays directly."
+            "Pass data to gufo.chart(data) or pass arrays directly."
         )

@@ -1,13 +1,13 @@
-"""Tests for cerno.style — Theme, registry, palette."""
+"""Tests for gufo.style — Theme, registry, palette."""
 import matplotlib.pyplot as plt
 import pytest
 
-import cerno
-from cerno.style.theme import (
+import gufo
+from gufo.style.theme import (
     Theme, register_theme, get_theme, set_theme, theme_context,
     _resolve_theme, _PASSTHROUGH, _PassthroughTheme,
 )
-from cerno.style.color import Palette, CERNO_PALETTE
+from gufo.style.color import Palette, GUFO_PALETTE
 
 
 # ── Theme object ────────────────────────────────────────────────────
@@ -45,7 +45,7 @@ class TestTheme:
 
 class TestRegistry:
     def test_builtin_themes_registered(self):
-        for name in ("cerno_modern", "cerno_dark", "cerno_print"):
+        for name in ("gufo_modern", "gufo_dark", "gufo_print"):
             theme = get_theme(name)
             assert isinstance(theme, Theme)
             assert theme.name == name
@@ -61,7 +61,7 @@ class TestRegistry:
 
     def test_theme_context_manager(self):
         original = plt.rcParams.get("axes.facecolor")
-        with theme_context("cerno_dark"):
+        with theme_context("gufo_dark"):
             assert plt.rcParams["axes.facecolor"] == "#1e1e2e"
         assert plt.rcParams["axes.facecolor"] == original
 
@@ -74,9 +74,9 @@ class TestResolveTheme:
         assert isinstance(result, _PassthroughTheme)
 
     def test_string_resolves_to_theme(self):
-        result = _resolve_theme("cerno_modern")
+        result = _resolve_theme("gufo_modern")
         assert isinstance(result, Theme)
-        assert result.name == "cerno_modern"
+        assert result.name == "gufo_modern"
 
     def test_theme_object_passthrough(self):
         t = Theme("direct", {})
@@ -98,38 +98,38 @@ class TestResolveTheme:
 
 class TestPalette:
     def test_palette_has_categorical(self):
-        assert len(CERNO_PALETTE.categorical) == 8
+        assert len(GUFO_PALETTE.categorical) == 8
 
     def test_palette_has_sequential(self):
-        assert len(CERNO_PALETTE.sequential) > 0
+        assert len(GUFO_PALETTE.sequential) > 0
 
     def test_palette_has_diverging(self):
-        assert len(CERNO_PALETTE.diverging) > 0
+        assert len(GUFO_PALETTE.diverging) > 0
 
     def test_palette_colors_are_hex(self):
-        for color in CERNO_PALETTE.categorical:
+        for color in GUFO_PALETTE.categorical:
             assert color.startswith("#")
             assert len(color) == 7
 
     def test_theme_uses_palette_colors(self):
         """The modern theme's prop_cycle should reference the same palette."""
-        theme = get_theme("cerno_modern")
+        theme = get_theme("gufo_modern")
         cycle_colors = [c["color"] for c in theme._rc["axes.prop_cycle"]]
-        assert cycle_colors == CERNO_PALETTE.categorical
+        assert cycle_colors == GUFO_PALETTE.categorical
 
 
 # ── Chart-level theme override ──────────────────────────────────────
 
 class TestChartTheme:
     def test_chart_theme_by_name(self, sample_df, tmp_path):
-        (cerno.chart(sample_df)
+        (gufo.chart(sample_df)
          .scatter("x", "y")
-         .theme("cerno_dark")
+         .theme("gufo_dark")
          .save(tmp_path / "dark.png"))
 
     def test_chart_theme_by_object(self, sample_df, tmp_path):
         custom = Theme("inline", {"axes.facecolor": "#ff0000"})
-        (cerno.chart(sample_df)
+        (gufo.chart(sample_df)
          .scatter("x", "y")
          .theme(custom)
          .save(tmp_path / "custom.png"))
@@ -139,33 +139,33 @@ class TestChartTheme:
 
 class TestPaletteAPI:
     def test_palette_with_list(self, sample_df, tmp_path):
-        (cerno.chart(sample_df)
+        (gufo.chart(sample_df)
          .scatter("x", "y", color="cat")
          .palette(["red", "blue"])
          .legend()
          .save(tmp_path / "p.png"))
 
     def test_palette_with_name(self, sample_df, tmp_path):
-        (cerno.chart(sample_df)
+        (gufo.chart(sample_df)
          .scatter("x", "y", color="cat")
          .palette("colorblind")
          .legend()
          .save(tmp_path / "p.png"))
 
     def test_palette_unknown_name_raises(self, sample_df):
-        c = (cerno.chart(sample_df)
+        c = (gufo.chart(sample_df)
              .scatter("x", "y", color="cat")
              .palette("nonexistent"))
         with pytest.raises(ValueError, match="Unknown palette"):
             c.save("/dev/null")
 
     def test_palette_none_uses_default(self, sample_df, tmp_path):
-        (cerno.chart(sample_df)
+        (gufo.chart(sample_df)
          .bar("x", ["series_a", "series_b"])
          .save(tmp_path / "p.png"))
 
     def test_palette_applies_to_wide_form_bar(self, sample_df, tmp_path):
-        (cerno.chart(sample_df)
+        (gufo.chart(sample_df)
          .bar("x", ["series_a", "series_b"])
          .palette(["coral", "teal"])
          .save(tmp_path / "p.png"))

@@ -1,10 +1,10 @@
-"""Tests for cerno.core.validate — input validation helpers."""
+"""Tests for gufo.core.validate — input validation helpers."""
 import warnings
 
 import numpy as np
 import pytest
 
-from cerno.core.validate import (
+from gufo.core.validate import (
     check_array_lengths,
     check_numeric,
     check_stroke_dash,

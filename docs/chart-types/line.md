@@ -4,7 +4,7 @@ A line chart connects data points in sequence. Use it for time series and
 ordered data.
 
 ```python
-cerno.chart(df).line("year", "revenue").show()
+gufo.chart(df).line("year", "revenue").show()
 ```
 
 ## Multiple series — wide-form data
@@ -20,7 +20,7 @@ wide_df = pd.DataFrame({
     "product_c": [60,   70,   90,   125],
 })
 
-cerno.chart(wide_df).line("year", ["product_a", "product_b", "product_c"]).legend().show()
+gufo.chart(wide_df).line("year", ["product_a", "product_b", "product_c"]).legend().show()
 ```
 
 ## Multiple series — long-form data
@@ -28,7 +28,7 @@ cerno.chart(wide_df).line("year", ["product_a", "product_b", "product_c"]).legen
 For long-form DataFrames, use `color` to group by a categorical column.
 
 ```python
-cerno.chart(long_df).line("year", "revenue", color="product").legend().show()
+gufo.chart(long_df).line("year", "revenue", color="product").legend().show()
 ```
 
 ## Continuous color
@@ -37,10 +37,10 @@ Pass a numeric column as `color` to draw a gradient line whose segments are
 colored by the variable. An automatic colorbar is added.
 
 ```python
-cerno.chart(df).line("x", "y", color="speed", cmap="viridis").show()
+gufo.chart(df).line("x", "y", color="speed", cmap="viridis").show()
 
 # Custom range and no colorbar
-cerno.chart(df).line("x", "y", color="speed", vmin=0, vmax=100,
+gufo.chart(df).line("x", "y", color="speed", vmin=0, vmax=100,
                      colorbar=False).show()
 ```
 
@@ -50,7 +50,7 @@ Pass `y_error` (column name or array) to draw error bars or a confidence band
 along the line.
 
 ```python
-cerno.chart(df).line("year", "revenue", y_error="revenue_std").show()
+gufo.chart(df).line("year", "revenue", y_error="revenue_std").show()
 ```
 
 ## Data labels
@@ -58,14 +58,14 @@ cerno.chart(df).line("year", "revenue", y_error="revenue_std").show()
 Use `.label()` to annotate each point with its y-value or a column.
 
 ```python
-cerno.chart(df).line("month", "revenue").label(fmt=".0f").show()
-cerno.chart(df).line("month", "revenue").label("note").show()
+gufo.chart(df).line("month", "revenue").label(fmt=".0f").show()
+gufo.chart(df).line("month", "revenue").label("note").show()
 ```
 
 ## Line style
 
 ```python
-cerno.chart(df).line("year", "forecast", stroke_dash="dashed").show()
+gufo.chart(df).line("year", "forecast", stroke_dash="dashed").show()
 ```
 
 Available values for `stroke_dash`: `"solid"` (default), `"dashed"`, `"dotted"`, `"dashdot"`.
@@ -74,7 +74,7 @@ Available values for `stroke_dash`: `"solid"` (default), `"dashed"`, `"dotted"`,
 
 ```python
 (
-    cerno.chart(df)
+    gufo.chart(df)
     .scatter("x", "y", alpha=0.5, label="Observations")
     .line("x", "trend", color="#333333", stroke_dash="dashed", label="Trend")
     .legend()
@@ -84,4 +84,4 @@ Available values for `stroke_dash`: `"solid"` (default), `"dashed"`, `"dotted"`,
 
 ## API reference
 
-See {py:meth}`cerno.core.chart.Chart.line`.
+See {py:meth}`gufo.core.chart.Chart.line`.

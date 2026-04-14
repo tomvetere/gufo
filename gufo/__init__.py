@@ -1,8 +1,7 @@
 """
-Cerno — data visualization simplified.
+Gufo — data visualization simplified.
 
-"Cerno" (Classical Latin: /ˈker.noː/, KEHR-noh) means
-"I discern, I perceive, I distinguish."
+"Gufo" (Italian: /ˈɡu.fo/, GOO-foh) means "owl."
 
 A Pythonic, matplotlib-based chart library for researchers,
 data explorers, and anyone making reports.
@@ -48,7 +47,7 @@ def lowess(frac=0.6667, *, color=None, linestyle="-", linewidth=2.0,
            label=None):
     """Create a LOWESS smoothing configuration for scatter plots.
 
-    Requires statsmodels. Install with: ``pip install cerno[stats]``.
+    Requires statsmodels. Install with: ``pip install gufo[stats]``.
     """
     return Lowess(
         frac=frac, color=color, linestyle=linestyle,
