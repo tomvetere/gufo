@@ -1,5 +1,5 @@
 """
-Cerno — data visualization for humans.
+Cerno — data visualization simplified.
 
 "Cerno" (Classical Latin: /ˈker.noː/, KEHR-noh) means
 "I discern, I perceive, I distinguish."

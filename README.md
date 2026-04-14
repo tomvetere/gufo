@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="docs/_static/cerno_logo.png" alt="Cerno logo" width="200">
+  <img src="https://raw.githubusercontent.com/tomvetere/cerno/main/docs/_static/cerno_logo.png" alt="Cerno logo" width="200">
 </p>
 
 # Cerno
 
-**Data visualization for humans.**
+**Data visualization simplified.**
 
 *Cerno* (Classical Latin: /ˈker.noː/, **KEHR-noh**) — "I discern, I perceive, I distinguish."
 
@@ -726,3 +726,7 @@ pytest tests/ -v
 **v0.0.7** — data labels, pointplot, LOWESS smoothing, facet sharex/sharey, legend outside positioning ✓
 
 **v0.0.8** — shared colorbar/legend on faceted charts, continuous color on line, `.label()` on line and pointplot, error bands on area ✓
+
+**v0.0.9** — release-hygiene pass ahead of PyPI (changelog cleanup, README polish, TestPyPI dry run)
+
+**v0.1.0** — first tagged release on PyPI

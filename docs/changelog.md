@@ -1,6 +1,16 @@
 # Changelog
 
-## Unreleased (v0.0.8)
+## Unreleased (v0.0.9)
+
+Release-hygiene pass ahead of the first PyPI tag. No new features.
+
+- Version bumped from `0.0.7` → `0.0.8` to reflect merged v0.0.8 work, then `0.0.9` for this polish cycle.
+- Changelog cleaned up: historical versions (v0.0.3–v0.0.8) no longer labeled `Unreleased`. `Unreleased` is now reserved for the single in-flight version.
+- TestPyPI dry run of the release pipeline.
+
+---
+
+## v0.0.8
 
 **Correctness fixes — faceted charts**
 - Shared colorbar: faceted charts with continuous color (`scatter`/`line`) now draw a single figure-level colorbar using the global data range across all panels. Previously each panel produced its own colorbar with a per-subset scale, making colors incomparable across panels.
@@ -22,7 +32,7 @@
 
 ---
 
-## Unreleased (v0.0.7)
+## v0.0.7
 
 **New chart types**
 - Point plot: `.pointplot("x", "y")` — connected category means with 95% CI error bars. Supports categorical color grouping (dodged) and horizontal mode.
@@ -43,7 +53,7 @@
 
 ---
 
-## Unreleased (v0.0.6)
+## v0.0.6
 
 **New features**
 - Stacked/dodged bar grouping: `.bar("x", "y", color="category")` now groups bars by category (dodged by default). Set `stacked=True` to stack bars instead.
@@ -74,7 +84,7 @@
 
 ---
 
-## Unreleased (v0.0.5)
+## v0.0.5
 
 **New chart types**
 - Countplot: `.countplot("x")` — bar chart of value counts, with optional categorical color grouping for side-by-side bars.
@@ -92,7 +102,7 @@
 
 ---
 
-## Unreleased (v0.0.4)
+## v0.0.4
 
 **New chart types**
 - KDE (kernel density estimation): `.kde("x")` — standalone density plot with optional fill, categorical color grouping, configurable bandwidth. Requires scipy.
@@ -117,7 +127,7 @@
 
 ---
 
-## Unreleased (v0.0.3)
+## v0.0.3
 
 **New features**
 - Pair plot: `cerno.pairplot(df)` generates an NxN grid of scatter plots (off-diagonal) and histograms (diagonal) for all numeric columns. Supports `color` for categorical grouping and `columns` to select a subset. Returns a `Grid`.

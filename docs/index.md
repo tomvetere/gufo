@@ -1,6 +1,6 @@
 # cerno
 
-**Data visualization for humans.**
+**Data visualization simplified.**
 
 Cerno is a Python library for making charts — built on matplotlib, designed so
 you can explore and present data without fighting your tools.
