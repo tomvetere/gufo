@@ -149,7 +149,7 @@ Run `python -m pytest tests/` after every change to verify correctness. All test
 Core:
 - `matplotlib >= 3.5.0`
 - `numpy >= 1.21.0`
-- Python `>= 3.9`
+- Python `>= 3.10`
 
 Optional extras:
 - `cerno[pandas]` — `pandas >= 1.3.0`
