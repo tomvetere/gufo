@@ -5,33 +5,33 @@ Statistical overlay configuration classes and their factory functions.
 ## Factory functions
 
 ```{eval-rst}
-.. autofunction:: cerno.regression
+.. autofunction:: gufo.regression
 ```
 
 ```{eval-rst}
-.. autofunction:: cerno.kde
+.. autofunction:: gufo.kde
 ```
 
 ```{eval-rst}
-.. autofunction:: cerno.lowess
+.. autofunction:: gufo.lowess
 ```
 
 ## Config classes
 
 ```{eval-rst}
-.. autoclass:: cerno.stats.regression.Regression
+.. autoclass:: gufo.stats.regression.Regression
    :members:
    :undoc-members: False
 ```
 
 ```{eval-rst}
-.. autoclass:: cerno.stats.kde.KDE
+.. autoclass:: gufo.stats.kde.KDE
    :members:
    :undoc-members: False
 ```
 
 ```{eval-rst}
-.. autoclass:: cerno.stats.lowess.Lowess
+.. autoclass:: gufo.stats.lowess.Lowess
    :members:
    :undoc-members: False
 ```

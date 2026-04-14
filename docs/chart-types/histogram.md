@@ -3,13 +3,13 @@
 A histogram shows the distribution of a numeric variable.
 
 ```python
-cerno.chart(df).histogram("income").show()
+gufo.chart(df).histogram("income").show()
 ```
 
 ## Bin count
 
 ```python
-cerno.chart(df).histogram("income", bins=40).show()
+gufo.chart(df).histogram("income", bins=40).show()
 ```
 
 The default is `"auto"`, which delegates to matplotlib's automatic bin selection
@@ -18,30 +18,30 @@ The default is `"auto"`, which delegates to matplotlib's automatic bin selection
 ## From a raw array
 
 When your data is in a numpy array or list, omit the data argument from
-`cerno.chart()` and pass the array directly.
+`gufo.chart()` and pass the array directly.
 
 ```python
 import numpy as np
 
 data = np.random.normal(0, 1, 1000)
-cerno.chart().histogram(data).show()
+gufo.chart().histogram(data).show()
 ```
 
 ## KDE overlay
 
-Pass a `cerno.kde()` config to overlay a density curve on the histogram.
+Pass a `gufo.kde()` config to overlay a density curve on the histogram.
 The curve is automatically scaled to match the histogram's y-axis.
-Requires scipy (`pip install cerno[scipy]`).
+Requires scipy (`pip install gufo[scipy]`).
 
 ```python
-cerno.chart(df).histogram("income", kde=cerno.kde()).show()
+gufo.chart(df).histogram("income", kde=gufo.kde()).show()
 
 # Filled overlay
-cerno.chart(df).histogram("income", kde=cerno.kde(fill=True, alpha=0.3)).show()
+gufo.chart(df).histogram("income", kde=gufo.kde(fill=True, alpha=0.3)).show()
 ```
 
 See [KDE](kde.md) for standalone density plots and full details.
 
 ## API reference
 
-See {py:meth}`cerno.core.chart.Chart.histogram`.
+See {py:meth}`gufo.core.chart.Chart.histogram`.

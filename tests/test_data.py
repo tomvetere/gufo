@@ -1,11 +1,11 @@
-"""Tests for cerno.data — DataAdapter and inference."""
+"""Tests for gufo.data — DataAdapter and inference."""
 import numpy as np
 import pandas as pd
 import polars as pl
 import pytest
 
-from cerno.data.adapter import DataAdapter
-from cerno.data.inference import is_categorical
+from gufo.data.adapter import DataAdapter
+from gufo.data.inference import is_categorical
 
 
 # ── DataAdapter construction ────────────────────────────────────────
@@ -42,14 +42,14 @@ class TestDataAdapterConstruction:
 
     def test_fallback_detection_pandas(self, sample_df, monkeypatch):
         """DataFrame detection works even when module-level pd is None."""
-        import cerno.data.adapter as mod
+        import gufo.data.adapter as mod
         monkeypatch.setattr(mod, "pd", None)
         adapter = DataAdapter(sample_df)
         assert adapter._type == "dataframe"
 
     def test_fallback_detection_polars(self, monkeypatch):
         """Polars detection works even when module-level pl is None."""
-        import cerno.data.adapter as mod
+        import gufo.data.adapter as mod
         monkeypatch.setattr(mod, "pl", None)
         df = pl.DataFrame({"x": [1, 2, 3]})
         adapter = DataAdapter(df)
@@ -158,9 +158,9 @@ class TestIsCategorical:
 
 class TestPolarsEndToEnd:
     def test_scatter_with_polars(self, tmp_path):
-        import cerno
+        import gufo
         df = pl.DataFrame({"x": [1, 2, 3, 4, 5], "y": [2, 4, 1, 5, 3]})
-        cerno.chart(df).scatter("x", "y").save(tmp_path / "pl.png")
+        gufo.chart(df).scatter("x", "y").save(tmp_path / "pl.png")
 
     def test_polars_subset(self):
         df = pl.DataFrame({"x": [1, 2, 3], "y": [4, 5, 6]})

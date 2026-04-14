@@ -39,7 +39,7 @@ Release-hygiene pass ahead of the first PyPI tag. No new features.
 
 **New features**
 - Data labels: `.label()` adds value labels to bar charts (via `bar_label()`) or scatter points (via column name). Supports `fmt`, `fontsize`, and `offset` options.
-- LOWESS smoothing: `fit=cerno.lowess()` on `.scatter()` adds a non-parametric smooth curve. Requires statsmodels (`pip install cerno[stats]`).
+- LOWESS smoothing: `fit=gufo.lowess()` on `.scatter()` adds a non-parametric smooth curve. Requires statsmodels (`pip install gufo[stats]`).
 - Facet axis sharing: `.facet("col", sharex=False, sharey=False)` allows independent axis ranges per panel. Default is shared (preserving existing behavior).
 - Legend outside positioning: `.legend(position="outside right")` places the legend outside the plot area. Supports `outside right`, `outside left`, `outside top`, `outside bottom`.
 
@@ -58,14 +58,14 @@ Release-hygiene pass ahead of the first PyPI tag. No new features.
 **New features**
 - Stacked/dodged bar grouping: `.bar("x", "y", color="category")` now groups bars by category (dodged by default). Set `stacked=True` to stack bars instead.
 - Continuous color scales on scatter: pass a numeric column as `color=` with `cmap=`, `vmin=`, `vmax=` to get a colormap + automatic colorbar. Set `colorbar=False` to hide.
-- Joint plot: `cerno.jointplot(df, "x", "y")` creates a scatter with marginal histograms or KDE on the edges. Returns a `Grid`.
-- Grid width/height ratios: `cerno.grid(2, 2, width_ratios=[3, 1], height_ratios=[1, 3])` for non-uniform panel sizing.
+- Joint plot: `gufo.jointplot(df, "x", "y")` creates a scatter with marginal histograms or KDE on the edges. Returns a `Grid`.
+- Grid width/height ratios: `gufo.grid(2, 2, width_ratios=[3, 1], height_ratios=[1, 3])` for non-uniform panel sizing.
 - Horizontal histogram: `.histogram("x", horizontal=True)`.
 
 **Bug fixes**
-- DataAdapter now detects pandas and polars DataFrames even when the module-level import fails, using `type(data).__module__` as a fallback. Fixes a bug where `cerno.chart(df)` raised `TypeError: Unsupported data type: DataFrame` in certain environment configurations (e.g., Jupyter notebooks with separate venvs).
+- DataAdapter now detects pandas and polars DataFrames even when the module-level import fails, using `type(data).__module__` as a fallback. Fixes a bug where `gufo.chart(df)` raised `TypeError: Unsupported data type: DataFrame` in certain environment configurations (e.g., Jupyter notebooks with separate venvs).
 - Scatter continuous color detection no longer misfires on single-character color strings like `"r"`.
-- Removed unused `is_datetime()` from `cerno/data/inference.py`.
+- Removed unused `is_datetime()` from `gufo/data/inference.py`.
 
 **Documentation**
 - Complete docstrings added to all public Chart methods (title, subtitle, xlabel, ylabel, caption, annotate, xlim, ylim, xscale, yscale, xticks, yticks, legend, theme, size) and Grid methods (title, theme).
@@ -95,7 +95,7 @@ Release-hygiene pass ahead of the first PyPI tag. No new features.
 - Categorical color on box/violin: `.boxplot("x", "y", color="category")` and `.violin("x", "y", color="category")` now group by a third variable.
 - Error bars: `.scatter()`, `.line()`, and `.bar()` accept `y_error` and `x_error` parameters (column name or array).
 - Reference lines and bands: `.hline()`, `.vline()`, `.hband()`, `.vband()` for adding reference markers with optional labels and styling.
-- Color palette API: `.palette("colorblind")` or `.palette(["#e63946", "#457b9d"])` to set named or custom palettes per chart. Built-in palettes: `cerno`, `pastel`, `bold`, `colorblind`.
+- Color palette API: `.palette("colorblind")` or `.palette(["#e63946", "#457b9d"])` to set named or custom palettes per chart. Built-in palettes: `gufo`, `pastel`, `bold`, `colorblind`.
 
 **Testing**
 - 319 tests passing
@@ -110,9 +110,9 @@ Release-hygiene pass ahead of the first PyPI tag. No new features.
 - Swarm plot: `.swarm("x", "y")` — beeswarm layout that avoids overlapping points along a categorical axis. Requires scipy.
 
 **New features**
-- Regression overlay: pass `fit=cerno.regression()` to `.scatter()` for linear or polynomial fit lines. Supports custom degree, color, linestyle, linewidth, and label. Uses numpy only (no scipy required).
-- KDE histogram overlay: pass `kde=cerno.kde()` to `.histogram()` to overlay a density curve scaled to the histogram's y-axis.
-- scipy optional dependency: `pip install cerno[scipy]` for KDE and swarm plot support.
+- Regression overlay: pass `fit=gufo.regression()` to `.scatter()` for linear or polynomial fit lines. Supports custom degree, color, linestyle, linewidth, and label. Uses numpy only (no scipy required).
+- KDE histogram overlay: pass `kde=gufo.kde()` to `.histogram()` to overlay a density curve scaled to the histogram's y-axis.
+- scipy optional dependency: `pip install gufo[scipy]` for KDE and swarm plot support.
 
 **Internal improvements**
 - Config object pattern: `Regression` and `KDE` are frozen dataclasses passed as parameters to existing marks, following the same pattern as `Grid`.
@@ -120,7 +120,7 @@ Release-hygiene pass ahead of the first PyPI tag. No new features.
 - Shared `render_categorical_scatter()` helper in `_base.py` eliminates duplication between strip and swarm renderers via pluggable `offset_fn` callback.
 - `resolve_color_list()` utility added to `_base.py` for categorical scatter color resolution.
 - KDE mark uses `dataclasses.replace()` for immutable config handling.
-- `cerno/stats/` module added with `__init__.py` (scipy guard), `regression.py`, and `kde.py`.
+- `gufo/stats/` module added with `__init__.py` (scipy guard), `regression.py`, and `kde.py`.
 
 **Testing**
 - 282 tests passing
@@ -130,7 +130,7 @@ Release-hygiene pass ahead of the first PyPI tag. No new features.
 ## v0.0.3
 
 **New features**
-- Pair plot: `cerno.pairplot(df)` generates an NxN grid of scatter plots (off-diagonal) and histograms (diagonal) for all numeric columns. Supports `color` for categorical grouping and `columns` to select a subset. Returns a `Grid`.
+- Pair plot: `gufo.pairplot(df)` generates an NxN grid of scatter plots (off-diagonal) and histograms (diagonal) for all numeric columns. Supports `color` for categorical grouping and `columns` to select a subset. Returns a `Grid`.
 
 **Bug fixes**
 - Histogram now handles categorical color encoding by grouping (previously passed raw category names to matplotlib as color values, causing a crash)
@@ -152,28 +152,28 @@ Release-hygiene pass ahead of the first PyPI tag. No new features.
 - Area chart: `.area("x", "y")` — filled area, stacked area from wide-form data, categorical color grouping
 
 **New features**
-- Polars support: pass a Polars DataFrame to `cerno.chart()` and use it exactly like pandas. Install with `pip install cerno[polars]`.
+- Polars support: pass a Polars DataFrame to `gufo.chart()` and use it exactly like pandas. Install with `pip install gufo[polars]`.
 - Two-variable faceting: `.facet("col_var", row="row_var")` creates a row × column grid of subplots. Row-only faceting with `.facet(row="var")`.
-- pandas is now an optional dependency — install with `pip install cerno[pandas]`. Core cerno works with dicts, numpy arrays, and lists.
+- pandas is now an optional dependency — install with `pip install gufo[pandas]`. Core gufo works with dicts, numpy arrays, and lists.
 
 **Breaking changes**
-- `Grid` is now a standalone class in `cerno/layout/grid.py`, no longer part of `Chart`. `cerno.grid(2, 2)` returns a `Grid` instance (not a `Chart`). The `chart().grid(...)` pattern no longer works.
+- `Grid` is now a standalone class in `gufo/layout/grid.py`, no longer part of `Chart`. `gufo.grid(2, 2)` returns a `Grid` instance (not a `Chart`). The `chart().grid(...)` pattern no longer works.
 
 **Previously shipped features (v0.0.1 cycle)**
-- Faceting: `cerno.chart(df).scatter("x", "y").facet("category")` splits data by a categorical column into subplots. Chart-level `.title()` becomes a super-title; each panel is titled with its category value. Panels wrap after `cols` columns (default 3).
+- Faceting: `gufo.chart(df).scatter("x", "y").facet("category")` splits data by a categorical column into subplots. Chart-level `.title()` becomes a super-title; each panel is titled with its category value. Panels wrap after `cols` columns (default 3).
 - Wide-form scatter: `.scatter("x", ["col_a", "col_b"])` renders one series per column with automatic colors and legend labels
 - Wide-form bar: `.bar("x", ["col_a", "col_b"])` renders grouped bars with automatic offset positioning, colors, and legend labels. Supports `horizontal=True`.
-- Input validation module (`cerno/core/validate.py`) with plain-English error messages for: array length mismatches, non-numeric histogram data, NaN/Inf warnings, and invalid stroke dash styles
+- Input validation module (`gufo/core/validate.py`) with plain-English error messages for: array length mismatches, non-numeric histogram data, NaN/Inf warnings, and invalid stroke dash styles
 - `DataAdapter.subset(mask)` returns a filtered adapter for row-level subsetting (used by faceting)
 - `Grid` supports `.title()`, `.theme()`, `.apply()`, `.show()`, `.save()`
 - Grid-level `.apply(func)` receives `(figure, axes_2d_array)` for full matplotlib access
 - Empty grid cells are automatically hidden
-- Dark theme (`cerno_dark`) now includes a high-contrast color cycle
+- Dark theme (`gufo_dark`) now includes a high-contrast color cycle
 
 **Bug fixes**
 - Violin wide-form now correctly applies user color encoding (previously silently ignored)
 - Figure memory leak: `.save()` now closes the figure after writing (both single charts and grids)
-- `default_colors()` now uses `CERNO_PALETTE.categorical` instead of matplotlib's tab10, so categorical colors are consistent with the active theme
+- `default_colors()` now uses `GUFO_PALETTE.categorical` instead of matplotlib's tab10, so categorical colors are consistent with the active theme
 - Grid figures now created inside theme context (previously ignored theme)
 - `_normalize_size()` always returns numpy arrays (previously mixed list/array return types)
 - `_normalize_size()` equal-value fallback now uses midpoint of min/max size instead of hardcoded 100
@@ -184,14 +184,14 @@ Release-hygiene pass ahead of the first PyPI tag. No new features.
 - `DataAdapter` exposes `raw_data` and `data_type` properties — marks use these instead of private `_data`/`_type` attributes
 - Box plot and violin renderers now validate array lengths with `check_array_lengths()`
 - PEP 8 cleanup: long guard condition in `iter_color_groups` broken across lines, extra blank lines removed in `validate.py`, misaligned indentation fixed in `facet.py`
-- `Grid` extracted from `Chart` into dedicated `cerno/layout/grid.py` class
+- `Grid` extracted from `Chart` into dedicated `gufo/layout/grid.py` class
 - `Chart._render_onto(figure, axes, adapter=None)` added so `Grid` and faceting render panels without reaching into Chart internals
 - Redundant validation removed: `check_alpha`, `check_limit_order`, `check_positive_dimensions`, `check_scale`, `check_ticks_labels`, `check_xy_tuple` — matplotlib provides equally clear errors for these
 - Shared wide-form utilities extracted to `_base.py`: `is_wide_form()`, `render_wide_form()`
 - Shared distribution mark helper `group_by_x()` in `_base.py`
 - `DataAdapter._detect_type` uses `isinstance(data, pd.DataFrame)` instead of string comparison
 - `apply_color()` no longer returns a value — consistent with `apply_label()`
-- Dark theme colors extracted to `_CERNO_DARK_PALETTE` constant
+- Dark theme colors extracted to `_GUFO_DARK_PALETTE` constant
 - All imports moved to top of file per PEP 8 (no more lazy imports in methods)
 - `layout/__init__.py` simplified to docstring only, breaking circular import chain
 - `Palette` dataclass uses `list[str]` instead of `typing.List[str]`
@@ -221,14 +221,14 @@ Initial release.
 - Histogram: configurable bins, works with raw arrays
 
 **Theming**
-- Three built-in themes: `cerno_modern`, `cerno_dark`, `cerno_print`
-- Global theme via `cerno.set_theme()`
+- Three built-in themes: `gufo_modern`, `gufo_dark`, `gufo_print`
+- Global theme via `gufo.set_theme()`
 - Per-chart theme via `.theme()`
-- Scoped theme via `cerno.theme_context()`
-- Custom theme creation via `Theme.merge()` and `cerno.register_theme()`
+- Scoped theme via `gufo.theme_context()`
+- Custom theme creation via `Theme.merge()` and `gufo.register_theme()`
 
 **Layout**
-- `cerno.grid(rows, cols)` multi-panel layout
+- `gufo.grid(rows, cols)` multi-panel layout
 
 **Data formats**
 - pandas DataFrame (long-form and wide-form)
@@ -241,7 +241,7 @@ Initial release.
 **Bug fixes**
 - `is_categorical()` no longer crashes on empty arrays
 - `_normalize_size()` handles empty arrays gracefully
-- `cerno.grid(1, 1)` no longer crashes (scalar Axes from `plt.subplots` now handled)
+- `gufo.grid(1, 1)` no longer crashes (scalar Axes from `plt.subplots` now handled)
 - Color resolution with `data=None` and a literal color string no longer raises `ValueError`
 
 **Internal improvements**

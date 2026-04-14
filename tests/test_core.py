@@ -1,11 +1,11 @@
-"""Tests for cerno.core — Chart, Layer, Canvas."""
+"""Tests for gufo.core — Chart, Layer, Canvas."""
 import numpy as np
 import pytest
 
-import cerno
-from cerno.core.chart import Chart, chart
-from cerno.core.layer import Layer
-from cerno.core.canvas import Canvas
+import gufo
+from gufo.core.chart import Chart, chart
+from gufo.core.layer import Layer
+from gufo.core.canvas import Canvas
 
 
 # ── Chart construction ──────────────────────────────────────────────
@@ -15,8 +15,8 @@ class TestChartConstruction:
         c = chart()
         assert isinstance(c, Chart)
 
-    def test_cerno_chart_entry_point(self, sample_df):
-        c = cerno.chart(sample_df)
+    def test_gufo_chart_entry_point(self, sample_df):
+        c = gufo.chart(sample_df)
         assert isinstance(c, Chart)
         assert c._data is sample_df
 
@@ -37,7 +37,7 @@ class TestChartConstruction:
 
 class TestChaining:
     def test_all_mark_methods_return_self(self, sample_df):
-        c = cerno.chart(sample_df)
+        c = gufo.chart(sample_df)
         assert c.scatter("x", "y") is c
         assert c.line("x", "y") is c
         assert c.bar("x", "y") is c
@@ -64,19 +64,19 @@ class TestChaining:
     def test_option_methods_return_self(self):
         c = chart()
         assert c.legend() is c
-        assert c.theme("cerno_modern") is c
+        assert c.theme("gufo_modern") is c
         assert c.size(10, 8) is c
         assert c.apply(lambda fig, ax: None) is c
 
     def test_output_methods_return_self(self, sample_df, tmp_path):
-        c = cerno.chart(sample_df).scatter("x", "y")
+        c = gufo.chart(sample_df).scatter("x", "y")
         result = c.save(tmp_path / "test.png")
         assert result is c
 
     def test_full_chain(self, sample_df, tmp_path):
         """A realistic full chain should work without errors."""
         (
-            cerno.chart(sample_df)
+            gufo.chart(sample_df)
             .scatter("x", "y", color="cat", size="size_col")
             .title("Test Chart")
             .subtitle("A subtitle")
@@ -94,37 +94,37 @@ class TestChaining:
 
 class TestLayerRegistration:
     def test_scatter_adds_layer(self, sample_df):
-        c = cerno.chart(sample_df).scatter("x", "y")
+        c = gufo.chart(sample_df).scatter("x", "y")
         assert len(c._layers) == 1
         assert c._layers[0].mark_type == "scatter"
 
     def test_line_adds_layer(self, sample_df):
-        c = cerno.chart(sample_df).line("x", "y")
+        c = gufo.chart(sample_df).line("x", "y")
         assert len(c._layers) == 1
         assert c._layers[0].mark_type == "line"
 
     def test_bar_adds_layer(self, sample_df):
-        c = cerno.chart(sample_df).bar("x", "y")
+        c = gufo.chart(sample_df).bar("x", "y")
         assert len(c._layers) == 1
         assert c._layers[0].mark_type == "bar"
 
     def test_histogram_adds_layer(self, sample_df):
-        c = cerno.chart(sample_df).histogram("x")
+        c = gufo.chart(sample_df).histogram("x")
         assert len(c._layers) == 1
         assert c._layers[0].mark_type == "histogram"
 
     def test_multiple_layers(self, sample_df):
-        c = cerno.chart(sample_df).scatter("x", "y").line("x", "y")
+        c = gufo.chart(sample_df).scatter("x", "y").line("x", "y")
         assert len(c._layers) == 2
 
     def test_layer_stores_encodings(self, sample_df):
-        c = cerno.chart(sample_df).scatter("x", "y", color="red", alpha=0.5)
+        c = gufo.chart(sample_df).scatter("x", "y", color="red", alpha=0.5)
         layer = c._layers[0]
         assert layer.encodings["color"] == "red"
         assert layer.encodings["alpha"] == 0.5
 
     def test_layer_stores_kwargs(self, sample_df):
-        c = cerno.chart(sample_df).scatter("x", "y", marker="^")
+        c = gufo.chart(sample_df).scatter("x", "y", marker="^")
         assert c._layers[0].kwargs["marker"] == "^"
 
 
@@ -180,29 +180,29 @@ class TestDecorators:
 class TestRendering:
     def test_render_returns_fig_and_axes(self, sample_df):
         import matplotlib.figure
-        c = cerno.chart(sample_df).scatter("x", "y")
+        c = gufo.chart(sample_df).scatter("x", "y")
         fig, axes = c._render()
         assert isinstance(fig, matplotlib.figure.Figure)
 
     def test_title_applied_to_axes(self, sample_df):
-        c = cerno.chart(sample_df).scatter("x", "y").title("Hello")
+        c = gufo.chart(sample_df).scatter("x", "y").title("Hello")
         _, axes = c._render()
         assert axes.get_title() == "Hello"
 
     def test_labels_applied(self, sample_df):
-        c = cerno.chart(sample_df).scatter("x", "y").xlabel("X").ylabel("Y")
+        c = gufo.chart(sample_df).scatter("x", "y").xlabel("X").ylabel("Y")
         _, axes = c._render()
         assert axes.get_xlabel() == "X"
         assert axes.get_ylabel() == "Y"
 
     def test_limits_applied(self, sample_df):
-        c = cerno.chart(sample_df).scatter("x", "y").xlim(0, 100).ylim(-10, 10)
+        c = gufo.chart(sample_df).scatter("x", "y").xlim(0, 100).ylim(-10, 10)
         _, axes = c._render()
         assert axes.get_xlim() == (0, 100)
         assert axes.get_ylim() == (-10, 10)
 
     def test_log_scale_applied(self, sample_df):
-        c = cerno.chart(sample_df).scatter("x", "y").xscale("log")
+        c = gufo.chart(sample_df).scatter("x", "y").xscale("log")
         _, axes = c._render()
         assert axes.get_xscale() == "log"
 
@@ -212,14 +212,14 @@ class TestRendering:
             called.append(True)
             axes.axhline(y=3, color="red")
 
-        c = cerno.chart(sample_df).scatter("x", "y").apply(my_func)
+        c = gufo.chart(sample_df).scatter("x", "y").apply(my_func)
         c._render()
         assert called == [True]
 
     def test_multiple_apply_calls(self, sample_df):
         calls = []
         c = (
-            cerno.chart(sample_df)
+            gufo.chart(sample_df)
             .scatter("x", "y")
             .apply(lambda f, a: calls.append("first"))
             .apply(lambda f, a: calls.append("second"))
@@ -233,18 +233,18 @@ class TestRendering:
 class TestSave:
     def test_save_creates_file(self, sample_df, tmp_path):
         path = tmp_path / "chart.png"
-        cerno.chart(sample_df).scatter("x", "y").save(str(path))
+        gufo.chart(sample_df).scatter("x", "y").save(str(path))
         assert path.exists()
         assert path.stat().st_size > 0
 
     def test_save_pdf(self, sample_df, tmp_path):
         path = tmp_path / "chart.pdf"
-        cerno.chart(sample_df).scatter("x", "y").save(str(path))
+        gufo.chart(sample_df).scatter("x", "y").save(str(path))
         assert path.exists()
 
     def test_save_custom_dpi(self, sample_df, tmp_path):
         path = tmp_path / "chart.png"
-        cerno.chart(sample_df).scatter("x", "y").save(str(path), dpi=300)
+        gufo.chart(sample_df).scatter("x", "y").save(str(path), dpi=300)
         assert path.exists()
 
 
@@ -278,7 +278,7 @@ class TestCanvas:
         assert h == pytest.approx(6)
 
     def test_size_method_on_chart(self, sample_df):
-        c = cerno.chart(sample_df).size(14, 7).scatter("x", "y")
+        c = gufo.chart(sample_df).size(14, 7).scatter("x", "y")
         fig, _ = c._render()
         w, h = fig.get_size_inches()
         assert w == pytest.approx(14)
@@ -311,38 +311,38 @@ class TestLayer:
 
 class TestReferenceLines:
     def test_hline(self, sample_df, tmp_path):
-        (cerno.chart(sample_df)
+        (gufo.chart(sample_df)
          .scatter("x", "y")
          .hline(3)
          .save(tmp_path / "r.png"))
 
     def test_vline(self, sample_df, tmp_path):
-        (cerno.chart(sample_df)
+        (gufo.chart(sample_df)
          .scatter("x", "y")
          .vline(2.5)
          .save(tmp_path / "r.png"))
 
     def test_hband(self, sample_df, tmp_path):
-        (cerno.chart(sample_df)
+        (gufo.chart(sample_df)
          .scatter("x", "y")
          .hband(2, 4, color="blue", alpha=0.1)
          .save(tmp_path / "r.png"))
 
     def test_vband(self, sample_df, tmp_path):
-        (cerno.chart(sample_df)
+        (gufo.chart(sample_df)
          .scatter("x", "y")
          .vband(1.5, 3.5)
          .save(tmp_path / "r.png"))
 
     def test_reference_with_label(self, sample_df, tmp_path):
-        (cerno.chart(sample_df)
+        (gufo.chart(sample_df)
          .scatter("x", "y")
          .hline(3, label="threshold", color="red")
          .legend()
          .save(tmp_path / "r.png"))
 
     def test_multiple_references(self, sample_df, tmp_path):
-        (cerno.chart(sample_df)
+        (gufo.chart(sample_df)
          .scatter("x", "y")
          .hline(2)
          .hline(4)
@@ -351,7 +351,7 @@ class TestReferenceLines:
          .save(tmp_path / "r.png"))
 
     def test_reference_chaining(self, sample_df, tmp_path):
-        c = (cerno.chart(sample_df)
+        c = (gufo.chart(sample_df)
              .scatter("x", "y")
              .hline(3)
              .vline(2))
@@ -363,31 +363,31 @@ class TestReferenceLines:
 
 class TestDataLabels:
     def test_label_bar(self, sample_df, tmp_path):
-        (cerno.chart(sample_df)
+        (gufo.chart(sample_df)
          .bar("cat", "x")
          .label()
          .save(tmp_path / "l.png"))
         assert (tmp_path / "l.png").exists()
 
     def test_label_bar_fmt(self, sample_df, tmp_path):
-        (cerno.chart(sample_df)
+        (gufo.chart(sample_df)
          .bar("cat", "x")
          .label(fmt=".1f")
          .save(tmp_path / "l.png"))
 
     def test_label_scatter_column(self, tmp_path):
         df = {"x": [1, 2, 3], "y": [4, 5, 6], "name": ["a", "b", "c"]}
-        (cerno.chart(df)
+        (gufo.chart(df)
          .scatter("x", "y")
          .label("name")
          .save(tmp_path / "l.png"))
 
     def test_label_returns_self(self, sample_df):
-        c = cerno.chart(sample_df).bar("cat", "x").label()
+        c = gufo.chart(sample_df).bar("cat", "x").label()
         assert isinstance(c, Chart)
 
     def test_label_with_fontsize(self, sample_df, tmp_path):
-        (cerno.chart(sample_df)
+        (gufo.chart(sample_df)
          .bar("cat", "x")
          .label(fontsize=8)
          .save(tmp_path / "l.png"))
@@ -397,32 +397,32 @@ class TestDataLabels:
 
 class TestLegendOutside:
     def test_outside_right(self, sample_df, tmp_path):
-        (cerno.chart(sample_df)
+        (gufo.chart(sample_df)
          .scatter("x", "y", color="cat")
          .legend(position="outside right")
          .save(tmp_path / "l.png"))
         assert (tmp_path / "l.png").exists()
 
     def test_outside_bottom(self, sample_df, tmp_path):
-        (cerno.chart(sample_df)
+        (gufo.chart(sample_df)
          .scatter("x", "y", color="cat")
          .legend(position="outside bottom")
          .save(tmp_path / "l.png"))
 
     def test_outside_top(self, sample_df, tmp_path):
-        (cerno.chart(sample_df)
+        (gufo.chart(sample_df)
          .scatter("x", "y", color="cat")
          .legend(position="outside top")
          .save(tmp_path / "l.png"))
 
     def test_outside_left(self, sample_df, tmp_path):
-        (cerno.chart(sample_df)
+        (gufo.chart(sample_df)
          .scatter("x", "y", color="cat")
          .legend(position="outside left")
          .save(tmp_path / "l.png"))
 
     def test_regular_position_still_works(self, sample_df, tmp_path):
-        (cerno.chart(sample_df)
+        (gufo.chart(sample_df)
          .scatter("x", "y", color="cat")
          .legend(position="upper left")
          .save(tmp_path / "l.png"))

@@ -1,6 +1,6 @@
 # API reference
 
-Complete reference for all public cerno classes and functions, generated from
+Complete reference for all public gufo classes and functions, generated from
 source docstrings.
 
 ```{toctree}

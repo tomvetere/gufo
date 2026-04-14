@@ -1,4 +1,4 @@
-"""Shared fixtures for cerno tests."""
+"""Shared fixtures for gufo tests."""
 import matplotlib
 matplotlib.use("Agg")  # non-interactive backend for CI
 

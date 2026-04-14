@@ -1,11 +1,11 @@
-"""Tests for cerno faceting."""
+"""Tests for gufo faceting."""
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pytest
 
-import cerno
-from cerno.core.chart import Chart, chart
+import gufo
+from gufo.core.chart import Chart, chart
 
 
 # ── Facet construction ──────────────────────────────────────────────
@@ -125,7 +125,7 @@ class TestFacetDecorators:
         (
             chart(sample_df)
             .scatter("x", "y")
-            .theme("cerno_dark")
+            .theme("gufo_dark")
             .facet("cat")
             .save(path)
         )

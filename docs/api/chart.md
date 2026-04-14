@@ -1,18 +1,18 @@
 # Chart
 
-The `Chart` class is the central object in cerno. Users create instances via
-`cerno.chart()`, never by instantiating `Chart` directly.
+The `Chart` class is the central object in gufo. Users create instances via
+`gufo.chart()`, never by instantiating `Chart` directly.
 
 ## Entry point
 
 ```{eval-rst}
-.. autofunction:: cerno.core.chart.chart
+.. autofunction:: gufo.core.chart.chart
 ```
 
 ## Chart class
 
 ```{eval-rst}
-.. autoclass:: cerno.core.chart.Chart
+.. autoclass:: gufo.core.chart.Chart
    :members:
    :member-order: bysource
    :undoc-members: False

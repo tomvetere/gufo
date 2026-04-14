@@ -2,7 +2,7 @@
 import contextlib
 import matplotlib.pyplot as plt
 
-from .color import CERNO_PALETTE
+from .color import GUFO_PALETTE
 
 
 class Theme:
@@ -11,7 +11,7 @@ class Theme:
 
     Themes do not mutate global state until explicitly applied.
     Use as_context() to scope a theme to a with-block.
-    Use apply_global() (or cerno.set_theme()) to set the global default.
+    Use apply_global() (or gufo.set_theme()) to set the global default.
     """
 
     def __init__(self, name, rc):
@@ -49,7 +49,7 @@ class Theme:
 # Built-in themes
 # ---------------------------------------------------------------------------
 
-_CERNO_MODERN_RC = {
+_GUFO_MODERN_RC = {
     "axes.facecolor": "#f5f5f5",
     "figure.facecolor": "#ffffff",
     "axes.grid": True,
@@ -61,15 +61,15 @@ _CERNO_MODERN_RC = {
     "axes.spines.bottom": False,
     "lines.linewidth": 2.0,
     "font.family": "sans-serif",
-    "axes.prop_cycle": plt.cycler(color=CERNO_PALETTE.categorical),
+    "axes.prop_cycle": plt.cycler(color=GUFO_PALETTE.categorical),
 }
 
-_CERNO_DARK_PALETTE = [
+_GUFO_DARK_PALETTE = [
     "#7EB8DA", "#F2A65A", "#7DC87D", "#E87070",
     "#B09ADB", "#C4A97D", "#F0A8D8", "#B0B0B0",
 ]
 
-_CERNO_DARK_RC = {
+_GUFO_DARK_RC = {
     "axes.facecolor": "#1e1e2e",
     "figure.facecolor": "#13131e",
     "axes.grid": True,
@@ -85,10 +85,10 @@ _CERNO_DARK_RC = {
     "xtick.color": "#cccccc",
     "ytick.color": "#cccccc",
     "font.family": "sans-serif",
-    "axes.prop_cycle": plt.cycler(color=_CERNO_DARK_PALETTE),
+    "axes.prop_cycle": plt.cycler(color=_GUFO_DARK_PALETTE),
 }
 
-_CERNO_PRINT_RC = {
+_GUFO_PRINT_RC = {
     "axes.facecolor": "#ffffff",
     "figure.facecolor": "#ffffff",
     "axes.grid": True,
@@ -123,7 +123,7 @@ def get_theme(name: str) -> Theme:
     return _REGISTRY[name]
 
 
-def set_theme(name: str = "cerno_modern") -> None:
+def set_theme(name: str = "gufo_modern") -> None:
     """Apply a theme globally to all subsequent charts."""
     get_theme(name).apply_global()
 
@@ -165,6 +165,6 @@ def _resolve_theme(override):
 
 
 # Register built-ins at import time
-register_theme(Theme("cerno_modern", _CERNO_MODERN_RC))
-register_theme(Theme("cerno_dark", _CERNO_DARK_RC))
-register_theme(Theme("cerno_print", _CERNO_PRINT_RC))
+register_theme(Theme("gufo_modern", _GUFO_MODERN_RC))
+register_theme(Theme("gufo_dark", _GUFO_DARK_RC))
+register_theme(Theme("gufo_print", _GUFO_PRINT_RC))

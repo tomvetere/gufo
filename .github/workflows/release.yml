@@ -22,7 +22,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
-      - name: Install cerno with all extras
+      - name: Install gufo with all extras
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[all]" pytest
@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: testpypi
-      url: https://test.pypi.org/project/cerno/
+      url: https://test.pypi.org/project/gufo/
     permissions:
       id-token: write
 
@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/project/cerno/
+      url: https://pypi.org/project/gufo/
     permissions:
       id-token: write
 

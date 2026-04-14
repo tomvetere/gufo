@@ -1,4 +1,4 @@
-"""Input validation helpers for cerno.
+"""Input validation helpers for gufo.
 
 Each function checks a single constraint and raises ValueError (or warns)
 with a plain-English message that names the problem and suggests a fix.

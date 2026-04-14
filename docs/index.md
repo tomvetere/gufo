@@ -1,15 +1,15 @@
-# cerno
+# gufo
 
 **Data visualization simplified.**
 
-Cerno is a Python library for making charts — built on matplotlib, designed so
+Gufo is a Python library for making charts — built on matplotlib, designed so
 you can explore and present data without fighting your tools.
 
 ```python
-import cerno
+import gufo
 
 (
-    cerno.chart(df)
+    gufo.chart(df)
     .scatter("gdp_per_capita", "life_expectancy", color="continent", size="population")
     .title("GDP vs Life Expectancy")
     .xlabel("GDP per Capita (USD)")
@@ -22,12 +22,12 @@ import cerno
 ## Install
 
 ```bash
-pip install cerno
+pip install gufo
 ```
 
 ## Core idea
 
-Everything goes through `cerno.chart(data)`. You chain methods to describe
+Everything goes through `gufo.chart(data)`. You chain methods to describe
 what you want. Nothing is drawn until you call `.show()` or `.save()`.
 
 ```{toctree}

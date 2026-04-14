@@ -10,7 +10,7 @@ import numpy as np
 class Regression:
     """Configuration for a regression fit line overlaid on a scatter plot.
 
-    Users create instances via cerno.regression(), never directly.
+    Users create instances via gufo.regression(), never directly.
     """
 
     degree: int = 1

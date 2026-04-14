@@ -1,12 +1,12 @@
-"""Tests for cerno grid layout."""
+"""Tests for gufo grid layout."""
 import numpy as np
 import pandas as pd
 import pytest
 import matplotlib.pyplot as plt
 
-import cerno
-from cerno.core.chart import Chart, chart
-from cerno.layout.grid import Grid
+import gufo
+from gufo.core.chart import Chart, chart
+from gufo.layout.grid import Grid
 
 
 # ── Grid construction ───────────────────────────────────────────────
@@ -20,8 +20,8 @@ class TestGridConstruction:
         g = Grid(2, 2)
         assert not isinstance(g, Chart)
 
-    def test_cerno_grid_entry_point(self):
-        g = cerno.grid(2, 2)
+    def test_gufo_grid_entry_point(self):
+        g = gufo.grid(2, 2)
         assert isinstance(g, Grid)
 
     def test_custom_figsize(self, sample_df, tmp_path):
@@ -83,7 +83,7 @@ class TestGridPanels:
         assert (tmp_path / "sparse.png").exists()
 
     def test_grid_theme(self, sample_df, tmp_path):
-        g = Grid(1, 1).theme("cerno_modern")
+        g = Grid(1, 1).theme("gufo_modern")
         g[0, 0] = chart(sample_df).scatter("x", "y")
         g.save(tmp_path / "themed.png")
         assert (tmp_path / "themed.png").exists()
@@ -104,17 +104,17 @@ class TestGridPanels:
 
 class TestGridOutput:
     def test_save(self, sample_df, tmp_path):
-        g = cerno.grid(1, 2)
-        g[0, 0] = cerno.chart(sample_df).scatter("x", "y")
-        g[0, 1] = cerno.chart(sample_df).line("x", "y")
+        g = gufo.grid(1, 2)
+        g[0, 0] = gufo.chart(sample_df).scatter("x", "y")
+        g[0, 1] = gufo.chart(sample_df).line("x", "y")
         path = tmp_path / "grid_out.png"
         g.save(str(path))
         assert path.exists()
         assert path.stat().st_size > 0
 
     def test_save_custom_dpi(self, sample_df, tmp_path):
-        g = cerno.grid(1, 1)
-        g[0, 0] = cerno.chart(sample_df).scatter("x", "y")
+        g = gufo.grid(1, 1)
+        g[0, 0] = gufo.chart(sample_df).scatter("x", "y")
         g.save(tmp_path / "grid_dpi.png", dpi=300)
 
 
@@ -122,16 +122,16 @@ class TestGridOutput:
 
 class TestGridRatios:
     def test_grid_width_height_ratios(self, sample_df, tmp_path):
-        g = cerno.grid(2, 2, width_ratios=[3, 1], height_ratios=[1, 3])
-        g[0, 0] = cerno.chart(sample_df).scatter("x", "y")
-        g[1, 0] = cerno.chart(sample_df).line("x", "y")
+        g = gufo.grid(2, 2, width_ratios=[3, 1], height_ratios=[1, 3])
+        g[0, 0] = gufo.chart(sample_df).scatter("x", "y")
+        g[1, 0] = gufo.chart(sample_df).line("x", "y")
         g.save(tmp_path / "ratios.png")
         assert (tmp_path / "ratios.png").exists()
 
     def test_grid_ratios_none_by_default(self, sample_df, tmp_path):
-        g = cerno.grid(1, 2)
-        g[0, 0] = cerno.chart(sample_df).scatter("x", "y")
-        g[0, 1] = cerno.chart(sample_df).line("x", "y")
+        g = gufo.grid(1, 2)
+        g[0, 0] = gufo.chart(sample_df).scatter("x", "y")
+        g[0, 1] = gufo.chart(sample_df).line("x", "y")
         g.save(tmp_path / "no_ratios.png")
         assert (tmp_path / "no_ratios.png").exists()
 
@@ -148,26 +148,26 @@ class TestJointplot:
         })
 
     def test_jointplot_returns_grid(self, joint_df):
-        g = cerno.jointplot(joint_df, "x", "y")
+        g = gufo.jointplot(joint_df, "x", "y")
         assert isinstance(g, Grid)
 
     def test_jointplot_saves(self, joint_df, tmp_path):
-        cerno.jointplot(joint_df, "x", "y").save(tmp_path / "j.png")
+        gufo.jointplot(joint_df, "x", "y").save(tmp_path / "j.png")
         assert (tmp_path / "j.png").exists()
 
     def test_jointplot_with_color(self, joint_df, tmp_path):
-        cerno.jointplot(joint_df, "x", "y", color="cat").save(tmp_path / "j.png")
+        gufo.jointplot(joint_df, "x", "y", color="cat").save(tmp_path / "j.png")
 
     def test_jointplot_kde_marginals(self, joint_df, tmp_path):
-        cerno.jointplot(joint_df, "x", "y", marginal="kde").save(tmp_path / "j.png")
+        gufo.jointplot(joint_df, "x", "y", marginal="kde").save(tmp_path / "j.png")
 
     def test_jointplot_title(self, joint_df):
-        g = cerno.jointplot(joint_df, "x", "y").title("My Joint")
+        g = gufo.jointplot(joint_df, "x", "y").title("My Joint")
         fig, _ = g._render()
         assert fig._suptitle.get_text() == "My Joint"
 
     def test_jointplot_three_visible_axes(self, joint_df):
-        g = cerno.jointplot(joint_df, "x", "y")
+        g = gufo.jointplot(joint_df, "x", "y")
         fig, axs = g._render()
         visible = [ax for ax in fig.axes if ax.get_visible()]
         # 3 panels visible (center, top, right), corner hidden
@@ -178,10 +178,10 @@ class TestJointplot:
 
 class TestHistogramHorizontal:
     def test_histogram_horizontal(self, sample_df, tmp_path):
-        cerno.chart(sample_df).histogram("x", horizontal=True).save(tmp_path / "h.png")
+        gufo.chart(sample_df).histogram("x", horizontal=True).save(tmp_path / "h.png")
 
     def test_histogram_horizontal_renders(self, sample_df):
-        c = cerno.chart(sample_df).histogram("x", horizontal=True)
+        c = gufo.chart(sample_df).histogram("x", horizontal=True)
         _, axes = c._render()
         # Horizontal histogram has patches
         assert len(axes.patches) > 0

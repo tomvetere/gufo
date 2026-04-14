@@ -1,11 +1,11 @@
-# Cerno — Claude Context
+# Gufo — Claude Context
 
 ## What this project is
 
-Cerno is a Python data visualization library built on matplotlib. It targets researchers, data explorers, and business users who want good-looking charts without fighting their tools.
+Gufo is a Python data visualization library built on matplotlib. It targets researchers, data explorers, and business users who want good-looking charts without fighting their tools.
 
 The core design philosophy:
-- **Fluent method-chaining only.** `cerno.chart(data).scatter(...).title(...).show()`. There is no functional API alias — one pattern, always.
+- **Fluent method-chaining only.** `gufo.chart(data).scatter(...).title(...).show()`. There is no functional API alias — one pattern, always.
 - **Wide-form and long-form data both work natively.** No `pd.melt()` required.
 - **Always returns `Chart` or `Grid`.** Every factory function returns a `Chart` or `Grid`. Never a FacetGrid, never an Axes.
 - **One escape hatch: `.apply(func)`.** `func(figure, axes)` drops down to matplotlib and stays in the chain. No `.ax`, no `.fig` properties on the public API.
@@ -14,7 +14,7 @@ The core design philosophy:
 ## Module structure
 
 ```
-cerno/
+gufo/
 ├── __init__.py          # public API only — explicit __all__
 ├── _version.py
 ├── core/
@@ -45,7 +45,7 @@ cerno/
 │   └── inference.py     # is_categorical()
 ├── style/
 │   ├── theme.py         # Theme class, registry, set_theme, theme_context, built-in themes
-│   └── color.py         # Palette dataclass, CERNO_PALETTE, NAMED_PALETTES, resolve_palette()
+│   └── color.py         # Palette dataclass, GUFO_PALETTE, NAMED_PALETTES, resolve_palette()
 ├── stats/
 │   ├── __init__.py      # scipy guard (_require_scipy)
 │   ├── regression.py    # Regression dataclass — fit overlay for scatter
@@ -71,19 +71,19 @@ Follow [PEP 8](https://peps.python.org/pep-0008/) and [PEP 20 (The Zen of Python
 
 ### Adding a new chart type
 
-1. Create `cerno/marks/<type>.py` with a single `render(layer, adapter, axes)` function
-2. Register it in `cerno/marks/__init__.py` under `_REGISTRY`
-3. Add the method to `Chart` in `cerno/core/chart.py` — it appends a `Layer` and returns `self`
+1. Create `gufo/marks/<type>.py` with a single `render(layer, adapter, axes)` function
+2. Register it in `gufo/marks/__init__.py` under `_REGISTRY`
+3. Add the method to `Chart` in `gufo/core/chart.py` — it appends a `Layer` and returns `self`
 4. Document it in `README.md` with copy-pasteable examples
 
 ### Statistical overlays (regression, KDE)
 
-Overlays are **config object classes** in `cerno/stats/`, passed as parameters to existing marks:
-- `cerno.regression()` → `Regression` dataclass, passed via `fit=` on `.scatter()`
-- `cerno.kde()` → `KDE` dataclass, passed via `kde=` on `.histogram()`, or used standalone via `.kde()`
-- `cerno.lowess()` → `Lowess` dataclass, passed via `fit=` on `.scatter()`
+Overlays are **config object classes** in `gufo/stats/`, passed as parameters to existing marks:
+- `gufo.regression()` → `Regression` dataclass, passed via `fit=` on `.scatter()`
+- `gufo.kde()` → `KDE` dataclass, passed via `kde=` on `.histogram()`, or used standalone via `.kde()`
+- `gufo.lowess()` → `Lowess` dataclass, passed via `fit=` on `.scatter()`
 
-Each config class has a `render()` method that draws itself onto axes. The mark renderer checks for the config object and delegates rendering. Factory functions in `cerno/__init__.py` create the config instances. This pattern avoids signature bloat and keeps overlay logic separate from mark logic.
+Each config class has a `render()` method that draws itself onto axes. The mark renderer checks for the config object and delegates rendering. Factory functions in `gufo/__init__.py` create the config instances. This pattern avoids signature bloat and keeps overlay logic separate from mark logic.
 
 ### Data resolution
 
@@ -117,20 +117,20 @@ Grid rendering is handled by `Grid._render()` in `layout/grid.py`:
 Validation lives in `core/validate.py` — small pure functions that raise `ValueError` or `warnings.warn`. Only checks that genuinely improve on matplotlib's own error messages belong here.
 
 - **Render-time checks** (in mark renderers): array length mismatches (`check_array_lengths`), numeric type for histogram (`check_numeric`), NaN/Inf warnings (`warn_nan_inf`), stroke dash validation (`check_stroke_dash`). These require resolved data and fire during `_render()`.
-- **Do not duplicate matplotlib.** If matplotlib already raises a clear error for invalid input (alpha out of range, bad scale name, negative figsize, etc.), do not add a cerno-level check. Only add validation when cerno can provide a meaningfully better message.
+- **Do not duplicate matplotlib.** If matplotlib already raises a clear error for invalid input (alpha out of range, bad scale name, negative figsize, etc.), do not add a gufo-level check. Only add validation when gufo can provide a meaningfully better message.
 
 ### Grid layout
 
 Grid is a standalone layout container, separate from Chart. Usage:
 
 ```python
-g = cerno.grid(2, 2, figsize=(14, 10))
-g[0, 0] = cerno.chart(df).scatter("x", "y").title("Panel A")
-g[0, 1] = cerno.chart(df).line("x", "y").title("Panel B")
+g = gufo.grid(2, 2, figsize=(14, 10))
+g[0, 0] = gufo.chart(df).scatter("x", "y").title("Panel A")
+g[0, 1] = gufo.chart(df).line("x", "y").title("Panel B")
 g.show()
 ```
 
-- `cerno.grid(rows, cols)` creates a `Grid` instance directly
+- `gufo.grid(rows, cols)` creates a `Grid` instance directly
 - `Grid.__setitem__` stores panel Charts in `_panels`
 - `Grid.__getitem__` raises `TypeError` (panels are write-only — no implicit state)
 - `Grid._render()` creates subplots and delegates to each panel
@@ -152,13 +152,13 @@ Core:
 - Python `>= 3.10`
 
 Optional extras:
-- `cerno[pandas]` — `pandas >= 1.3.0`
-- `cerno[polars]` — `polars >= 0.20.0`
-- `cerno[scipy]` — `scipy >= 1.7.0` (required for KDE and swarm)
-- `cerno[stats]` — `statsmodels >= 0.13.0` (required for LOWESS smoothing)
-- `cerno[all]` — all optional dependencies
+- `gufo[pandas]` — `pandas >= 1.3.0`
+- `gufo[polars]` — `polars >= 0.20.0`
+- `gufo[scipy]` — `scipy >= 1.7.0` (required for KDE and swarm)
+- `gufo[stats]` — `statsmodels >= 0.13.0` (required for LOWESS smoothing)
+- `gufo[all]` — all optional dependencies
 
-pandas, polars, scipy, and statsmodels are guarded with `try/except ImportError` at import time. If neither is installed, cerno still works with dicts, arrays, and lists. KDE and swarm raise `ImportError` with install instructions when scipy is missing. LOWESS raises `ImportError` when statsmodels is missing. Regression uses numpy only.
+pandas, polars, scipy, and statsmodels are guarded with `try/except ImportError` at import time. If neither is installed, gufo still works with dicts, arrays, and lists. KDE and swarm raise `ImportError` with install instructions when scipy is missing. LOWESS raises `ImportError` when statsmodels is missing. Regression uses numpy only.
 
 ## Roadmap
 

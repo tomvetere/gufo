@@ -3,42 +3,42 @@
 ## Installation
 
 ```bash
-pip install cerno              # core only (matplotlib + numpy)
-pip install cerno[pandas]      # + pandas support
-pip install cerno[polars]      # + polars support
-pip install cerno[scipy]       # + KDE and swarm plots
-pip install cerno[all]         # everything
+pip install gufo              # core only (matplotlib + numpy)
+pip install gufo[pandas]      # + pandas support
+pip install gufo[polars]      # + polars support
+pip install gufo[scipy]       # + KDE and swarm plots
+pip install gufo[all]         # everything
 ```
 
 For the latest development version:
 
 ```bash
-pip install git+https://github.com/thomas/cerno.git
+pip install git+https://github.com/tomvetere/gufo.git
 ```
 
 ## Your first chart
 
 ```python
-import cerno
+import gufo
 import pandas as pd
 
 df = pd.read_csv("gapminder.csv")
 
-cerno.chart(df).scatter("gdp_per_capita", "life_expectancy").show()
+gufo.chart(df).scatter("gdp_per_capita", "life_expectancy").show()
 ```
 
 ## The pattern
 
-Every cerno chart follows the same structure:
+Every gufo chart follows the same structure:
 
-1. **Create a chart** with `cerno.chart(data)` — pass your data once here.
+1. **Create a chart** with `gufo.chart(data)` — pass your data once here.
 2. **Add marks** — `.scatter()`, `.line()`, `.bar()`, `.histogram()`, `.boxplot()`, `.violin()`, `.heatmap()`, `.area()`, `.kde()`, `.strip()`, `.swarm()`.
 3. **Describe the chart** — `.title()`, `.xlabel()`, `.ylabel()`, `.legend()`.
 4. **Output** — `.show()` to display, `.save("file.png")` to write to disk.
 
 ```python
 (
-    cerno.chart(df)
+    gufo.chart(df)
     .scatter("x", "y", color="category")   # mark
     .title("My Chart")                      # description
     .xlabel("X axis")
@@ -51,14 +51,14 @@ Every cerno chart follows the same structure:
 Methods can be called in any order. `.show()` and `.save()` trigger rendering —
 everything before them just registers intent.
 
-## What data cerno accepts
+## What data gufo accepts
 
 You do not need to reshape your data before passing it in:
 
 - **pandas DataFrame** — long-form or wide-form, refer to columns by name
-- **Polars DataFrame** — same as pandas, install with `cerno[polars]`
+- **Polars DataFrame** — same as pandas, install with `gufo[polars]`
 - **dict** — `{"x": [...], "y": [...]}`
-- **numpy arrays or lists** — pass directly to mark methods, omit data from `cerno.chart()`
+- **numpy arrays or lists** — pass directly to mark methods, omit data from `gufo.chart()`
 
 See [Data formats](guides/data-formats.md) for details and examples.
 
@@ -78,7 +78,7 @@ This walkthrough uses a small inline dataset — no external files needed.
 ### Step 1 — create some data
 
 ```python
-import cerno
+import gufo
 import pandas as pd
 
 sales = pd.DataFrame({
@@ -92,17 +92,17 @@ sales = pd.DataFrame({
 ### Step 2 — a basic scatter plot
 
 ```python
-cerno.chart(sales).scatter("headcount", "revenue").show()
+gufo.chart(sales).scatter("headcount", "revenue").show()
 ```
 
-One line, one chart. `cerno.chart(data)` binds the data, `.scatter()` says
+One line, one chart. `gufo.chart(data)` binds the data, `.scatter()` says
 what to draw, and `.show()` triggers rendering.
 
 ### Step 3 — add color, labels, and a title
 
 ```python
 (
-    cerno.chart(sales)
+    gufo.chart(sales)
     .scatter("headcount", "revenue", color="region")
     .title("Revenue vs Headcount")
     .xlabel("Headcount")
@@ -119,9 +119,9 @@ entry for each group automatically.
 
 ```python
 (
-    cerno.chart(sales)
+    gufo.chart(sales)
     .scatter("headcount", "revenue", color="region",
-             fit=cerno.regression())
+             fit=gufo.regression())
     .title("Revenue vs Headcount — with fit")
     .xlabel("Headcount")
     .ylabel("Revenue ($k)")
@@ -130,14 +130,14 @@ entry for each group automatically.
 )
 ```
 
-`cerno.regression()` creates a linear fit config. Pass `degree=2` for a
+`gufo.regression()` creates a linear fit config. Pass `degree=2` for a
 polynomial. The fit line is drawn per-group when `color` is set.
 
 ### Step 5 — facet by a column
 
 ```python
 (
-    cerno.chart(sales)
+    gufo.chart(sales)
     .scatter("headcount", "revenue")
     .facet("region")
     .title("Revenue by Region")
@@ -152,7 +152,7 @@ polynomial. The fit line is drawn per-group when `color` is set.
 
 ```python
 (
-    cerno.chart(sales)
+    gufo.chart(sales)
     .scatter("headcount", "revenue", color="region")
     .title("Revenue vs Headcount")
     .save("revenue_scatter.png", dpi=300)
