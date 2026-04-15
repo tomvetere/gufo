@@ -20,6 +20,7 @@ class Theme:
 
     @property
     def name(self):
+        """The theme's registered name."""
         return self._name
 
     def merge(self, overrides):
@@ -143,8 +144,7 @@ class _PassthroughTheme(Theme):
 
     @contextlib.contextmanager
     def as_context(self):
-        # No rc_context wrapper — let the current rcParams (including any
-        # global theme set via set_theme()) pass through unchanged.
+        """Pass-through context: inherit whatever rcParams are currently active."""
         yield
 
 

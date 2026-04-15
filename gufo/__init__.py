@@ -61,7 +61,6 @@ __all__ = [
     "grid",
     "jointplot",
     "pairplot",
-    "Grid",
     "set_theme",
     "get_theme",
     "register_theme",

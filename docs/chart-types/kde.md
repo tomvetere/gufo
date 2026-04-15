@@ -6,19 +6,19 @@ Requires scipy (`pip install gufo[scipy]`).
 ## Standalone density plot
 
 ```python
-gufo.chart(df).kde("x").show()
+gufo.chart(df).kdeplot("x").show()
 ```
 
 ## Filled density
 
 ```python
-gufo.chart(df).kde("x", fill=True).show()
+gufo.chart(df).kdeplot("x", fill=True).show()
 ```
 
 ## Grouped by category
 
 ```python
-gufo.chart(df).kde("x", color="category").show()
+gufo.chart(df).kdeplot("x", color="category").show()
 ```
 
 ## Histogram overlay
@@ -39,10 +39,10 @@ gufo.chart(df).histogram("income", kde=gufo.kde(fill=True, alpha=0.3)).show()
 The `bw_method` parameter is passed to `scipy.stats.gaussian_kde`.
 
 ```python
-gufo.chart(df).kde("x", bw_method=0.3).show()
+gufo.chart(df).kdeplot("x", bw_method=0.3).show()
 ```
 
 ## API reference
 
 See {py:func}`gufo.kde`, {py:class}`gufo.stats.kde.KDE`,
-and {py:meth}`gufo.core.chart.Chart.kde`.
+and {py:meth}`gufo.core.chart.Chart.kdeplot`.

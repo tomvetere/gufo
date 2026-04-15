@@ -12,6 +12,7 @@ def render(layer, adapter, axes):
     warn_nan_inf(x, "x", "histogram")
 
     kwargs["bins"] = enc.get("bins", "auto")
+    kwargs["density"] = enc.get("density", False)
 
     if enc.get("horizontal"):
         kwargs["orientation"] = "horizontal"

@@ -114,19 +114,24 @@ class TestRegression:
 # ── KDE Standalone ─────────────────────────────────────────────────────
 
 class TestKDEStandalone:
-    def test_basic_kde(self, scatter_df, tmp_path):
-        gufo.chart(scatter_df).kde("x").save(tmp_path / "kde.png")
+    def test_basic_kdeplot(self, scatter_df, tmp_path):
+        gufo.chart(scatter_df).kdeplot("x").save(tmp_path / "kde.png")
 
-    def test_kde_with_fill(self, scatter_df, tmp_path):
-        gufo.chart(scatter_df).kde("x", fill=True).save(tmp_path / "kde_fill.png")
+    def test_kdeplot_with_fill(self, scatter_df, tmp_path):
+        gufo.chart(scatter_df).kdeplot("x", fill=True).save(tmp_path / "kde_fill.png")
 
-    def test_kde_with_color(self, scatter_df, tmp_path):
-        gufo.chart(scatter_df).kde("x", color="red").save(tmp_path / "kde_color.png")
+    def test_kdeplot_with_color(self, scatter_df, tmp_path):
+        gufo.chart(scatter_df).kdeplot("x", color="red").save(tmp_path / "kde_color.png")
 
-    def test_kde_with_categorical_color(self, scatter_df, tmp_path):
-        gufo.chart(scatter_df).kde("x", color="group").save(
+    def test_kdeplot_with_categorical_color(self, scatter_df, tmp_path):
+        gufo.chart(scatter_df).kdeplot("x", color="group").save(
             tmp_path / "kde_cat.png"
         )
+
+    def test_kdeplot_flat_params_forward(self, scatter_df, tmp_path):
+        gufo.chart(scatter_df).kdeplot(
+            "x", linewidth=3.0, linestyle="--", alpha=0.6, n_points=50
+        ).save(tmp_path / "kde_params.png")
 
     def test_kde_config_defaults(self):
         k = gufo.kde()

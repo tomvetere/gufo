@@ -133,28 +133,36 @@ class Chart:
         return self
 
     def histogram(self, x, *, bins="auto", color=None, horizontal=False,
-                  label=None, kde=None, **kwargs):
+                  density=False, label=None, kde=None, **kwargs):
         """Add a histogram layer.
 
         Set horizontal=True to orient the histogram sideways.
+        Set density=True to normalize the histogram so the area under it sums to 1.
         kde accepts a gufo.kde() config object to overlay a density curve.
         """
         self._layers.append(Layer(
             mark_type="histogram", x=x, y=None,
             encodings={"bins": bins, "color": color, "horizontal": horizontal,
-                       "label": label, "kde": kde},
+                       "density": density, "label": label, "kde": kde},
             kwargs=kwargs,
         ))
         return self
 
-    def kde(self, x, *, color=None, bw_method=None, fill=False, label=None,
-            **kwargs):
-        """Add a KDE (kernel density estimation) layer."""
-        kde_config = KDE(bw_method=bw_method, fill=fill)
+    def kdeplot(self, x, *, color=None, bw_method=None, linestyle="-",
+                linewidth=2.0, alpha=1.0, fill=False, n_points=200, label=None):
+        """Add a KDE (kernel density estimation) density layer.
+
+        Set fill=True to shade under the curve. bw_method controls scipy's
+        gaussian_kde bandwidth. n_points sets the resolution of the curve.
+        """
+        kde_config = KDE(
+            bw_method=bw_method, linestyle=linestyle, linewidth=linewidth,
+            alpha=alpha, fill=fill, n_points=n_points,
+        )
         self._layers.append(Layer(
             mark_type="kde", x=x, y=None,
             encodings={"color": color, "label": label, "kde_config": kde_config},
-            kwargs=kwargs,
+            kwargs={},
         ))
         return self
 
@@ -557,6 +565,37 @@ class Chart:
     def size(self, width, height):
         """Set the figure size in inches as (width, height)."""
         self._canvas = Canvas(figsize=(width, height))
+        return self
+
+    def clear(self):
+        """Remove all registered layers and decorators, keeping data and theme.
+
+        Gufo builds charts lazily: every mark or decorator call registers a
+        layer on the Chart, and nothing is drawn until .show() or .save().
+        Calling .show() does not clear those layers, so reusing a Chart
+        variable accumulates them. Use .clear() to reset the chart between
+        plots while keeping the bound data, theme, palette, figure size,
+        and facet configuration.
+
+        Returns self so it stays in the chain.
+        """
+        self._layers = []
+        self._title = None
+        self._subtitle = None
+        self._xlabel = None
+        self._ylabel = None
+        self._caption = None
+        self._annotations = []
+        self._xlim = None
+        self._ylim = None
+        self._xscale = None
+        self._yscale = None
+        self._xticks = {}
+        self._yticks = {}
+        self._legend_opts = None
+        self._references = []
+        self._label_config = None
+        self._apply_funcs = []
         return self
 
     # ------------------------------------------------------------------

@@ -105,7 +105,7 @@ Release-hygiene pass ahead of the first PyPI tag. No new features.
 ## v0.0.4
 
 **New chart types**
-- KDE (kernel density estimation): `.kde("x")` — standalone density plot with optional fill, categorical color grouping, configurable bandwidth. Requires scipy.
+- KDE (kernel density estimation): `.kdeplot("x")` — standalone density plot with optional fill, categorical color grouping, configurable bandwidth. Requires scipy. (Originally named `.kde()`; renamed in 0.1.0 to avoid collision with the `gufo.kde()` overlay factory.)
 - Strip plot: `.strip("x", "y")` — individual data points with random jitter along a categorical axis. Supports horizontal mode and wide-form data.
 - Swarm plot: `.swarm("x", "y")` — beeswarm layout that avoids overlapping points along a categorical axis. Requires scipy.
 

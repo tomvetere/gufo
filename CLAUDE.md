@@ -80,7 +80,7 @@ Follow [PEP 8](https://peps.python.org/pep-0008/) and [PEP 20 (The Zen of Python
 
 Overlays are **config object classes** in `gufo/stats/`, passed as parameters to existing marks:
 - `gufo.regression()` → `Regression` dataclass, passed via `fit=` on `.scatter()`
-- `gufo.kde()` → `KDE` dataclass, passed via `kde=` on `.histogram()`, or used standalone via `.kde()`
+- `gufo.kde()` → `KDE` dataclass, passed via `kde=` on `.histogram()` as an overlay. For a standalone density plot, use `Chart.kdeplot()` (a flat-param mark method, not the overlay factory).
 - `gufo.lowess()` → `Lowess` dataclass, passed via `fit=` on `.scatter()`
 
 Each config class has a `render()` method that draws itself onto axes. The mark renderer checks for the config object and delegates rendering. Factory functions in `gufo/__init__.py` create the config instances. This pattern avoids signature bloat and keeps overlay logic separate from mark logic.
@@ -140,6 +140,10 @@ g.show()
 
 Run `python -m pytest tests/` after every change to verify correctness. All tests must pass before committing.
 
+### Commit messages
+
+Never include `Co-Authored-By: Claude`, `Authored by Claude`, or any similar attribution line in commit messages or PR descriptions.
+
 ## What the README is
 
 `README.md` is the API spec. All public-facing behavior should be derivable from it. If a feature isn't in the README, it isn't part of the public API.
@@ -170,4 +174,33 @@ pandas, polars, scipy, and statsmodels are guarded with `try/except ImportError`
 - **v0.0.6**: stacked/dodged bar grouping, continuous color scales on scatter, jointplot, Grid ratios, horizontal histogram, docstrings, gallery, tutorial — complete
 - **v0.0.7**: data labels, pointplot, LOWESS smoothing, facet sharex/sharey, legend outside — complete
 - **v0.0.8**: shared colorbar/legend on faceted charts, continuous color on line, `.label()` on line and pointplot, error bands on area — complete
-- **v0.1.0**: target first tagged release
+- **v0.0.9**: PyPI release prep, CI + trusted-publishing workflows, package rename from cerno to gufo, Read the Docs deploy — complete
+- **v0.1.0**: first tagged release — in progress. All current work on `main` targets v0.1.0 until it ships. Includes `density=` as a named parameter on `.histogram()` and documented matplotlib kwargs passthrough.
+
+## Release policy
+
+Gufo follows [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
+
+- **PATCH** (`0.1.x`) — bug fixes, docs, internal refactors. No public API changes.
+- **MINOR** (`0.x.0`) — new marks, new parameters, new config objects, new themes. Must be backwards-compatible: existing code keeps working unchanged.
+- **MAJOR** (`x.0.0`) — breaking changes to the public API. Pre-1.0, breaking changes may also ship in MINOR bumps, but must still follow the deprecation process below.
+
+The public API is whatever is re-exported from `gufo/__init__.py` plus every method on `Chart` and `Grid`. Anything under a leading underscore or not re-exported is internal and may change at any time.
+
+### Breaking changes
+
+A change is breaking if it removes, renames, or changes the meaning of any public API — method names, parameter names, parameter defaults that alter output, return types, or the shape of `Layer`/`Theme`/`Palette` dataclasses when user code constructs them directly.
+
+When a breaking change ships:
+1. Add a **`### Breaking changes`** subsection to the roadmap entry for that version listing each break and the migration path.
+2. Cross-reference it from the README if the break affects anything shown in README examples.
+
+### Deprecation process
+
+Never remove a public API in a single release. The process is:
+
+1. **Deprecate** in version N: keep the old API working, but emit a `DeprecationWarning` pointing at the replacement. Mark it in the docstring with `.. deprecated:: N` and state the removal version.
+2. **Remove** no earlier than version N+2 (or the next MAJOR, whichever comes later). This gives users at least one full release cycle to migrate.
+3. List deprecations in a **`### Deprecated`** subsection of the roadmap entry for the version that introduces the warning, and again under **`### Breaking changes`** in the version that removes it.
+
+Use `warnings.warn(msg, DeprecationWarning, stacklevel=2)` so the warning points at the caller, not gufo internals.
