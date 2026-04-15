@@ -55,7 +55,7 @@ def jointplot(data, x, y, *, color=None, marginal="histogram", figsize=None):
 def _marginal_chart(data, col, *, color, marginal, horizontal=False):
     """Build a marginal distribution chart (histogram or KDE)."""
     if marginal == "kde":
-        return chart(data).kde(col, color=color)
+        return chart(data).kdeplot(col, color=color)
     return chart(data).histogram(col, color=color, horizontal=horizontal)
 
 

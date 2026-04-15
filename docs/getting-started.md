@@ -32,7 +32,7 @@ gufo.chart(df).scatter("gdp_per_capita", "life_expectancy").show()
 Every gufo chart follows the same structure:
 
 1. **Create a chart** with `gufo.chart(data)` — pass your data once here.
-2. **Add marks** — `.scatter()`, `.line()`, `.bar()`, `.histogram()`, `.boxplot()`, `.violin()`, `.heatmap()`, `.area()`, `.kde()`, `.strip()`, `.swarm()`.
+2. **Add marks** — `.scatter()`, `.line()`, `.bar()`, `.histogram()`, `.boxplot()`, `.violin()`, `.heatmap()`, `.area()`, `.kdeplot()`, `.strip()`, `.swarm()`.
 3. **Describe the chart** — `.title()`, `.xlabel()`, `.ylabel()`, `.legend()`.
 4. **Output** — `.show()` to display, `.save("file.png")` to write to disk.
 

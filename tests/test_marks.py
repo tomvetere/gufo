@@ -272,6 +272,12 @@ class TestHistogramMark:
     def test_histogram_with_arrays(self, tmp_path):
         gufo.chart().histogram([1, 1, 2, 3, 3, 3, 4]).save(tmp_path / "h.png")
 
+    def test_histogram_density(self, sample_df, tmp_path):
+        gufo.chart(sample_df).histogram("x", density=True).save(tmp_path / "h.png")
+
+    def test_histogram_extra_kwargs(self, sample_df, tmp_path):
+        gufo.chart(sample_df).histogram("x", histtype="step").save(tmp_path / "h.png")
+
 
 # ── Multi-layer ─────────────────────────────────────────────────────
 
@@ -286,6 +292,67 @@ class TestMultiLayer:
         c = gufo.chart(sample_df).scatter("x", "y").line("x", "y")
         assert c._layers[0].mark_type == "scatter"
         assert c._layers[1].mark_type == "line"
+
+
+class TestChartClear:
+    def test_clear_removes_layers(self, sample_df):
+        c = gufo.chart(sample_df).scatter("x", "y").line("x", "y")
+        assert len(c._layers) == 2
+        c.clear()
+        assert c._layers == []
+
+    def test_clear_returns_self(self, sample_df):
+        c = gufo.chart(sample_df).scatter("x", "y")
+        assert c.clear() is c
+
+    def test_clear_chainable(self, sample_df, tmp_path):
+        c = gufo.chart(sample_df).histogram("x")
+        (c.clear()
+         .histogram("x", density=True)
+         .save(tmp_path / "cleared.png"))
+        assert len(c._layers) == 1
+        assert c._layers[0].encodings.get("density") is True
+
+    def test_clear_preserves_data_and_theme(self, sample_df):
+        c = (gufo.chart(sample_df)
+             .theme("gufo_dark")
+             .palette(["#ff0000", "#00ff00"])
+             .size(10, 6)
+             .scatter("x", "y"))
+        c.clear()
+        assert c._data is sample_df
+        assert c._theme_override == "gufo_dark"
+        assert c._palette == ["#ff0000", "#00ff00"]
+        assert c._canvas._figsize == (10, 6)
+
+    def test_clear_resets_decorators(self, sample_df):
+        c = (gufo.chart(sample_df)
+             .scatter("x", "y")
+             .title("before")
+             .xlabel("X")
+             .ylabel("Y")
+             .xlim(0, 10)
+             .annotate("note", (1, 2))
+             .hline(0)
+             .legend()
+             .label())
+        c.clear()
+        assert c._title is None
+        assert c._xlabel is None
+        assert c._ylabel is None
+        assert c._xlim is None
+        assert c._annotations == []
+        assert c._references == []
+        assert c._legend_opts is None
+        assert c._label_config is None
+
+    def test_clear_then_render_shows_only_new_layers(self, sample_df, tmp_path):
+        c = gufo.chart(sample_df).scatter("x", "y")
+        c.save(tmp_path / "first.png")
+        c.clear().line("x", "y")
+        c.save(tmp_path / "second.png")
+        assert len(c._layers) == 1
+        assert c._layers[0].mark_type == "line"
 
 
 # ── Mark-level validation ─────────────────────────────────────────

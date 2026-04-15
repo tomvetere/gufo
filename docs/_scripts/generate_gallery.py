@@ -167,7 +167,7 @@ save("area.png")
 # 10. KDE (filled)
 (
     gufo.chart(df)
-    .kde("x", fill=True, color="category")
+    .kdeplot("x", fill=True, color="category")
     .title("KDE — filled density")
     .save(OUT / "kde.png")
 )

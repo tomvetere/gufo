@@ -32,6 +32,8 @@ import gufo
 pip install gufo
 ```
 
+See [`CHANGELOG.md`](CHANGELOG.md) for release notes.
+
 ---
 
 ## Core principles
@@ -62,6 +64,51 @@ import polars as pl
 df = pl.read_csv("gapminder.csv")
 gufo.chart(df).scatter("gdp_per_capita", "life_expectancy").show()
 ```
+
+---
+
+## Building a chart
+
+There are three equivalent ways to build a chart. Pick whichever reads best:
+
+```python
+# 1. Inline fluent chain — best for single-cell, self-contained plots
+gufo.chart(df).histogram("income").title("Incomes").show()
+
+# 2. Assign the chart, then add marks — useful for notebooks where you
+#    build a plot across cells, or when you want to add layers conditionally
+c = gufo.chart(df)
+c.histogram("income")
+if show_density:
+    c.histogram("income", density=True, color="red")
+c.title("Incomes").show()
+
+# 3. Shorter call sites via direct import
+from gufo import chart
+c = chart(df).histogram("income")
+c.show()
+```
+
+All three produce identical output — `gufo.chart()` and `from gufo import chart` are the same factory, and method chaining vs. separate statements are interchangeable because every chart method returns `self`.
+
+### Reusing charts
+
+Gufo builds charts lazily: every mark and decorator call registers a layer on the `Chart`, and nothing is drawn until `.show()` or `.save()`. Calling `.show()` does **not** clear those layers — so reusing a `Chart` variable across cells accumulates them. This is intentional (it's how layering works, e.g. scatter + regression line on one plot), but it can surprise users who expect a fresh plot per call.
+
+Two idioms work:
+
+```python
+# Preferred: one fluent chain per plot
+gufo.chart(df).histogram("income").show()
+gufo.chart(df).histogram("income", density=True).show()
+
+# Or: reuse the variable and reset explicitly between plots
+c = gufo.chart(df)
+c.histogram("income").show()
+c.clear().histogram("income", density=True).show()
+```
+
+`.clear()` resets layers, titles, labels, annotations, and reference lines, but **keeps** the bound data, theme, palette, figure size, and facet configuration — so it's "start a fresh plot from this data/theme," not "reset to defaults."
 
 ---
 
@@ -148,6 +195,9 @@ gufo.chart(df).histogram("income").show()
 # Custom bin count
 gufo.chart(df).histogram("income", bins=40).show()
 
+# Normalized (area sums to 1)
+gufo.chart(df).histogram("income", density=True).show()
+
 # From a raw array
 import numpy as np
 data = np.random.normal(0, 1, 1000)
@@ -159,6 +209,8 @@ gufo.chart(df).histogram("income", kde=gufo.kde()).show()
 # Filled KDE overlay
 gufo.chart(df).histogram("income", kde=gufo.kde(fill=True, alpha=0.3)).show()
 ```
+
+Any extra keyword arguments are forwarded to `matplotlib.axes.Axes.hist`, so options like `cumulative=True` or `histtype="step"` work out of the box. The same passthrough applies to the other marks (`scatter` → `Axes.scatter`, `line` → `Axes.plot`, `bar` → `Axes.bar`, etc.).
 
 ### Box plot
 
@@ -257,13 +309,13 @@ gufo.chart(df).scatter("x", "y", fit=gufo.lowess(frac=0.3)).show()
 
 ```python
 # Standalone density plot (requires scipy)
-gufo.chart(df).kde("x").show()
+gufo.chart(df).kdeplot("x").show()
 
 # Filled density
-gufo.chart(df).kde("x", fill=True).show()
+gufo.chart(df).kdeplot("x", fill=True).show()
 
 # Grouped by category
-gufo.chart(df).kde("x", color="category").show()
+gufo.chart(df).kdeplot("x", color="category").show()
 ```
 
 ### Strip plot

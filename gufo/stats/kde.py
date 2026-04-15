@@ -17,8 +17,8 @@ from . import _require_scipy
 class KDE:
     """Configuration for a KDE curve.
 
-    Used both as a standalone mark via .kde() and as an overlay
-    parameter on .histogram(kde=gufo.kde()).
+    Used as an overlay on .histogram() via histogram(kde=gufo.kde(...)).
+    For a standalone density plot, use Chart.kdeplot() instead.
 
     Users create instances via gufo.kde(), never directly.
     """

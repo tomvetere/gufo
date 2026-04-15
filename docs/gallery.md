@@ -106,7 +106,7 @@ gufo.chart(df).area("month", ["product_a", "product_b", "product_c"]).show()
 ## KDE — filled density
 
 ```python
-gufo.chart(df).kde("x", fill=True, color="category").show()
+gufo.chart(df).kdeplot("x", fill=True, color="category").show()
 ```
 
 ```{image} _static/gallery/kde.png
