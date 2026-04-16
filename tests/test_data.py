@@ -31,9 +31,25 @@ class TestDataAdapterConstruction:
         with pytest.raises(TypeError, match="Unsupported data type"):
             DataAdapter("not a valid data source")
 
-    def test_unsupported_type_list_raises(self):
-        with pytest.raises(TypeError, match="Unsupported data type"):
+    def test_list_raises_with_guidance(self):
+        with pytest.raises(TypeError, match="Pass arrays directly to the mark"):
             DataAdapter([1, 2, 3])
+
+    def test_ndarray_raises_with_guidance(self):
+        with pytest.raises(TypeError, match="Pass arrays directly to the mark"):
+            DataAdapter(np.array([1, 2, 3]))
+
+    def test_2d_ndarray_raises_with_shape(self):
+        with pytest.raises(TypeError, match="2D array with shape"):
+            DataAdapter(np.zeros((3, 3)))
+
+    def test_2d_list_raises(self):
+        with pytest.raises(TypeError, match="not a raw list or tuple"):
+            DataAdapter([[1, 2], [3, 4]])
+
+    def test_pandas_series_raises_with_guidance(self):
+        with pytest.raises(TypeError, match="not a Series"):
+            DataAdapter(pd.Series([1, 2, 3]))
 
     def test_from_polars(self):
         df = pl.DataFrame({"x": [1, 2, 3], "y": [4, 5, 6]})

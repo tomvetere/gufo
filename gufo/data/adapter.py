@@ -61,6 +61,31 @@ class DataAdapter:
                 return "polars"
         if isinstance(data, dict):
             return "dict"
+        if pd is not None and isinstance(data, pd.Series):
+            raise TypeError(
+                "gufo.chart() accepts columnar data (DataFrame or dict), "
+                "not a Series. Pass it directly to the mark instead: "
+                "gufo.chart().histogram(series) or gufo.chart().scatter(series, y)."
+            )
+        if isinstance(data, np.ndarray):
+            if data.ndim >= 2:
+                raise TypeError(
+                    f"gufo.chart() accepts columnar data (DataFrame or dict), "
+                    f"not a {data.ndim}D array with shape {data.shape}. "
+                    f"For multi-column data, use a dict: "
+                    f"gufo.chart({{'x': arr[:, 0], 'y': arr[:, 1]}})."
+                )
+            raise TypeError(
+                "gufo.chart() accepts columnar data (DataFrame or dict), "
+                "not a raw array. Pass arrays directly to the mark instead: "
+                "gufo.chart().histogram(data) or gufo.chart().scatter(x, y)."
+            )
+        if isinstance(data, (list, tuple)):
+            raise TypeError(
+                "gufo.chart() accepts columnar data (DataFrame or dict), "
+                "not a raw list or tuple. Pass arrays directly to the mark instead: "
+                "gufo.chart().histogram(data) or gufo.chart().scatter(x, y)."
+            )
         supported = ["pandas DataFrame", "Polars DataFrame", "dict", "None"]
         raise TypeError(
             f"Unsupported data type: {type(data).__name__}. "

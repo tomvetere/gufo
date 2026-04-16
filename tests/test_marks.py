@@ -689,7 +689,7 @@ class TestPointplot:
             "day": ["Mon", "Mon", "Mon", "Tue", "Tue", "Tue",
                     "Wed", "Wed", "Wed"],
             "tip": [3.0, 4.0, 5.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0],
-            "sex": ["M", "F", "M", "F", "M", "F", "M", "F", "M"],
+            "gender": ["M", "F", "M", "F", "M", "F", "M", "F", "M"],
         })
 
     def test_basic(self, point_df, tmp_path):
@@ -700,7 +700,7 @@ class TestPointplot:
 
     def test_grouped(self, point_df, tmp_path):
         (gufo.chart(point_df)
-         .pointplot("day", "tip", color="sex")
+         .pointplot("day", "tip", color="gender")
          .save(tmp_path / "p.png"))
 
     def test_horizontal(self, point_df, tmp_path):

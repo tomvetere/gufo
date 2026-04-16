@@ -396,7 +396,7 @@ gufo.chart(df).rug("income", color="region").legend().show()
 gufo.chart(df).pointplot("day", "total_bill").show()
 
 # Grouped by a second variable
-gufo.chart(df).pointplot("day", "total_bill", color="sex").legend().show()
+gufo.chart(df).pointplot("day", "total_bill", color="gender").legend().show()
 ```
 
 ---
@@ -752,8 +752,7 @@ Without pandas or polars, gufo works with dicts, numpy arrays, and raw lists. KD
 
 ```bash
 # Install in editable mode with all dependencies
-pip install -e ".[all,docs]"
-pip install pytest
+pip install -e ".[dev]"
 
 # Run the test suite
 pytest tests/ -v
@@ -781,4 +780,6 @@ pytest tests/ -v
 
 **v0.0.9** — release-hygiene pass ahead of PyPI (changelog cleanup, README polish, TestPyPI dry run)
 
-**v0.1.0** — first tagged release on PyPI
+**v0.1.0** — first tagged release on PyPI ✓
+
+**v0.1.1** — bug fixes: layer mutation during render, facet NaN handling, kdeplot kwargs passthrough, improved error messages for array input
