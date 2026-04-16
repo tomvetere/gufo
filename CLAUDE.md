@@ -175,7 +175,8 @@ pandas, polars, scipy, and statsmodels are guarded with `try/except ImportError`
 - **v0.0.7**: data labels, pointplot, LOWESS smoothing, facet sharex/sharey, legend outside — complete
 - **v0.0.8**: shared colorbar/legend on faceted charts, continuous color on line, `.label()` on line and pointplot, error bands on area — complete
 - **v0.0.9**: PyPI release prep, CI + trusted-publishing workflows, package rename from cerno to gufo, Read the Docs deploy — complete
-- **v0.1.0**: first tagged release — in progress. All current work on `main` targets v0.1.0 until it ships. Includes `density=` as a named parameter on `.histogram()` and documented matplotlib kwargs passthrough.
+- **v0.1.0**: first tagged release on PyPI. `density=` on `.histogram()`, documented matplotlib kwargs passthrough, CI + trusted-publishing workflows, package rename, Read the Docs deploy — complete
+- **v0.1.1**: bug fixes — layer mutation during render, facet NaN invisible panels, `kdeplot()` `**kwargs` passthrough, better error messages for array input to `chart()`, `[test]`/`[dev]` extras — complete
 
 ## Release policy
 

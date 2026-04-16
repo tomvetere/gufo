@@ -32,7 +32,8 @@ class KDE:
     fill: bool = False
     n_points: int = 200
 
-    def render(self, x, axes, *, scale_to_hist=False, hist_patches=None):
+    def render(self, x, axes, *, scale_to_hist=False, hist_patches=None,
+               **extra_kwargs):
         """Compute and draw the KDE curve.
 
         Parameters
@@ -45,6 +46,8 @@ class KDE:
             If True, scale the KDE to match histogram bar heights.
         hist_patches : list or None
             Patches from axes.hist(), used for bin width when scaling.
+        **extra_kwargs
+            Additional keyword arguments passed through to matplotlib.
         """
         _require_scipy("KDE")
 
@@ -64,6 +67,7 @@ class KDE:
             "linestyle": self.linestyle,
             "linewidth": self.linewidth,
             "alpha": self.alpha,
+            **extra_kwargs,
         }
         if self.color is not None:
             kwargs["color"] = self.color

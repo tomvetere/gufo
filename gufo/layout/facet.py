@@ -1,6 +1,8 @@
 """Facet rendering — split data by categorical columns into subplots."""
 import math
+import warnings
 from contextlib import contextmanager
+from dataclasses import replace
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -56,7 +58,7 @@ def _render_one_variable(chart, adapter, facet_column, wrap_cols, *,
     col_data = adapter.resolve(facet_column)
     _check_categorical(col_data, facet_column)
 
-    categories = list(dict.fromkeys(col_data))
+    categories = _unique_categories(col_data, facet_column)
     n = len(categories)
     cols = min(n, wrap_cols)
     rows = math.ceil(n / cols)
@@ -69,7 +71,7 @@ def _render_one_variable(chart, adapter, facet_column, wrap_cols, *,
                                       layout="constrained")
         axes_grid = np.atleast_2d(axes_grid).reshape(rows, cols)
 
-        with _shared_color_scales(chart, adapter) as shared_bars:
+        with _patched_layers(chart, adapter) as shared_bars:
             for i, category in enumerate(categories):
                 r, c = divmod(i, cols)
                 mask = col_data == category
@@ -97,12 +99,12 @@ def _render_two_variable(chart, adapter, facet_column, facet_row, *,
     """Two-variable faceting — row categories × column categories."""
     row_data = adapter.resolve(facet_row)
     _check_categorical(row_data, facet_row)
-    row_cats = list(dict.fromkeys(row_data))
+    row_cats = _unique_categories(row_data, facet_row)
 
     if facet_column is not None:
         col_data = adapter.resolve(facet_column)
         _check_categorical(col_data, facet_column)
-        col_cats = list(dict.fromkeys(col_data))
+        col_cats = _unique_categories(col_data, facet_column)
     else:
         col_data = None
         col_cats = [None]
@@ -117,7 +119,7 @@ def _render_two_variable(chart, adapter, facet_column, facet_row, *,
             sharex=sharex, sharey=sharey, layout="constrained")
         axes_grid = np.atleast_2d(axes_grid).reshape(n_rows, n_cols)
 
-        with _shared_color_scales(chart, adapter) as shared_bars:
+        with _patched_layers(chart, adapter) as shared_bars:
             visible_axes = []
             for ri, row_val in enumerate(row_cats):
                 row_mask = row_data == row_val
@@ -150,6 +152,26 @@ def _render_two_variable(chart, adapter, facet_column, facet_row, *,
     return fig, axes_grid
 
 
+def _unique_categories(col_data, column_name):
+    """Extract unique categories, filtering NaN and warning if any are found."""
+    def _is_nan(v):
+        try:
+            return np.isnan(v)
+        except (TypeError, ValueError):
+            return False
+
+    categories = list(dict.fromkeys(col_data))
+    clean = [c for c in categories if not _is_nan(c)]
+    if len(clean) < len(categories):
+        n_nan = sum(1 for v in col_data if _is_nan(v))
+        warnings.warn(
+            f"facet(): column '{column_name}' contains {n_nan} NaN value(s). "
+            f"These rows are excluded from the faceted plot.",
+            stacklevel=4,
+        )
+    return clean
+
+
 def _check_categorical(data, column_name):
     if not is_categorical(data):
         raise ValueError(
@@ -158,48 +180,62 @@ def _check_categorical(data, column_name):
         )
 
 
+@contextmanager
+def _patched_layers(chart, adapter):
+    """Temporarily replace chart layers with shared-color-scale copies."""
+    patched, shared_bars = _shared_color_scales(chart, adapter)
+    original = chart._layers
+    chart._layers = patched
+    try:
+        yield shared_bars
+    finally:
+        chart._layers = original
+
+
 def _facet_figsize(rows, cols, cell_width=4.5, cell_height=3.5):
     """Compute a reasonable figure size from the grid dimensions."""
     return (cols * cell_width, rows * cell_height)
 
 
-@contextmanager
 def _shared_color_scales(chart, full_adapter):
-    """Patch layers with continuous color so all panels share a global scale.
+    """Build patched layer copies so all facet panels share a global color scale.
 
-    Yields a list of (layer, cmap, vmin, vmax, label) descriptors for
-    layers that need a figure-level colorbar. On exit, restores the
-    original encodings.
+    Returns (patched_layers, descriptors). patched_layers is a list matching
+    chart._layers where continuous-color layers have vmin/vmax/colorbar
+    overridden. The original chart._layers are never mutated.
     """
-    patches = []
+    patched_layers = []
     descriptors = []
     for layer in chart._layers:
         if layer.mark_type not in _CONTINUOUS_COLOR_MARKS:
+            patched_layers.append(layer)
             continue
         enc = layer.encodings
         color_enc = enc.get("color")
         if not isinstance(color_enc, str):
+            patched_layers.append(layer)
             continue
         try:
             values = full_adapter.resolve(color_enc)
         except (KeyError, TypeError, ValueError):
+            patched_layers.append(layer)
             continue
         if is_categorical(values):
+            patched_layers.append(layer)
             continue
         if enc.get("colorbar") is False:
+            patched_layers.append(layer)
             continue
 
         arr = np.asarray(values, dtype=float)
         if not np.isfinite(arr).any():
+            patched_layers.append(layer)
             continue
 
         vmin, vmax = resolve_color_range(arr, enc.get("vmin"), enc.get("vmax"))
 
-        original = {k: enc.get(k) for k in ("vmin", "vmax", "colorbar")}
-        patches.append((layer, original))
-        enc["vmin"] = vmin
-        enc["vmax"] = vmax
-        enc["colorbar"] = False
+        new_enc = {**enc, "vmin": vmin, "vmax": vmax, "colorbar": False}
+        patched_layers.append(replace(layer, encodings=new_enc))
 
         descriptors.append({
             "cmap": enc.get("cmap"),
@@ -208,12 +244,7 @@ def _shared_color_scales(chart, full_adapter):
             "label": color_enc,
         })
 
-    try:
-        yield descriptors
-    finally:
-        for layer, original in patches:
-            for k, v in original.items():
-                layer.encodings[k] = v
+    return patched_layers, descriptors
 
 
 def _draw_shared_colorbars(fig, axes_list, descriptors):

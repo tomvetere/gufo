@@ -396,3 +396,73 @@ class TestFacetSharedLegend:
         per_panel = [ax.get_legend() for ax in axs.flat if ax.get_visible()]
         assert all(leg is None for leg in per_panel)
         plt.close(fig)
+
+
+# ── Layer immutability after render ──────────────────────────────────
+
+class TestLayerImmutabilityAfterRender:
+    def test_palette_unchanged_after_render(self, sample_df, tmp_path):
+        c = chart(sample_df).scatter("x", "y")
+        original_palette = c._layers[0].palette
+        c.save(tmp_path / "a.png")
+        assert c._layers[0].palette is original_palette
+
+    def test_palette_unchanged_after_double_render(self, sample_df, tmp_path):
+        c = chart(sample_df).scatter("x", "y")
+        c.save(tmp_path / "a.png")
+        c.save(tmp_path / "b.png")
+        assert c._layers[0].palette is None
+
+    def test_facet_encodings_unchanged_after_render(self, tmp_path):
+        df = pd.DataFrame({
+            "x": list(range(12)),
+            "y": list(range(12)),
+            "z": list(range(12)),
+            "group": ["A"] * 6 + ["B"] * 6,
+        })
+        c = chart(df).scatter("x", "y", color="z", cmap="viridis").facet("group")
+        enc_before = dict(c._layers[0].encodings)
+        c.save(tmp_path / "a.png")
+        enc_after = dict(c._layers[0].encodings)
+        assert enc_before == enc_after
+
+    def test_facet_encodings_unchanged_after_double_render(self, tmp_path):
+        df = pd.DataFrame({
+            "x": list(range(12)),
+            "y": list(range(12)),
+            "z": list(range(12)),
+            "group": ["A"] * 6 + ["B"] * 6,
+        })
+        c = chart(df).scatter("x", "y", color="z", cmap="viridis").facet("group")
+        enc_before = dict(c._layers[0].encodings)
+        c.save(tmp_path / "a.png")
+        c.save(tmp_path / "b.png")
+        assert dict(c._layers[0].encodings) == enc_before
+
+
+# ── Facet NaN handling ───────────────────────────────────────────────
+
+class TestFacetNaN:
+    def test_nan_in_facet_column_warns(self, tmp_path):
+        df = pd.DataFrame({
+            "x": [1, 2, 3, 4, 5],
+            "y": [2, 4, 1, 5, 3],
+            "group": ["A", "A", "B", "B", np.nan],
+        })
+        with pytest.warns(UserWarning, match="1 NaN"):
+            chart(df).scatter("x", "y").facet("group").save(tmp_path / "f.png")
+
+    def test_nan_excluded_from_panels(self):
+        df = pd.DataFrame({
+            "x": [1, 2, 3, 4, 5],
+            "y": [2, 4, 1, 5, 3],
+            "group": ["A", "A", "B", "B", np.nan],
+        })
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            fig, axs = chart(df).scatter("x", "y").facet("group")._render()
+        visible = [ax for ax in axs.flat if ax.get_visible()]
+        titles = {ax.get_title() for ax in visible}
+        assert titles == {"A", "B"}
+        plt.close(fig)

@@ -1,12 +1,29 @@
 # Changelog
 
-## Unreleased (v0.0.9)
+## v0.1.1
 
-Release-hygiene pass ahead of the first PyPI tag. No new features.
+**Bug fixes**
+- Rendering no longer mutates stored `Layer` objects — `layer.palette` and `layer.encodings` are unchanged after `.show()`/`.save()`. Internally uses `dataclasses.replace()` for immutable copies during the render pipeline.
+- Facet columns containing NaN now warn and exclude NaN rows instead of silently creating empty invisible panels.
+- `kdeplot()` now accepts `**kwargs` for matplotlib passthrough, consistent with all other marks.
+- Improved error messages when passing arrays, lists, or pandas Series to `gufo.chart()` — now explains to pass data directly to marks (e.g., `gufo.chart().histogram(data)`). Multi-dimensional arrays get a shape-specific message suggesting dict/DataFrame.
 
-- Version bumped from `0.0.7` → `0.0.8` to reflect merged v0.0.8 work, then `0.0.9` for this polish cycle.
-- Changelog cleaned up: historical versions (v0.0.3–v0.0.8) no longer labeled `Unreleased`. `Unreleased` is now reserved for the single in-flight version.
-- TestPyPI dry run of the release pipeline.
+**Internal**
+- Facet `_shared_color_scales()` refactored from mutation-restore context manager to a pure function returning patched layer copies.
+- Added `[test]` and `[dev]` extras to `pyproject.toml`.
+
+**Testing**
+- 403 tests passing
+
+---
+
+## v0.1.0
+
+First tagged release on PyPI.
+
+- `density=` parameter on `.histogram()` for normalized histograms.
+- Documented matplotlib kwargs passthrough on all marks.
+- Release-hygiene: changelog cleanup, README polish, CI + trusted-publishing workflows, package rename from cerno to gufo, Read the Docs deploy.
 
 ---
 

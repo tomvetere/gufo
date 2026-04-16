@@ -10,6 +10,7 @@ from ._base import resolve_color, iter_color_groups
 def render(layer, adapter, axes):
     x = adapter.resolve(layer.x)
     enc = layer.encodings
+    extra_kwargs = dict(layer.kwargs)
 
     check_numeric(x, "x", "kde")
     warn_nan_inf(x, "x", "kde")
@@ -24,7 +25,7 @@ def render(layer, adapter, axes):
     if groups is not None:
         for cat, color, mask in groups:
             group_kde = replace(kde_config, color=color, label=cat)
-            group_kde.render(x[mask], axes)
+            group_kde.render(x[mask], axes, **extra_kwargs)
         return
 
     overrides = {}
@@ -36,4 +37,4 @@ def render(layer, adapter, axes):
     if overrides:
         kde_config = replace(kde_config, **overrides)
 
-    kde_config.render(x, axes)
+    kde_config.render(x, axes, **extra_kwargs)

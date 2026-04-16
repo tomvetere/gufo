@@ -42,6 +42,15 @@ The `bw_method` parameter is passed to `scipy.stats.gaussian_kde`.
 gufo.chart(df).kdeplot("x", bw_method=0.3).show()
 ```
 
+## Matplotlib passthrough
+
+Extra keyword arguments are forwarded to the underlying `axes.plot()` or
+`axes.fill_between()` call.
+
+```python
+gufo.chart(df).kdeplot("x", zorder=5, dash_capstyle="round").show()
+```
+
 ## API reference
 
 See {py:func}`gufo.kde`, {py:class}`gufo.stats.kde.KDE`,

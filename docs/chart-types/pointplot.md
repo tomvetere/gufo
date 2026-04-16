@@ -14,7 +14,7 @@ Split by a second categorical column. Groups are dodged so they
 don't overlap.
 
 ```python
-gufo.chart(df).pointplot("day", "total_bill", color="sex").legend().show()
+gufo.chart(df).pointplot("day", "total_bill", color="gender").legend().show()
 ```
 
 ## Horizontal

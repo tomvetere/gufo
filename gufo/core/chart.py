@@ -1,4 +1,6 @@
 """Chart — the central fluent builder object."""
+from dataclasses import replace
+
 import matplotlib.pyplot as plt
 
 from ..data.adapter import DataAdapter
@@ -149,11 +151,13 @@ class Chart:
         return self
 
     def kdeplot(self, x, *, color=None, bw_method=None, linestyle="-",
-                linewidth=2.0, alpha=1.0, fill=False, n_points=200, label=None):
+                linewidth=2.0, alpha=1.0, fill=False, n_points=200, label=None,
+                **kwargs):
         """Add a KDE (kernel density estimation) density layer.
 
         Set fill=True to shade under the curve. bw_method controls scipy's
         gaussian_kde bandwidth. n_points sets the resolution of the curve.
+        Extra keyword arguments are passed through to matplotlib.
         """
         kde_config = KDE(
             bw_method=bw_method, linestyle=linestyle, linewidth=linewidth,
@@ -162,7 +166,7 @@ class Chart:
         self._layers.append(Layer(
             mark_type="kde", x=x, y=None,
             encodings={"color": color, "label": label, "kde_config": kde_config},
-            kwargs={},
+            kwargs=kwargs,
         ))
         return self
 
@@ -660,8 +664,8 @@ class Chart:
 
         with theme.as_context():
             for layer in self._layers:
-                layer.palette = resolved_palette
-                render_layer(layer, adapter, axes)
+                render_layer(replace(layer, palette=resolved_palette),
+                             adapter, axes)
             self._apply_decorators(figure, axes, adapter,
                                    suppress_legend=suppress_legend)
             for func in self._apply_funcs:
