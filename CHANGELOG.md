@@ -6,6 +6,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Entries through v0.0.9 were reconstructed from the project roadmap and pre-date tagged releases, so dates on those entries are approximate. For the full per-version detail (internal refactors, test counts, etc.) see [`docs/changelog.md`](docs/changelog.md).
 
+## [0.1.1] — 2026-04-16
+
+### Fixed
+- Rendering no longer mutates stored `Layer` objects (uses `dataclasses.replace`)
+- Facet columns containing `NaN` now warn and exclude `NaN` rows instead of producing invisible panels
+- `kdeplot()` now passes `**kwargs` through to matplotlib
+- Better error messages when arrays, lists, or Series are passed to `chart()` instead of a DataFrame/dict
+
+### Changed
+- `[test]` and `[dev]` extras added to `pyproject.toml`
+- CI uses `pip install -e ".[test]"` instead of manual pytest install
+
+---
+
 ## [0.1.0] — 2026-04-14
 
 First tagged release.
