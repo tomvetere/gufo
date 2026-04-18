@@ -12,7 +12,6 @@ Entries through v0.0.9 were reconstructed from the project roadmap and pre-date 
 - Docstring escape for `**extra_kwargs` in `KDE.render()` now renders correctly in Sphinx
 
 ### Changed
-- `[test]`, `[dev]`, and `[docs]` migrated from `[project.optional-dependencies]` to PEP 735 `[dependency-groups]`
 - Updated project logo
 
 ---

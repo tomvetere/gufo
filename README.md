@@ -784,4 +784,4 @@ pytest tests/ -v
 
 **v0.1.1** — bug fixes: layer mutation during render, facet NaN handling, kdeplot kwargs passthrough, improved error messages for array input
 
-**v0.1.2** — docstring fix for Sphinx, migrated dev/test/docs to PEP 735 dependency groups, updated project logo
+**v0.1.2** — docstring fix for Sphinx, updated project logo
