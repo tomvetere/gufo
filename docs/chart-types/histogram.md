@@ -27,6 +27,52 @@ data = np.random.normal(0, 1, 1000)
 gufo.chart().histogram(data).show()
 ```
 
+## Step histogram
+
+Set `fill=False` for an outline-only (step) histogram.
+
+```python
+gufo.chart(df).histogram("income", fill=False).show()
+```
+
+This works with grouped histograms too — stack and dodge modes draw
+outline-only bars, while layer mode uses matplotlib's `"step"` histtype.
+
+## Grouped histograms
+
+When using `color=` to group by a categorical variable, the `multiple=`
+parameter controls how groups are displayed.
+
+### Layer (default)
+
+Overlaid with transparency. Best for comparing shape.
+
+```python
+gufo.chart(df).histogram("income", color="region", multiple="layer").show()
+```
+
+### Stack
+
+Bars stacked on top of each other with a cumulative baseline.
+
+```python
+gufo.chart(df).histogram("income", color="region", multiple="stack").show()
+```
+
+### Dodge
+
+Side-by-side narrower bars per group within each bin.
+
+```python
+gufo.chart(df).histogram("income", color="region", multiple="dodge").show()
+```
+
+## Normalized
+
+```python
+gufo.chart(df).histogram("income", density=True).show()
+```
+
 ## KDE overlay
 
 Pass a `gufo.kde()` config to overlay a density curve on the histogram.
@@ -39,6 +85,8 @@ gufo.chart(df).histogram("income", kde=gufo.kde()).show()
 # Filled overlay
 gufo.chart(df).histogram("income", kde=gufo.kde(fill=True, alpha=0.3)).show()
 ```
+
+KDE overlay is only supported with `multiple="layer"` (the default).
 
 See [KDE](kde.md) for standalone density plots and full details.
 

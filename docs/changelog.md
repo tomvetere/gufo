@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.2.0
+
+**New features**
+- Category ordering: `order=` parameter on `bar`, `boxplot`, `violin`, `countplot`, `pointplot`, `strip`, `swarm`, and `histogram` controls category display order on the x-axis. Values not in the list are excluded from the plot.
+- Color group ordering: `color_order=` parameter on all marks that accept `color=` controls the rendering and legend order of categorical color groups.
+- Histogram grouping modes: `multiple=` parameter on `.histogram()` — `"layer"` (overlay with transparency, the default), `"stack"` (cumulative bars sharing common bin edges), or `"dodge"` (side-by-side narrower bars per group).
+- Step histogram: `fill=False` on `.histogram()` draws outline-only step histograms. In grouped stack/dodge modes, uses outline-only bars with `edgecolor` instead of filled bars.
+
+**Internal**
+- Dev dependencies (`pytest`, `sphinx`, etc.) moved from `[project.optional-dependencies]` to PEP 735 `[dependency-groups]`. Local development now uses `uv sync` instead of `pip install -e ".[dev]"`.
+- `_resolve_order()` helper centralized in `marks/_base.py` — replaces per-mark `list(dict.fromkeys(x))` calls.
+- `_apply_fill_style()` helper in `histogram.py` deduplicates fill vs outline-only bar styling.
+- Replaced `np.histogram()` with `np.histogram_bin_edges()` where only edges are needed.
+
+**Testing**
+- 422 tests passing
+
+---
+
 ## v0.1.2
 
 **Fixes**

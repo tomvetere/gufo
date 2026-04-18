@@ -66,19 +66,31 @@ def render_wide_form(layer, adapter, axes, draw_fn, **extra_kwargs):
         draw_fn(axes, x, y_data, **series_kwargs)
 
 
-def group_by_x(x, y):
+def _resolve_order(data, order):
+    """Return ordered unique values from data.
+
+    If order is provided, use it (filtering to values present in data).
+    Data values not in order are excluded. If order is None, use appearance order.
+    """
+    if order is not None:
+        present = set(data)
+        return [v for v in order if v in present]
+    return list(dict.fromkeys(data))
+
+
+def group_by_x(x, y, order=None):
     """Group y-values by unique x-values for distribution marks.
 
     Returns (unique_x, grouped, positions) where grouped is a list of
     y sub-arrays and positions is 1-based integers for matplotlib.
     """
-    unique_x = list(dict.fromkeys(x))
+    unique_x = _resolve_order(x, order)
     grouped = [y[x == val] for val in unique_x]
     positions = list(range(1, len(unique_x) + 1))
     return unique_x, grouped, positions
 
 
-def iter_color_groups(color_value, palette=None):
+def iter_color_groups(color_value, palette=None, color_order=None):
     """Yield (category, color, mask) for each group in a categorical color array.
 
     Returns None if color_value is not categorical, allowing callers to
@@ -89,7 +101,7 @@ def iter_color_groups(color_value, palette=None):
             or not hasattr(color_value, "__len__")
             or not is_categorical(color_value)):
         return None
-    categories = list(dict.fromkeys(color_value))
+    categories = _resolve_order(color_value, color_order)
     colors = default_colors(len(categories), palette=palette)
     return [(cat, colors[i], color_value == cat) for i, cat in enumerate(categories)]
 
@@ -159,7 +171,7 @@ def render_categorical_scatter(layer, adapter, axes, offset_fn, mark_name,
     check_array_lengths({"x": x, "y": y}, mark_name)
     warn_nan_inf(y, "y", mark_name)
 
-    unique_x, grouped, positions = group_by_x(x, y)
+    unique_x, grouped, positions = group_by_x(x, y, order=enc.get("order"))
 
     size = enc.get("size", default_size)
     alpha = enc.get("alpha", default_alpha)

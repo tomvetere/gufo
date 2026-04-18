@@ -3,7 +3,7 @@ import numpy as np
 
 from ..core.validate import check_array_lengths, warn_nan_inf
 from ._base import (
-    apply_label, apply_color, default_colors, is_wide_form,
+    _resolve_order, apply_label, apply_color, default_colors, is_wide_form,
     resolve_color, resolve_errors, iter_color_groups, set_category_ticks,
 )
 
@@ -19,13 +19,27 @@ def render(layer, adapter, axes):
     y = adapter.resolve(layer.y)
 
     color_value = resolve_color(adapter, enc.get("color"))
-    groups = iter_color_groups(color_value, palette=layer.palette)
+    groups = iter_color_groups(color_value, palette=layer.palette,
+                               color_order=enc.get("color_order"))
 
     if groups is not None:
         _render_color_groups(x, y, groups, axes, enc, layer.kwargs)
         return
 
     kwargs = dict(layer.kwargs)
+
+    order = enc.get("order")
+    if order is not None:
+        x = np.asarray(x)
+        y = np.asarray(y, dtype=float)
+        ordered_x = _resolve_order(x, order)
+        order_idx = {v: i for i, v in enumerate(ordered_x)}
+        valid = np.isin(x, ordered_x)
+        xf, yf = x[valid], y[valid]
+        sort_keys = np.array([order_idx[v] for v in xf])
+        perm = np.argsort(sort_keys, kind="stable")
+        x = xf[perm]
+        y = yf[perm]
 
     check_array_lengths({"x": x, "y": y}, "bar")
     warn_nan_inf(y, "y", "bar")
@@ -77,15 +91,18 @@ def _render_color_groups(x, y, groups, axes, enc, extra_kwargs):
     horizontal = enc.get("horizontal", False)
     stacked = enc.get("stacked", False)
 
-    unique_x = list(dict.fromkeys(x))
+    unique_x = _resolve_order(x, enc.get("order"))
     x_pos = np.arange(len(unique_x))
+    valid = np.isin(x, unique_x)
+    xf, yf = x[valid], y[valid]
     x_to_idx = {val: i for i, val in enumerate(unique_x)}
-    x_indices = np.array([x_to_idx[v] for v in x])
+    x_indices = np.array([x_to_idx[v] for v in xf])
 
     if stacked:
         bottom = np.zeros(len(unique_x))
         for cat, color, mask in groups:
-            heights = _aggregate_by_x(x, y, mask, unique_x, x_indices)
+            maskf = mask[valid]
+            heights = _aggregate_by_x(xf, yf, maskf, unique_x, x_indices)
             bar_kwargs = dict(extra_kwargs, label=cat, color=color)
             if horizontal:
                 axes.barh(x_pos, heights, left=bottom, **bar_kwargs)
@@ -93,7 +110,8 @@ def _render_color_groups(x, y, groups, axes, enc, extra_kwargs):
                 axes.bar(x_pos, heights, bottom=bottom, **bar_kwargs)
             bottom += heights
     else:
-        series = [(_aggregate_by_x(x, y, mask, unique_x, x_indices), cat, color)
+        series = [(_aggregate_by_x(xf, yf, mask[valid], unique_x, x_indices),
+                   cat, color)
                   for cat, color, mask in groups]
         _draw_dodged(axes, x_pos, series, horizontal, extra_kwargs)
 

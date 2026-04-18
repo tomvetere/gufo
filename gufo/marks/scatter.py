@@ -60,7 +60,8 @@ def render(layer, adapter, axes):
     size_enc = enc.get("size")
     color_value = resolve_color(adapter, enc.get("color"))
 
-    groups = iter_color_groups(color_value, palette=layer.palette)
+    groups = iter_color_groups(color_value, palette=layer.palette,
+                               color_order=enc.get("color_order"))
     if groups is not None:
         sz = adapter.resolve(size_enc) if size_enc is not None else None
         for cat, color, mask in groups:
