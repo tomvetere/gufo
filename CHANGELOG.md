@@ -6,6 +6,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Entries through v0.0.9 were reconstructed from the project roadmap and pre-date tagged releases, so dates on those entries are approximate. For the full per-version detail (internal refactors, test counts, etc.) see [`docs/changelog.md`](docs/changelog.md).
 
+## [0.1.2] — 2026-04-17
+
+### Fixed
+- Docstring escape for `**extra_kwargs` in `KDE.render()` now renders correctly in Sphinx
+
+### Changed
+- `[test]`, `[dev]`, and `[docs]` migrated from `[project.optional-dependencies]` to PEP 735 `[dependency-groups]`
+- Updated project logo
+
+---
+
 ## [0.1.1] — 2026-04-16
 
 ### Fixed

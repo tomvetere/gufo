@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.1.2
+
+**Fixes**
+- Fixed docstring escape for `**extra_kwargs` in `KDE.render()` so it renders correctly in Sphinx documentation.
+
+**Internal**
+- Migrated `[test]`, `[dev]`, and `[docs]` from `[project.optional-dependencies]` to PEP 735 `[dependency-groups]` in `pyproject.toml`.
+- Updated project logo.
+
+---
+
 ## v0.1.1
 
 **Bug fixes**

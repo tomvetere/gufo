@@ -38,11 +38,17 @@ polars = ["polars>=0.20.0"]
 scipy = ["scipy>=1.7.0"]
 stats = ["statsmodels>=0.13.0"]
 all = ["gufo[pandas,polars,scipy,stats]"]
+
+[dependency-groups]
 test = [
+    {include-group = "docs"},
     "gufo[all]",
     "pytest>=7.0",
 ]
-dev = ["gufo[test,docs]"]
+dev = [
+    {include-group = "test"},
+    {include-group = "docs"},
+]
 docs = [
     "sphinx>=7.0",
     "pydata-sphinx-theme>=0.15",
