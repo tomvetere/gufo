@@ -177,6 +177,7 @@ pandas, polars, scipy, and statsmodels are guarded with `try/except ImportError`
 - **v0.0.9**: PyPI release prep, CI + trusted-publishing workflows, package rename from cerno to gufo, Read the Docs deploy — complete
 - **v0.1.0**: first tagged release on PyPI. `density=` on `.histogram()`, documented matplotlib kwargs passthrough, CI + trusted-publishing workflows, package rename, Read the Docs deploy — complete
 - **v0.1.1**: bug fixes — layer mutation during render, facet NaN invisible panels, `kdeplot()` `**kwargs` passthrough, better error messages for array input to `chart()`, `[test]`/`[dev]` extras — complete
+- **v0.1.2**: docstring escape fix for Sphinx, updated project logo — complete
 
 ## Release policy
 

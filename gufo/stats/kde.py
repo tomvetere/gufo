@@ -46,7 +46,7 @@ class KDE:
             If True, scale the KDE to match histogram bar heights.
         hist_patches : list or None
             Patches from axes.hist(), used for bin width when scaling.
-        **extra_kwargs
+        \**extra_kwargs
             Additional keyword arguments passed through to matplotlib.
         """
         _require_scipy("KDE")
