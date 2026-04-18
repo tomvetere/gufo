@@ -1,7 +1,7 @@
 """Pointplot mark — connected category means with confidence intervals."""
 import numpy as np
 
-from ._base import iter_color_groups, resolve_color, set_category_ticks
+from ._base import _resolve_order, iter_color_groups, resolve_color, set_category_ticks
 
 
 def render(layer, adapter, axes):
@@ -14,12 +14,15 @@ def render(layer, adapter, axes):
 
     horizontal = enc.get("horizontal", False)
     color_value = resolve_color(adapter, enc.get("color"))
-    groups = iter_color_groups(color_value, palette=layer.palette)
+    groups = iter_color_groups(color_value, palette=layer.palette,
+                               color_order=enc.get("color_order"))
 
-    unique_x = list(dict.fromkeys(x))
+    unique_x = _resolve_order(x, enc.get("order"))
     x_pos = np.arange(len(unique_x))
     x_to_idx = {val: i for i, val in enumerate(unique_x)}
-    x_indices = np.array([x_to_idx[v] for v in x])
+    valid = np.isin(x, unique_x)
+    xf, yf = x[valid], y[valid]
+    x_indices = np.array([x_to_idx[v] for v in xf])
 
     kwargs = dict(layer.kwargs)
     kwargs.setdefault("marker", "o")
@@ -29,12 +32,13 @@ def render(layer, adapter, axes):
         n_groups = len(groups)
         dodge_width = 0.2
         for gi, (cat, color, mask) in enumerate(groups):
-            means, cis = _aggregate(y[mask], x_indices[mask], len(unique_x))
+            maskf = mask[valid]
+            means, cis = _aggregate(yf[maskf], x_indices[maskf], len(unique_x))
             offset = (gi - n_groups / 2 + 0.5) * dodge_width
             _draw(axes, x_pos + offset, means, cis, horizontal,
                   color=color, label=cat, **kwargs)
     else:
-        means, cis = _aggregate(y, x_indices, len(unique_x))
+        means, cis = _aggregate(yf, x_indices, len(unique_x))
         _draw(axes, x_pos, means, cis, horizontal, **kwargs)
 
     set_category_ticks(axes, x_pos, unique_x, horizontal)

@@ -3,7 +3,7 @@ import numpy as np
 
 from ..core.validate import check_array_lengths, warn_nan_inf
 from ._base import (
-    apply_label, default_colors, group_by_x, is_wide_form,
+    _resolve_order, apply_label, default_colors, group_by_x, is_wide_form,
     iter_color_groups, resolve_color,
 )
 
@@ -23,13 +23,14 @@ def render(layer, adapter, axes):
     warn_nan_inf(y, "y", "violin")
 
     color_value = resolve_color(adapter, enc.get("color"))
-    groups = iter_color_groups(color_value, palette=layer.palette)
+    groups = iter_color_groups(color_value, palette=layer.palette,
+                               color_order=enc.get("color_order"))
 
     if groups is not None:
         _render_grouped(x, y, color_value, groups, axes, enc, kwargs)
         return
 
-    unique_x, grouped, positions = group_by_x(x, y)
+    unique_x, grouped, positions = group_by_x(x, y, order=enc.get("order"))
 
     kwargs.setdefault("showmedians", True)
 
@@ -55,7 +56,7 @@ def _render_grouped(x, y, color_value, groups, axes, enc, extra_kwargs):
     y = np.asarray(y, dtype=float)
     color_value = np.asarray(color_value)
 
-    unique_x = list(dict.fromkeys(x))
+    unique_x = _resolve_order(x, enc.get("order"))
     n_colors = len(groups)
     sub_width = 0.6 / n_colors
     horizontal = enc.get("horizontal", False)

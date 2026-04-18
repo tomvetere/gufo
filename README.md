@@ -208,9 +208,17 @@ gufo.chart(df).histogram("income", kde=gufo.kde()).show()
 
 # Filled KDE overlay
 gufo.chart(df).histogram("income", kde=gufo.kde(fill=True, alpha=0.3)).show()
+
+# Step (outline-only) histogram
+gufo.chart(df).histogram("income", fill=False).show()
+
+# Grouped histograms: overlay (default), stack, or dodge
+gufo.chart(df).histogram("income", color="region", multiple="layer").show()
+gufo.chart(df).histogram("income", color="region", multiple="stack").show()
+gufo.chart(df).histogram("income", color="region", multiple="dodge").show()
 ```
 
-Any extra keyword arguments are forwarded to `matplotlib.axes.Axes.hist`, so options like `cumulative=True` or `histtype="step"` work out of the box. The same passthrough applies to the other marks (`scatter` → `Axes.scatter`, `line` → `Axes.plot`, `bar` → `Axes.bar`, etc.).
+Any extra keyword arguments are forwarded to `matplotlib.axes.Axes.hist`, so options like `cumulative=True` work out of the box. The same passthrough applies to the other marks (`scatter` → `Axes.scatter`, `line` → `Axes.plot`, `bar` → `Axes.bar`, etc.).
 
 ### Box plot
 
@@ -517,6 +525,25 @@ gufo.chart(df).scatter("x", "y").annotate("Outlier", xy=(42, 180)).show()
 
 ---
 
+## Category ordering
+
+Control the display order of categories on the x-axis (`order=`) and color groups (`color_order=`). Values not in the order list are excluded from the plot.
+
+```python
+# Show only these departments, in this order
+gufo.chart(df).boxplot("department", "salary", order=["Engineering", "Sales"]).show()
+
+# Control color group order (affects legend and rendering order)
+gufo.chart(df).scatter("x", "y", color="region", color_order=["West", "East"]).show()
+
+# Works on bar, boxplot, violin, countplot, pointplot, strip, swarm, histogram
+gufo.chart(df).countplot("category", order=["B", "A", "C"]).show()
+```
+
+`order=` is available on marks with a categorical x-axis. `color_order=` is available on all marks that accept `color=`.
+
+---
+
 ## Legend
 
 ```python
@@ -751,8 +778,8 @@ Without pandas or polars, gufo works with dicts, numpy arrays, and raw lists. KD
 ## Development
 
 ```bash
-# Install in editable mode with all dependencies
-pip install -e ".[dev]"
+# Install in editable mode with all dependencies (requires uv)
+uv sync --group dev
 
 # Run the test suite
 pytest tests/ -v
@@ -785,3 +812,5 @@ pytest tests/ -v
 **v0.1.1** — bug fixes: layer mutation during render, facet NaN handling, kdeplot kwargs passthrough, improved error messages for array input
 
 **v0.1.2** — docstring fix for Sphinx, updated project logo
+
+**v0.2.0** — category ordering (`order=`, `color_order=`), histogram grouping modes (`multiple=`), step histogram (`fill=False`), dev dependency groups

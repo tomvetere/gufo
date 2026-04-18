@@ -54,7 +54,8 @@ def render(layer, adapter, axes):
         return
 
     color_value = resolve_color(adapter, color_enc)
-    groups = iter_color_groups(color_value, palette=layer.palette)
+    groups = iter_color_groups(color_value, palette=layer.palette,
+                               color_order=enc.get("color_order"))
     if groups is not None:
         for cat, color, mask in groups:
             series_kwargs = dict(kwargs, label=cat, color=color)

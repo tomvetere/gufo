@@ -66,7 +66,8 @@ class Chart:
 
     def scatter(self, x, y, *, color=None, size=None, alpha=None, label=None,
                 cmap=None, vmin=None, vmax=None, colorbar=True,
-                fit=None, y_error=None, x_error=None, **kwargs):
+                fit=None, y_error=None, x_error=None,
+                color_order=None, **kwargs):
         """Add a scatter plot layer.
 
         y may be a list of column names for wide-form DataFrames — each column
@@ -84,14 +85,15 @@ class Chart:
                        "label": label, "cmap": cmap, "vmin": vmin,
                        "vmax": vmax, "colorbar": colorbar,
                        "fit": fit,
-                       "y_error": y_error, "x_error": x_error},
+                       "y_error": y_error, "x_error": x_error,
+                       "color_order": color_order},
             kwargs=kwargs,
         ))
         return self
 
     def line(self, x, y, *, color=None, stroke_dash=None, label=None,
              cmap=None, vmin=None, vmax=None, colorbar=True,
-             y_error=None, x_error=None, **kwargs):
+             y_error=None, x_error=None, color_order=None, **kwargs):
         """Add a line plot layer.
 
         y may be a list of column names for wide-form DataFrames — each column
@@ -108,13 +110,15 @@ class Chart:
             encodings={"color": color, "stroke_dash": stroke_dash,
                        "label": label, "cmap": cmap, "vmin": vmin,
                        "vmax": vmax, "colorbar": colorbar,
-                       "y_error": y_error, "x_error": x_error},
+                       "y_error": y_error, "x_error": x_error,
+                       "color_order": color_order},
             kwargs=kwargs,
         ))
         return self
 
     def bar(self, x, y, *, color=None, horizontal=False, stacked=False,
-            label=None, y_error=None, x_error=None, **kwargs):
+            label=None, y_error=None, x_error=None,
+            order=None, color_order=None, **kwargs):
         """Add a bar chart layer.
 
         y may be a list of column names for wide-form DataFrames — each column
@@ -129,30 +133,37 @@ class Chart:
             mark_type="bar", x=x, y=y,
             encodings={"color": color, "horizontal": horizontal,
                        "stacked": stacked, "label": label,
-                       "y_error": y_error, "x_error": x_error},
+                       "y_error": y_error, "x_error": x_error,
+                       "order": order, "color_order": color_order},
             kwargs=kwargs,
         ))
         return self
 
     def histogram(self, x, *, bins="auto", color=None, horizontal=False,
-                  density=False, label=None, kde=None, **kwargs):
+                  density=False, multiple="layer", fill=True,
+                  label=None, kde=None, color_order=None, **kwargs):
         """Add a histogram layer.
 
         Set horizontal=True to orient the histogram sideways.
         Set density=True to normalize the histogram so the area under it sums to 1.
+        multiple controls grouped histogram layout: "layer" (overlay with
+        transparency), "stack", or "dodge".
+        Set fill=False for step (outline-only) histograms.
         kde accepts a gufo.kde() config object to overlay a density curve.
         """
         self._layers.append(Layer(
             mark_type="histogram", x=x, y=None,
             encodings={"bins": bins, "color": color, "horizontal": horizontal,
-                       "density": density, "label": label, "kde": kde},
+                       "density": density, "multiple": multiple, "fill": fill,
+                       "label": label, "kde": kde,
+                       "color_order": color_order},
             kwargs=kwargs,
         ))
         return self
 
     def kdeplot(self, x, *, color=None, bw_method=None, linestyle="-",
                 linewidth=2.0, alpha=1.0, fill=False, n_points=200, label=None,
-                **kwargs):
+                color_order=None, **kwargs):
         """Add a KDE (kernel density estimation) density layer.
 
         Set fill=True to shade under the curve. bw_method controls scipy's
@@ -165,13 +176,15 @@ class Chart:
         )
         self._layers.append(Layer(
             mark_type="kde", x=x, y=None,
-            encodings={"color": color, "label": label, "kde_config": kde_config},
+            encodings={"color": color, "label": label, "kde_config": kde_config,
+                       "color_order": color_order},
             kwargs=kwargs,
         ))
         return self
 
     def strip(self, x, y, *, color=None, size=None, alpha=None, jitter=0.2,
-              horizontal=False, label=None, **kwargs):
+              horizontal=False, label=None, order=None, color_order=None,
+              **kwargs):
         """Add a strip plot layer (jittered points along a categorical axis).
 
         x is the grouping column (categorical). y is the values column (numeric).
@@ -184,13 +197,15 @@ class Chart:
             encodings={
                 "color": color, "size": size, "alpha": alpha,
                 "jitter": jitter, "horizontal": horizontal, "label": label,
+                "order": order, "color_order": color_order,
             },
             kwargs=kwargs,
         ))
         return self
 
     def swarm(self, x, y, *, color=None, size=None, alpha=None,
-              horizontal=False, label=None, **kwargs):
+              horizontal=False, label=None, order=None, color_order=None,
+              **kwargs):
         """Add a swarm plot layer (non-overlapping points along a categorical axis).
 
         x is the grouping column (categorical). y is the values column (numeric).
@@ -203,12 +218,14 @@ class Chart:
             encodings={
                 "color": color, "size": size, "alpha": alpha,
                 "horizontal": horizontal, "label": label,
+                "order": order, "color_order": color_order,
             },
             kwargs=kwargs,
         ))
         return self
 
-    def boxplot(self, x, y, *, color=None, horizontal=False, label=None, **kwargs):
+    def boxplot(self, x, y, *, color=None, horizontal=False, label=None,
+                order=None, color_order=None, **kwargs):
         """Add a box plot layer.
 
         x is the grouping column (categorical). y is the values column (numeric).
@@ -219,12 +236,14 @@ class Chart:
         """
         self._layers.append(Layer(
             mark_type="boxplot", x=x, y=y,
-            encodings={"color": color, "horizontal": horizontal, "label": label},
+            encodings={"color": color, "horizontal": horizontal, "label": label,
+                       "order": order, "color_order": color_order},
             kwargs=kwargs,
         ))
         return self
 
-    def violin(self, x, y, *, color=None, horizontal=False, label=None, **kwargs):
+    def violin(self, x, y, *, color=None, horizontal=False, label=None,
+               order=None, color_order=None, **kwargs):
         """Add a violin plot layer.
 
         x is the grouping column (categorical). y is the values column (numeric).
@@ -235,7 +254,8 @@ class Chart:
         """
         self._layers.append(Layer(
             mark_type="violin", x=x, y=y,
-            encodings={"color": color, "horizontal": horizontal, "label": label},
+            encodings={"color": color, "horizontal": horizontal, "label": label,
+                       "order": order, "color_order": color_order},
             kwargs=kwargs,
         ))
         return self
@@ -257,7 +277,7 @@ class Chart:
         return self
 
     def area(self, x, y, *, color=None, alpha=None, label=None,
-             y_error=None, **kwargs):
+             y_error=None, color_order=None, **kwargs):
         """Add an area chart layer.
 
         y may be a list of column names for wide-form DataFrames — each column
@@ -269,41 +289,45 @@ class Chart:
         self._layers.append(Layer(
             mark_type="area", x=x, y=y,
             encodings={"color": color, "alpha": alpha, "label": label,
-                       "y_error": y_error},
+                       "y_error": y_error, "color_order": color_order},
             kwargs=kwargs,
         ))
         return self
 
-    def countplot(self, x, *, color=None, horizontal=False, label=None, **kwargs):
+    def countplot(self, x, *, color=None, horizontal=False, label=None,
+                  order=None, color_order=None, **kwargs):
         """Add a count plot layer — bars showing frequency of each x category."""
         self._layers.append(Layer(
             mark_type="countplot", x=x, y=None,
-            encodings={"color": color, "horizontal": horizontal, "label": label},
+            encodings={"color": color, "horizontal": horizontal, "label": label,
+                       "order": order, "color_order": color_order},
             kwargs=kwargs,
         ))
         return self
 
-    def ecdf(self, x, *, color=None, label=None, **kwargs):
+    def ecdf(self, x, *, color=None, label=None, color_order=None, **kwargs):
         """Add an ECDF (empirical cumulative distribution function) layer."""
         self._layers.append(Layer(
             mark_type="ecdf", x=x, y=None,
-            encodings={"color": color, "label": label},
+            encodings={"color": color, "label": label,
+                       "color_order": color_order},
             kwargs=kwargs,
         ))
         return self
 
-    def rug(self, x, *, color=None, height=0.05, alpha=0.5, label=None, **kwargs):
+    def rug(self, x, *, color=None, height=0.05, alpha=0.5, label=None,
+            color_order=None, **kwargs):
         """Add a rug plot layer — tick marks along the x axis."""
         self._layers.append(Layer(
             mark_type="rug", x=x, y=None,
             encodings={"color": color, "height": height, "alpha": alpha,
-                       "label": label},
+                       "label": label, "color_order": color_order},
             kwargs=kwargs,
         ))
         return self
 
     def pointplot(self, x, y, *, color=None, horizontal=False, label=None,
-                  **kwargs):
+                  order=None, color_order=None, **kwargs):
         """Add a point plot layer — connected category means with 95% CI.
 
         Shows the mean of y for each unique x value, connected by lines,
@@ -316,7 +340,8 @@ class Chart:
         self._layers.append(Layer(
             mark_type="pointplot", x=x, y=y,
             encodings={"color": color, "horizontal": horizontal,
-                       "label": label},
+                       "label": label, "order": order,
+                       "color_order": color_order},
             kwargs=kwargs,
         ))
         return self

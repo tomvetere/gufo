@@ -6,6 +6,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Entries through v0.0.9 were reconstructed from the project roadmap and pre-date tagged releases, so dates on those entries are approximate. For the full per-version detail (internal refactors, test counts, etc.) see [`docs/changelog.md`](docs/changelog.md).
 
+## [0.2.0] — 2026-04-18
+
+### Added
+- **Category ordering**: `order=` parameter on `bar`, `boxplot`, `violin`, `countplot`, `pointplot`, `strip`, `swarm`, and `histogram` controls the display order of categories on the x-axis. Values not in the order list are excluded.
+- **Color group ordering**: `color_order=` parameter on all marks that accept `color=` controls the rendering and legend order of color groups.
+- **Histogram grouping modes**: `multiple=` parameter on `histogram` — `"layer"` (overlay, default), `"stack"` (cumulative bars), or `"dodge"` (side-by-side bars).
+- **Step histogram**: `fill=False` on `histogram` draws outline-only step histograms. Works with both ungrouped and grouped (stack/dodge) modes.
+
+### Changed
+- Dev dependencies (`pytest`, `sphinx`, etc.) moved from `[project.optional-dependencies]` to PEP 735 `[dependency-groups]`. Local development now uses `uv sync` instead of `pip install -e ".[dev]"`.
+
+---
+
 ## [0.1.2] — 2026-04-17
 
 ### Fixed

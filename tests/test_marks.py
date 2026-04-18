@@ -871,3 +871,176 @@ class TestAreaErrorBand:
         # Error band spans y ± 0.5 → overall y range [0.5, 6.5]
         assert ys.min() >= 0.4 and ys.max() <= 6.6
         plt.close(fig)
+
+
+# ── Category ordering ─────────────────────────────────────────────────
+
+class TestCategoryOrder:
+    @pytest.fixture
+    def cat_df(self):
+        return pd.DataFrame({
+            "group": ["C", "A", "B", "A", "B", "C", "A", "B", "C"],
+            "value": [3, 1, 2, 4, 5, 6, 7, 8, 9],
+            "color": ["x", "y", "x", "y", "x", "y", "x", "y", "x"],
+        })
+
+    def test_boxplot_order(self, cat_df, tmp_path):
+        c = gufo.chart(cat_df).boxplot("group", "value", order=["B", "A"])
+        fig, ax = c._render()
+        labels = [t.get_text() for t in ax.get_xticklabels()]
+        assert labels == ["B", "A"]
+        plt.close(fig)
+
+    def test_violin_order(self, cat_df, tmp_path):
+        c = gufo.chart(cat_df).violin("group", "value", order=["C", "A"])
+        fig, ax = c._render()
+        labels = [t.get_text() for t in ax.get_xticklabels()]
+        assert labels == ["C", "A"]
+        plt.close(fig)
+
+    def test_countplot_order(self, cat_df, tmp_path):
+        c = gufo.chart(cat_df).countplot("group", order=["B", "C"])
+        fig, ax = c._render()
+        containers = ax.containers
+        assert len(containers) == 1
+        heights = [bar.get_height() for bar in containers[0]]
+        # B has 3 entries, C has 3 entries
+        assert heights == [3, 3]
+        plt.close(fig)
+
+    def test_bar_order(self, tmp_path):
+        df = pd.DataFrame({"x": ["C", "A", "B"], "y": [3, 1, 2]})
+        c = gufo.chart(df).bar("x", "y", order=["B", "A"])
+        fig, ax = c._render()
+        labels = [t.get_text() for t in ax.get_xticklabels()]
+        assert labels == ["B", "A"]
+        plt.close(fig)
+
+    def test_color_order(self, cat_df, tmp_path):
+        c = (gufo.chart(cat_df)
+             .scatter("value", "value", color="color",
+                      color_order=["y", "x"])
+             .legend())
+        fig, ax = c._render()
+        legend_labels = [t.get_text() for t in ax.get_legend().get_texts()]
+        assert legend_labels == ["y", "x"]
+        plt.close(fig)
+
+    def test_order_excludes_unlisted(self, cat_df, tmp_path):
+        c = gufo.chart(cat_df).boxplot("group", "value", order=["A"])
+        fig, ax = c._render()
+        labels = [t.get_text() for t in ax.get_xticklabels()]
+        assert labels == ["A"]
+        plt.close(fig)
+
+    def test_order_skips_missing_values(self, cat_df, tmp_path):
+        c = gufo.chart(cat_df).countplot("group", order=["A", "Z", "B"])
+        fig, ax = c._render()
+        containers = ax.containers
+        heights = [bar.get_height() for bar in containers[0]]
+        assert len(heights) == 2
+        plt.close(fig)
+
+    def test_pointplot_order(self, cat_df, tmp_path):
+        c = gufo.chart(cat_df).pointplot("group", "value", order=["C", "B"])
+        fig, ax = c._render()
+        labels = [t.get_text() for t in ax.get_xticklabels()]
+        assert labels == ["C", "B"]
+        plt.close(fig)
+
+
+# ── Histogram fill= ───────────────────────────────────────────────────
+
+class TestHistogramFill:
+    def test_fill_false_uses_step(self, sample_df, tmp_path):
+        c = gufo.chart(sample_df).histogram("x", fill=False)
+        fig, ax = c._render()
+        # step histogram uses Polygon (not bars), fewer patches than filled
+        filled_chart = gufo.chart(sample_df).histogram("x")
+        fig2, ax2 = filled_chart._render()
+        assert len(ax.patches) < len(ax2.patches)
+        plt.close(fig)
+        plt.close(fig2)
+
+    def test_fill_true_default(self, sample_df, tmp_path):
+        c = gufo.chart(sample_df).histogram("x")
+        fig, ax = c._render()
+        assert len(ax.patches) > 0
+        plt.close(fig)
+
+    def test_fill_false_with_color(self, tmp_path):
+        df = pd.DataFrame({
+            "val": np.random.default_rng(0).normal(size=100),
+            "grp": ["a"] * 50 + ["b"] * 50,
+        })
+        c = gufo.chart(df).histogram("val", color="grp", fill=False)
+        fig, ax = c._render()
+        # step histograms render, no errors
+        plt.close(fig)
+
+
+# ── Histogram multiple= ──────────────────────────────────────────────
+
+class TestHistogramMultiple:
+    @pytest.fixture
+    def hist_df(self):
+        rng = np.random.default_rng(42)
+        return pd.DataFrame({
+            "val": np.concatenate([rng.normal(0, 1, 50),
+                                   rng.normal(2, 1, 50)]),
+            "grp": ["a"] * 50 + ["b"] * 50,
+        })
+
+    def test_stack_renders(self, hist_df, tmp_path):
+        c = gufo.chart(hist_df).histogram("val", color="grp", multiple="stack")
+        fig, ax = c._render()
+        assert len(ax.containers) >= 2
+        plt.close(fig)
+
+    def test_dodge_renders(self, hist_df, tmp_path):
+        c = gufo.chart(hist_df).histogram("val", color="grp", multiple="dodge")
+        fig, ax = c._render()
+        assert len(ax.containers) >= 2
+        plt.close(fig)
+
+    def test_layer_renders(self, hist_df, tmp_path):
+        c = gufo.chart(hist_df).histogram("val", color="grp", multiple="layer")
+        fig, ax = c._render()
+        assert len(ax.patches) > 0
+        plt.close(fig)
+
+    def test_invalid_multiple_raises(self, hist_df):
+        c = gufo.chart(hist_df).histogram("val", color="grp", multiple="bad")
+        with pytest.raises(ValueError, match="multiple must be one of"):
+            c._render()
+
+    def test_kde_with_non_layer_raises(self, hist_df):
+        c = gufo.chart(hist_df).histogram(
+            "val", color="grp", multiple="stack", kde=gufo.kde()
+        )
+        with pytest.raises(ValueError, match="kde overlay requires"):
+            c._render()
+
+    def test_stack_horizontal(self, hist_df, tmp_path):
+        c = gufo.chart(hist_df).histogram(
+            "val", color="grp", multiple="stack", horizontal=True
+        )
+        fig, ax = c._render()
+        assert len(ax.containers) >= 2
+        plt.close(fig)
+
+    def test_dodge_with_density(self, hist_df, tmp_path):
+        c = gufo.chart(hist_df).histogram(
+            "val", color="grp", multiple="dodge", density=True
+        )
+        fig, ax = c._render()
+        assert len(ax.containers) >= 2
+        plt.close(fig)
+
+    def test_stack_fill_false(self, hist_df, tmp_path):
+        c = gufo.chart(hist_df).histogram(
+            "val", color="grp", multiple="stack", fill=False
+        )
+        fig, ax = c._render()
+        assert len(ax.containers) >= 2
+        plt.close(fig)

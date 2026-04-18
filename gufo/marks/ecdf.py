@@ -14,7 +14,8 @@ def render(layer, adapter, axes):
     warn_nan_inf(x, "x", "ecdf")
 
     color_value = resolve_color(adapter, enc.get("color"))
-    groups = iter_color_groups(color_value, palette=layer.palette)
+    groups = iter_color_groups(color_value, palette=layer.palette,
+                               color_order=enc.get("color_order"))
 
     if groups is not None:
         for cat, color, mask in groups:
