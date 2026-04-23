@@ -49,6 +49,7 @@ docs = [
     "myst-parser>=2.0",
     "sphinx-autodoc-typehints>=1.23",
     "sphinx-copybutton>=0.5",
+    "sphinxcontrib-mermaid>=0.9",
 ]
 dev = [
     { include-group = "test" },

@@ -179,6 +179,14 @@ pandas, polars, scipy, and statsmodels are guarded with `try/except ImportError`
 - **v0.1.1**: bug fixes — layer mutation during render, facet NaN invisible panels, `kdeplot()` `**kwargs` passthrough, better error messages for array input to `chart()`, `[test]`/`[dev]` extras — complete
 - **v0.1.2**: docstring escape fix for Sphinx, updated project logo — complete
 - **v0.2.0**: category ordering (`order=`, `color_order=`), histogram `multiple=` (stack/dodge/layer), step histogram (`fill=False`), dev dependency groups
+- **v0.3.0**: mixin decomposition — split Chart into MarksMixin, DecoratorsMixin, AxisMixin, ReferenceMixin for maintainability (no public API changes)
+- **v0.4.0**: 2D KDE/contour (bivariate `.kdeplot("x", "y")`), ridgeline plot
+- **v0.5.0**: built-in aggregation (`agg=` on bar/line/pointplot), confidence bands on line (`ci=`)
+- **v0.6.0**: secondary y-axis (`.twin_y()`), pattern fills (`hatch=` on bar/histogram/area)
+- **v0.7.0**: notebook auto-repr (`_repr_png_`), stricter type hints (`py.typed`, Literal types)
+- **v1.0.0**: stable API — plugin system for custom marks, theme gallery
+
+Patch releases (v0.x.y) ship between minor versions as needed for bug fixes.
 
 ## Release policy
 
