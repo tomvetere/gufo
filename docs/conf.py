@@ -31,6 +31,8 @@ myst_enable_extensions = [
     "fieldlist",
 ]
 
+myst_fence_as_directive = ["mermaid"]
+
 # -- Autodoc configuration ---------------------------------------------------
 
 autodoc_default_options = {

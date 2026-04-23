@@ -163,7 +163,7 @@ flowchart TD
     D --> D1["DataAdapter.from_any(data)"]
     D1 --> D2["Split data by facet column"]
     D2 --> D3["plt.subplots(rows, cols)"]
-    D3 --> D4["For each category:\nadapter.subset(mask)"]
+    D3 --> D4["For each category:<br/>adapter.subset(mask)"]
     D4 --> D5["chart._render_onto(fig, axes, sub_adapter)"]
     D5 --> D6["Shared legend / colorbar"]
 
@@ -184,7 +184,7 @@ flowchart TD
     N4 -- Yes --> N5["overlay.render(x, y, axes)"]
 
     K --> O["_apply_decorators(fig, axes)"]
-    O --> P["title, labels, legend,\nlimits, scales, ticks,\nreferences, annotations"]
+    O --> P["title, labels, legend,<br/>limits, scales, ticks,<br/>references, annotations"]
     P --> Q["Execute apply(func) callbacks"]
 
     style A fill:#4C72B0,color:#fff
@@ -251,6 +251,6 @@ flowchart TD
     B -- "Literal color" --> E["Apply to all points"]
 
     D --> F{"Array type?"}
-    F -- "Categorical" --> G["iter_color_groups()\nOne color per category"]
-    F -- "Continuous numeric" --> H["Colormap + colorbar\n(vmin, vmax, cmap)"]
+    F -- "Categorical" --> G["iter_color_groups()<br/>One color per category"]
+    F -- "Continuous numeric" --> H["Colormap + colorbar<br/>(vmin, vmax, cmap)"]
 ```
