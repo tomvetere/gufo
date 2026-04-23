@@ -67,5 +67,6 @@ api/index
 :maxdepth: 1
 :caption: Project
 
+architecture
 changelog
 ```

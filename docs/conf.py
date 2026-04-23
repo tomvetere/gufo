@@ -20,6 +20,7 @@ extensions = [
     "sphinx_autodoc_typehints",
     "sphinx_copybutton",
     "myst_parser",
+    "sphinxcontrib.mermaid",
 ]
 
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
