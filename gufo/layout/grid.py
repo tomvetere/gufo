@@ -66,9 +66,17 @@ class Grid:
         return self
 
     def show(self):
-        """Render and display the grid."""
-        self._render()
+        """Render and display the grid.
+
+        The figure is closed afterwards so repeated calls do not accumulate
+        open figures. In interactive mode the figure is left open, since the
+        window or widget is still live and the user is expected to keep
+        interacting with it.
+        """
+        fig, _ = self._render()
         plt.show()
+        if not plt.isinteractive():
+            plt.close(fig)
         return self
 
     def save(self, path, *, dpi=150):

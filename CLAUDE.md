@@ -96,7 +96,7 @@ Themes are immutable. `.merge(overrides)` returns a new `Theme`. Use `plt.rc_con
 ### Rendering pipeline (in `Chart._render()`)
 
 1. Resolve theme → enter `theme.as_context()`
-2. `Canvas.build()` creates fig/axes
+2. `Canvas.reset()` discards any previously built figure, then `Canvas.build()` creates fig/axes. The reset is what makes re-rendering a `Chart` produce a clean figure instead of drawing on top of the previous render.
 3. Delegate to `_render_onto(fig, axes)`:
    a. Create `DataAdapter` once for the chart's data (not per layer)
    b. Resolve palette via `resolve_palette()`; stamp on each `Layer`
@@ -178,7 +178,8 @@ pandas, polars, scipy, and statsmodels are guarded with `try/except ImportError`
 - **v0.1.0**: first tagged release on PyPI. `density=` on `.histogram()`, documented matplotlib kwargs passthrough, CI + trusted-publishing workflows, package rename, Read the Docs deploy — complete
 - **v0.1.1**: bug fixes — layer mutation during render, facet NaN invisible panels, `kdeplot()` `**kwargs` passthrough, better error messages for array input to `chart()`, `[test]`/`[dev]` extras — complete
 - **v0.1.2**: docstring escape fix for Sphinx, updated project logo — complete
-- **v0.2.0**: category ordering (`order=`, `color_order=`), histogram `multiple=` (stack/dodge/layer), step histogram (`fill=False`), dev dependency groups
+- **v0.2.0**: category ordering (`order=`, `color_order=`), histogram `multiple=` (stack/dodge/layer), step histogram (`fill=False`), dev dependency groups — complete
+- **v0.2.1**: bug fixes — re-render double-draw (`Canvas` figure caching), `.clear()` not clearing rendered output, figure leak on `.show()`/`Grid.show()`, Read the Docs dependency install — complete
 - **v0.3.0**: mixin decomposition — split Chart into MarksMixin, DecoratorsMixin, AxisMixin, ReferenceMixin for maintainability (no public API changes)
 - **v0.4.0**: 2D KDE/contour (bivariate `.kdeplot("x", "y")`), ridgeline plot
 - **v0.5.0**: built-in aggregation (`agg=` on bar/line/pointplot), confidence bands on line (`ci=`)

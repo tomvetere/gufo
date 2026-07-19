@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.2.1
+
+**Fixes**
+- Re-rendering a chart no longer double-draws. `Canvas.build()` cached the figure it created, so every render after the first drew on top of the previous render's artists — calling `.save()` twice on one chart produced a wrong second image.
+- `.clear()` now clears rendered output, not just the registered layers. The caching above meant cleared marks were still drawn in the next render, so the "reusing charts" idiom documented in the README did not work.
+- `.show()` no longer leaks figures. `Chart.show()` and `Grid.show()` never closed their figure the way `.save()` does, leaving one open per call. Reusing a chart in a loop grew memory without bound.
+- Read the Docs installed none of the documentation dependencies. `.readthedocs.yaml` asked for a `docs` pip extra, but v0.2.0 moved those to a PEP 735 dependency-group, which `extra_requirements` cannot resolve.
+
+**Changed**
+- `.show()` closes its figure after displaying it, unless matplotlib is in interactive mode (`plt.ion()`, `%matplotlib widget`), where the window or widget is still live.
+
+**Internal**
+- New `Canvas.reset()` discards and closes the built figure so the next `build()` starts clean; `Chart._render()` calls it first. `Canvas.build()` stays idempotent per instance.
+- `.readthedocs.yaml` installs the docs dependency-group via a `post_install` job, keeping `[dependency-groups]` as the single source of truth.
+
+**Testing**
+- 444 tests passing (up from 422). Each new regression test was verified to fail against the unfixed code.
+
+---
+
 ## v0.2.0
 
 **New features**

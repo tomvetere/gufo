@@ -5,6 +5,10 @@ build:
   tools:
     python: "3.12"
   jobs:
+    # Docs dependencies live in a PEP 735 dependency-group, which pip's
+    # extra_requirements cannot resolve. Install the group explicitly.
+    post_install:
+      - python -m pip install --group docs
     pre_build:
       - python docs/_scripts/generate_gallery.py
 
@@ -17,5 +21,4 @@ python:
     - method: pip
       path: .
       extra_requirements:
-        - docs
         - all

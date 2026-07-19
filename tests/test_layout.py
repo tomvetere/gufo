@@ -117,6 +117,29 @@ class TestGridOutput:
         g[0, 0] = gufo.chart(sample_df).scatter("x", "y")
         g.save(tmp_path / "grid_dpi.png", dpi=300)
 
+    @pytest.mark.filterwarnings("ignore:FigureCanvasAgg is non-interactive")
+    def test_show_closes_figure(self, sample_df):
+        g = gufo.grid(1, 1)
+        g[0, 0] = gufo.chart(sample_df).scatter("x", "y")
+        before = len(plt.get_fignums())
+        g.show()
+        assert len(plt.get_fignums()) == before
+
+    @pytest.mark.filterwarnings("ignore:FigureCanvasAgg is non-interactive")
+    def test_show_keeps_figure_open_when_interactive(self, sample_df,
+                                                     interactive_mode):
+        g = gufo.grid(1, 1)
+        g[0, 0] = gufo.chart(sample_df).scatter("x", "y")
+        before = len(plt.get_fignums())
+        g.show()
+        assert len(plt.get_fignums()) == before + 1
+
+    @pytest.mark.filterwarnings("ignore:FigureCanvasAgg is non-interactive")
+    def test_show_returns_self(self, sample_df):
+        g = gufo.grid(1, 1)
+        g[0, 0] = gufo.chart(sample_df).scatter("x", "y")
+        assert g.show() is g
+
 
 # ── Grid ratios ────────────────────────────────────────────────────
 

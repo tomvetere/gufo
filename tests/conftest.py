@@ -16,6 +16,14 @@ def _close_figures():
 
 
 @pytest.fixture
+def interactive_mode():
+    """Run a test with matplotlib in interactive mode, restoring it after."""
+    plt.ion()
+    yield
+    plt.ioff()
+
+
+@pytest.fixture
 def sample_df():
     """A small DataFrame useful across many tests."""
     return pd.DataFrame({

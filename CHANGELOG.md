@@ -6,6 +6,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Entries through v0.0.9 were reconstructed from the project roadmap and pre-date tagged releases, so dates on those entries are approximate. For the full per-version detail (internal refactors, test counts, etc.) see [`docs/changelog.md`](docs/changelog.md).
 
+## [0.2.1] — 2026-07-18
+
+### Fixed
+- **Re-rendering a chart no longer double-draws.** `Canvas.build()` cached the figure it created, so every render after the first drew on top of the previous render's artists. Calling `.save()` twice on the same chart produced a wrong second image.
+- **`.clear()` now clears rendered output.** Because of the caching above, marks removed by `.clear()` were still drawn in the next render — the "reusing charts" idiom documented in `README.md` did not work.
+- **`.show()` no longer leaks figures.** `Chart.show()` and `Grid.show()` never closed their figure the way `.save()` does, so each call left one open. Reusing a chart in a loop grew memory without bound.
+- Read the Docs installed no documentation dependencies. `.readthedocs.yaml` requested a `docs` pip extra, but v0.2.0 moved those dependencies to a PEP 735 dependency-group, which `extra_requirements` cannot resolve.
+
+### Changed
+- `.show()` closes its figure after displaying it, unless matplotlib is in interactive mode (`plt.ion()`, `%matplotlib widget`), where the window or widget is still live. Code that relied on the figure remaining current after `.show()` — for example calling `plt.savefig()` afterwards — should use `.save()` or the `.apply()` escape hatch instead.
+
+---
+
 ## [0.2.0] — 2026-04-18
 
 ### Added

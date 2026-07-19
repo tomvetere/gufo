@@ -295,6 +295,19 @@ class TestMultiLayer:
 
 
 class TestChartClear:
+    # Every attribute set in Chart.__init__ belongs to exactly one of these.
+    PRESERVES = frozenset({
+        "_data", "_theme_override", "_palette", "_canvas",
+        "_facet_column", "_facet_row", "_facet_cols",
+        "_facet_sharex", "_facet_sharey",
+    })
+    RESETS = frozenset({
+        "_layers", "_title", "_subtitle", "_xlabel", "_ylabel", "_caption",
+        "_annotations", "_xlim", "_ylim", "_xscale", "_yscale",
+        "_xticks", "_yticks", "_legend_opts", "_references",
+        "_label_config", "_apply_funcs",
+    })
+
     def test_clear_removes_layers(self, sample_df):
         c = gufo.chart(sample_df).scatter("x", "y").line("x", "y")
         assert len(c._layers) == 2
@@ -318,12 +331,55 @@ class TestChartClear:
              .theme("gufo_dark")
              .palette(["#ff0000", "#00ff00"])
              .size(10, 6)
+             .facet("cat")
              .scatter("x", "y"))
+        canvas = c._canvas
         c.clear()
         assert c._data is sample_df
         assert c._theme_override == "gufo_dark"
         assert c._palette == ["#ff0000", "#00ff00"]
+        assert c._canvas is canvas
         assert c._canvas._figsize == (10, 6)
+        assert c._facet_column == "cat"
+        assert c._facet_cols == 3
+        assert c._facet_sharex is True
+        assert c._facet_sharey is True
+
+    def test_clear_attribute_partition_is_exhaustive(self, sample_df):
+        """Guards against an attribute being added to __init__ but not clear().
+
+        If this fails, you added an attribute to Chart.__init__. Decide whether
+        clear() should reset it, then add its name to PRESERVES or RESETS above
+        (and to clear() itself if it belongs in RESETS).
+        """
+        assert not self.PRESERVES & self.RESETS
+        assert set(gufo.chart(sample_df).__dict__) == self.PRESERVES | self.RESETS
+
+    def test_clear_resets_every_resettable_attribute(self, sample_df):
+        c = (gufo.chart(sample_df)
+             .scatter("x", "y")
+             .title("t")
+             .subtitle("s")
+             .xlabel("X")
+             .ylabel("Y")
+             .caption("c")
+             .annotate("note", (1, 2))
+             .xlim(0, 10)
+             .ylim(0, 10)
+             .xscale("log")
+             .yscale("log")
+             .xticks([1, 2])
+             .yticks([1, 2])
+             .legend()
+             .hline(0)
+             .label()
+             .apply(lambda fig, ax: None))
+        fresh = gufo.chart(sample_df)
+        c.clear()
+        for name in sorted(self.RESETS):
+            assert c.__dict__[name] == fresh.__dict__[name], (
+                f"clear() did not reset {name}"
+            )
 
     def test_clear_resets_decorators(self, sample_df):
         c = (gufo.chart(sample_df)
@@ -353,6 +409,29 @@ class TestChartClear:
         c.save(tmp_path / "second.png")
         assert len(c._layers) == 1
         assert c._layers[0].mark_type == "line"
+        # The rendered output must not keep the cleared scatter.
+        axes = c._canvas._axes
+        assert len(axes.collections) == 0
+        assert len(axes.lines) == 1
+
+    def test_clear_removes_rendered_title(self, sample_df, tmp_path):
+        c = gufo.chart(sample_df).scatter("x", "y").title("before")
+        c.save(tmp_path / "titled.png")
+        c.clear().scatter("x", "y")
+        c.save(tmp_path / "untitled.png")
+        assert c._canvas._axes.get_title() == ""
+
+    def test_readme_clear_idiom(self, tmp_path):
+        """The 'Reusing charts' idiom documented in README.md must work."""
+        df = {"income": [1, 2, 3, 4, 5, 6]}
+        once = gufo.chart(df).histogram("income")
+        once.save(tmp_path / "once.png")
+        expected = len(once._canvas._axes.patches)
+
+        c = gufo.chart(df)
+        c.histogram("income").save(tmp_path / "first.png")
+        c.clear().histogram("income", density=True).save(tmp_path / "second.png")
+        assert len(c._canvas._axes.patches) == expected
 
 
 # ── Mark-level validation ─────────────────────────────────────────

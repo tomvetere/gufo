@@ -814,3 +814,5 @@ pytest tests/ -v
 **v0.1.2** — docstring fix for Sphinx, updated project logo
 
 **v0.2.0** — category ordering (`order=`, `color_order=`), histogram grouping modes (`multiple=`), step histogram (`fill=False`), dev dependency groups
+
+**v0.2.1** — bug fixes: re-render double-draw, `.clear()` not clearing rendered output, figure leak on `.show()`, Read the Docs dependency install

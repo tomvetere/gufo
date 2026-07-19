@@ -30,3 +30,15 @@ class Canvas:
             return self._figure, self._axes
         self._figure, self._axes = plt.subplots(figsize=self._figsize)
         return self._figure, self._axes
+
+    def reset(self):
+        """Discard the built figure so the next build() starts clean.
+
+        Closing is required, not just dropping the reference — matplotlib keeps
+        every figure registered globally until it is closed. The configured
+        figsize is preserved so a reset Canvas rebuilds at the same size.
+        """
+        if self._figure is not None:
+            plt.close(self._figure)
+        self._figure = None
+        self._axes = None

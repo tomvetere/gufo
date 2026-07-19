@@ -466,3 +466,23 @@ class TestFacetNaN:
         titles = {ax.get_title() for ax in visible}
         assert titles == {"A", "B"}
         plt.close(fig)
+
+
+# ── Facet re-rendering ───────────────────────────────────────────────
+
+class TestFacetRerender:
+    """Faceting builds its own figure per render, so it never double-draws."""
+
+    def test_facet_render_twice_does_not_double_draw(self):
+        df = pd.DataFrame({
+            "x": [1, 2, 3, 4],
+            "y": [2, 4, 1, 5],
+            "group": ["A", "A", "B", "B"],
+        })
+        c = chart(df).scatter("x", "y").facet("group")
+        c._render()
+        fig, axs = c._render()
+        for ax in axs.flat:
+            if ax.get_visible():
+                assert len(ax.collections) == 1
+        plt.close(fig)

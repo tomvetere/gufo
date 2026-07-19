@@ -632,9 +632,17 @@ class Chart:
     # ------------------------------------------------------------------
 
     def show(self):
-        """Render and display the chart."""
+        """Render and display the chart.
+
+        The figure is closed afterwards so repeated calls do not accumulate
+        open figures. In interactive mode the figure is left open, since the
+        window or widget is still live and the user is expected to keep
+        interacting with it.
+        """
         fig, axes = self._render()
         plt.show()
+        if not plt.isinteractive():
+            plt.close(fig)
         return self
 
     def save(self, path, *, dpi=150):
@@ -654,10 +662,14 @@ class Chart:
 
         Rendering order:
         1. Resolve theme (override or global)
-        2. Create figure / axes via Canvas
+        2. Reset the Canvas, then create figure / axes
         3. Draw each Layer via the appropriate Mark
         4. Apply decorators (title, labels, axis options, legend)
         5. Call each .apply() function
+
+        The Canvas is reset first so every render starts from a clean figure.
+        Without it, re-rendering a Chart would draw on top of the previous
+        render's artists.
         """
         if self._facet_column is not None or self._facet_row is not None:
             return render_facet(self, self._facet_column, self._facet_cols,
@@ -668,6 +680,7 @@ class Chart:
         theme = _resolve_theme(self._theme_override)
 
         with theme.as_context():
+            self._canvas.reset()
             fig, axes = self._canvas.build()
             self._render_onto(fig, axes)
 
