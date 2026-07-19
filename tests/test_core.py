@@ -1,4 +1,5 @@
 """Tests for gufo.core — Chart, Layer, Canvas."""
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
@@ -284,6 +285,78 @@ class TestCanvas:
         assert w == pytest.approx(14)
         assert h == pytest.approx(7)
 
+    def test_reset_clears_figure(self):
+        c = Canvas()
+        c.build()
+        c.reset()
+        assert c._figure is None
+        assert c._axes is None
+
+    def test_reset_closes_old_figure(self):
+        c = Canvas()
+        fig, _ = c.build()
+        c.reset()
+        assert fig.number not in plt.get_fignums()
+
+    def test_build_after_reset_creates_new_figure(self):
+        c = Canvas()
+        fig1, _ = c.build()
+        c.reset()
+        fig2, _ = c.build()
+        assert fig1 is not fig2
+
+    def test_reset_preserves_figsize(self):
+        c = Canvas(figsize=(9, 4))
+        c.build()
+        c.reset()
+        fig, _ = c.build()
+        w, h = fig.get_size_inches()
+        assert w == pytest.approx(9)
+        assert h == pytest.approx(4)
+
+    def test_reset_is_idempotent_before_build(self):
+        c = Canvas()
+        c.reset()
+        assert c._figure is None
+
+
+# ── Re-rendering ────────────────────────────────────────────────────
+
+class TestChartRerender:
+    """Each render must start from a clean figure, not the previous one."""
+
+    def test_render_twice_uses_fresh_figure(self, sample_df):
+        c = gufo.chart(sample_df).scatter("x", "y")
+        fig1, _ = c._render()
+        fig2, _ = c._render()
+        assert fig1 is not fig2
+
+    def test_render_twice_does_not_double_draw(self, sample_df):
+        c = gufo.chart(sample_df).scatter("x", "y")
+        c._render()
+        _, axes = c._render()
+        assert len(axes.collections) == 1
+
+    def test_render_twice_does_not_double_draw_lines(self, sample_df):
+        c = gufo.chart(sample_df).line("x", "y")
+        c._render()
+        _, axes = c._render()
+        assert len(axes.lines) == 1
+
+    def test_save_twice_produces_identical_files(self, sample_df, tmp_path):
+        first = tmp_path / "first.png"
+        second = tmp_path / "second.png"
+        c = gufo.chart(sample_df).scatter("x", "y")
+        c.save(first, dpi=50)
+        c.save(second, dpi=50)
+        assert first.read_bytes() == second.read_bytes()
+
+    def test_render_after_save_is_clean(self, sample_df, tmp_path):
+        c = gufo.chart(sample_df).scatter("x", "y")
+        c.save(tmp_path / "saved.png")
+        _, axes = c._render()
+        assert len(axes.collections) == 1
+
 
 # ── Layer dataclass ─────────────────────────────────────────────────
 
@@ -428,3 +501,31 @@ class TestLegendOutside:
          .save(tmp_path / "l.png"))
 
 
+
+
+# ── Show closes figures ─────────────────────────────────────────────
+
+@pytest.mark.filterwarnings("ignore:FigureCanvasAgg is non-interactive")
+class TestShowClosesFigures:
+    """show() must not accumulate open figures across repeated calls."""
+
+    def test_show_closes_figure(self, sample_df):
+        before = len(plt.get_fignums())
+        gufo.chart(sample_df).scatter("x", "y").show()
+        assert len(plt.get_fignums()) == before
+
+    def test_show_repeatedly_does_not_accumulate(self, sample_df):
+        before = len(plt.get_fignums())
+        for _ in range(5):
+            gufo.chart(sample_df).scatter("x", "y").show()
+            assert len(plt.get_fignums()) == before
+
+    def test_show_keeps_figure_open_when_interactive(self, sample_df,
+                                                     interactive_mode):
+        before = len(plt.get_fignums())
+        gufo.chart(sample_df).scatter("x", "y").show()
+        assert len(plt.get_fignums()) == before + 1
+
+    def test_show_returns_self(self, sample_df):
+        c = gufo.chart(sample_df).scatter("x", "y")
+        assert c.show() is c
