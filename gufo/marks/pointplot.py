@@ -1,6 +1,7 @@
 """Pointplot mark — connected category means with confidence intervals."""
 import numpy as np
 
+from ..core.validate import check_array_lengths, warn_nan_inf
 from ._base import _resolve_order, iter_color_groups, resolve_color, set_category_ticks
 
 
@@ -8,9 +9,11 @@ def render(layer, adapter, axes):
     enc = layer.encodings
     x = adapter.resolve(layer.x)
     y = adapter.resolve(layer.y)
+    check_array_lengths({"x": x, "y": y}, "pointplot")
 
     x = np.asarray(x)
     y = np.asarray(y, dtype=float)
+    warn_nan_inf(y, "y", "pointplot")
 
     horizontal = enc.get("horizontal", False)
     color_value = resolve_color(adapter, enc.get("color"))
