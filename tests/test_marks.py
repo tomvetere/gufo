@@ -476,6 +476,24 @@ class TestMarkValidation:
         with pytest.warns(UserWarning, match=r"pointplot\(\): 'y' contains 1 NaN"):
             c.save(tmp_path / "nan.png")
 
+    def test_pointplot_nan_is_omitted_not_propagated(self):
+        # The warning says NaN values are omitted; the category's mean must come
+        # from its remaining values, not become NaN and vanish.
+        data = {"x": ["a", "a", "b"], "y": [1.0, np.nan, 3.0]}
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            _, ax = gufo.chart(data).pointplot("x", "y")._render()
+        assert ax.lines[0].get_ydata().tolist() == [1.0, 3.0]
+
+    def test_pointplot_grouped_nan_is_omitted(self):
+        data = {"x": ["a", "a", "a", "b"], "y": [1.0, np.nan, 2.0, 3.0],
+                "g": ["p", "p", "q", "p"]}
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            _, ax = gufo.chart(data).pointplot("x", "y", color="g")._render()
+        means = [line.get_ydata().tolist() for line in ax.lines if len(line.get_ydata())]
+        assert [1.0, 3.0] in means
+
     def test_pointplot_clean_data_silent(self, tmp_path):
         c = gufo.chart({"x": ["a", "a", "b"], "y": [1.0, 2.0, 3.0]}).pointplot("x", "y")
         with warnings.catch_warnings():
