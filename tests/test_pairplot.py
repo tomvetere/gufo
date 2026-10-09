@@ -125,6 +125,19 @@ class TestPairplotRendering:
 
 
 class TestPairplotDataFormats:
+    def test_skips_bool_datetime_and_string_columns(self):
+        n = 6
+        data = {
+            "a": np.arange(n, dtype=float),
+            "b": np.arange(n, dtype=float) ** 2,
+            "flag": np.array([True, False] * 3),
+            "when": np.array([f"2020-01-0{i + 1}" for i in range(n)], dtype="datetime64[D]"),
+            "name": ["p", "q"] * 3,
+        }
+        fig, axs = gufo.pairplot(data)._render()
+        assert axs.shape == (2, 2)
+        plt.close(fig)
+
     def test_dict_data(self, tmp_path):
         data = {"x": [1, 2, 3, 4], "y": [4, 3, 2, 1], "z": [1, 1, 2, 2]}
         path = tmp_path / "dict_pair.png"

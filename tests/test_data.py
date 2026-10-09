@@ -5,7 +5,7 @@ import polars as pl
 import pytest
 
 from gufo.data.adapter import DataAdapter
-from gufo.data.inference import is_categorical
+from gufo.data.inference import is_categorical, is_numeric
 
 
 # ── DataAdapter construction ────────────────────────────────────────
@@ -167,6 +167,31 @@ class TestIsCategorical:
 
     def test_empty_numpy_array(self):
         assert not is_categorical(np.array([]))
+
+    def test_numpy_bool_dtype(self):
+        assert is_categorical(np.array([True, False, True]))
+
+    def test_plain_list_of_bools(self):
+        assert is_categorical([True, False, True])
+
+
+# ── is_numeric ──────────────────────────────────────────────────────
+
+class TestIsNumeric:
+    def test_int(self):
+        assert is_numeric(np.array([1, 2, 3]))
+
+    def test_float(self):
+        assert is_numeric(np.array([1.0, 2.0]))
+
+    def test_bool_is_not_numeric(self):
+        assert not is_numeric(np.array([True, False]))
+
+    def test_datetime_is_not_numeric(self):
+        assert not is_numeric(np.array(["2020-01-01"], dtype="datetime64[D]"))
+
+    def test_string_is_not_numeric(self):
+        assert not is_numeric(np.array(["a", "b"]))
 
 
 
