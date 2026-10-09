@@ -1,4 +1,6 @@
 """Tests for gufo.marks — individual mark renderers."""
+import warnings
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -463,6 +465,51 @@ class TestMarkValidation:
         c = gufo.chart().line(np.arange(5), np.arange(3))
         with pytest.raises(ValueError, match="array length mismatch"):
             c.save(tmp_path / "bad.png")
+
+    def test_pointplot_length_mismatch(self, tmp_path):
+        c = gufo.chart({"x": ["a", "b", "c"], "y": [1, 2]}).pointplot("x", "y")
+        with pytest.raises(ValueError, match=r"pointplot\(\): array length mismatch"):
+            c.save(tmp_path / "bad.png")
+
+    def test_pointplot_nan_warns(self, tmp_path):
+        c = gufo.chart({"x": ["a", "a", "b"], "y": [1.0, np.nan, 3.0]}).pointplot("x", "y")
+        with pytest.warns(UserWarning, match=r"pointplot\(\): 'y' contains 1 NaN"):
+            c.save(tmp_path / "nan.png")
+
+    def test_pointplot_clean_data_silent(self, tmp_path):
+        c = gufo.chart({"x": ["a", "a", "b"], "y": [1.0, 2.0, 3.0]}).pointplot("x", "y")
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            c.save(tmp_path / "ok.png")
+
+    def test_heatmap_long_form_length_mismatch(self, tmp_path):
+        data = {"x": ["a", "b", "c"], "y": ["p", "q", "r"], "v": [1, 2]}
+        c = gufo.chart(data).heatmap("x", "y", color="v")
+        with pytest.raises(ValueError, match=r"heatmap\(\): array length mismatch"):
+            c.save(tmp_path / "bad.png")
+
+    def test_heatmap_long_form_matching_lengths(self):
+        data = {"x": ["a", "b"], "y": ["p", "q"], "v": [1, 2]}
+        _, ax = gufo.chart(data).heatmap("x", "y", color="v")._render()
+        assert ax.images[0].get_array().shape == (2, 2)
+
+    def test_rug_nan_warns(self, tmp_path):
+        c = gufo.chart({"x": [1.0, np.nan, 3.0]}).rug("x")
+        with pytest.warns(UserWarning, match=r"rug\(\): 'x' contains 1 NaN"):
+            c.save(tmp_path / "nan.png")
+
+    def test_rug_clean_data_silent(self, tmp_path):
+        c = gufo.chart({"x": [1.0, 2.0, 3.0]}).rug("x")
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            c.save(tmp_path / "ok.png")
+
+    def test_rug_string_x_still_renders(self, tmp_path):
+        gufo.chart({"x": ["a", "b", "a"]}).rug("x").save(tmp_path / "r.png")
+
+    def test_rug_datetime_x_still_renders(self, tmp_path):
+        x = np.array(["2020-01-01", "2020-02-01"], dtype="datetime64[D]")
+        gufo.chart({"x": x}).rug("x").save(tmp_path / "r.png")
 
 
 # ── Box plot ───────────────────────────────────────────────────────
