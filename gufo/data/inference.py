@@ -4,11 +4,9 @@ import numpy as np
 
 def is_categorical(arr):
     """Return True if arr should be treated as a categorical variable."""
-    if hasattr(arr, "dtype"):
-        return arr.dtype.kind in ("O", "U", "S", "b") or str(arr.dtype) == "category"
-    if len(arr) == 0:
-        return False
-    return isinstance(arr[0], (str, bool))
+    if not hasattr(arr, "dtype"):
+        arr = np.asarray(arr)
+    return arr.dtype.kind in ("O", "U", "S", "b") or str(arr.dtype) == "category"
 
 
 def is_numeric(arr):

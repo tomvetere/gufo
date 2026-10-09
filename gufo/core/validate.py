@@ -27,8 +27,8 @@ def check_array_lengths(arrays: dict, mark: str):
 
 def check_numeric(arr, name: str, mark: str):
     """Verify that an array has a numeric dtype."""
+    arr = np.asarray(arr)
     if not is_numeric(arr):
-        arr = np.asarray(arr)
         raise ValueError(
             f"{mark}(): '{name}' must be numeric, but got {arr.dtype}. "
             f"{mark.capitalize()} requires numerical data."

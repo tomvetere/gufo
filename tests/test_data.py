@@ -174,6 +174,13 @@ class TestIsCategorical:
     def test_plain_list_of_bools(self):
         assert is_categorical([True, False, True])
 
+    def test_list_of_numpy_bools(self):
+        assert is_categorical([np.True_, np.False_])
+
+    def test_list_classified_by_all_elements_not_first(self):
+        # A leading bool must not make a numeric list categorical.
+        assert not is_categorical([True, 2.5, 3.0])
+
 
 # ── is_numeric ──────────────────────────────────────────────────────
 
