@@ -10,6 +10,9 @@ The core design philosophy:
 - **Always returns `Chart` or `Grid`.** Every factory function returns a `Chart` or `Grid`. Never a FacetGrid, never an Axes.
 - **One escape hatch: `.apply(func)`.** `func(figure, axes)` drops down to matplotlib and stays in the chain. No `.ax`, no `.fig` properties on the public API.
 - **Deferred rendering.** Marks register `Layer` objects on the `Chart`. Nothing is drawn until `.show()` or `.save()`.
+- **A convenience layer, not a platform.** A feature belongs only if it removes real boilerplate (aggregation, CI bands, wide-form wrangling). If `.apply()` plus a few lines of matplotlib does it, it doesn't belong in gufo.
+- **One user-facing `Chart`, kept thin.** No mark subclasses (`Scatter(Chart)` breaks chaining). Chart methods store config and return `self`; logic lives in the modules Chart delegates to. Growth goes into internal mixins, never a second public entry point.
+- **No Dask or PySpark.** Implicitly calling `.compute()`/`.toPandas()` on distributed data is a footgun; users aggregate first and pass pandas/polars.
 
 ## Style
 
