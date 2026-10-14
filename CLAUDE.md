@@ -103,19 +103,7 @@ Never include `Co-Authored-By: Claude`, `Authored by Claude`, or any similar att
 
 ## Dependencies
 
-Core:
-- `matplotlib >= 3.5.0`
-- `numpy >= 1.21.0`
-- Python `>= 3.10`
-
-Optional extras:
-- `gufo[pandas]` — `pandas >= 1.3.0`
-- `gufo[polars]` — `polars >= 0.20.0`
-- `gufo[scipy]` — `scipy >= 1.7.0` (required for KDE and swarm)
-- `gufo[stats]` — `statsmodels >= 0.13.0` (required for LOWESS smoothing)
-- `gufo[all]` — all optional dependencies
-
-pandas, polars, scipy, and statsmodels are guarded with `try/except ImportError` at import time. If neither is installed, gufo still works with dicts, arrays, and lists. KDE and swarm raise `ImportError` with install instructions when scipy is missing. LOWESS raises `ImportError` when statsmodels is missing. Regression uses numpy only.
+Only matplotlib and numpy are hard dependencies (versions live in `pyproject.toml`). Never import pandas, polars, scipy, or statsmodels unconditionally — guard with `try/except ImportError`, and when a feature needs one, raise `ImportError` naming the extra to install (e.g. `pip install gufo[scipy]`).
 
 ## Roadmap
 
