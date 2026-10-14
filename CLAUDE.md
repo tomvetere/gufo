@@ -49,24 +49,11 @@ Marks never receive raw DataFrames. Always go through `DataAdapter.resolve(key)`
 
 Themes are immutable. `.merge(overrides)` returns a new `Theme`. Use `plt.rc_context()` via `theme.as_context()` to scope a theme — never call `plt.rcParams.update()` directly in mark code.
 
-### Rendering pipeline (in `Chart._render()`)
+### Rendering
 
-1. Resolve theme → enter `theme.as_context()`
-2. `Canvas.reset()` discards any previously built figure, then `Canvas.build()` creates fig/axes. The reset is what makes re-rendering a `Chart` produce a clean figure instead of drawing on top of the previous render.
-3. Delegate to `_render_onto(fig, axes)`:
-   a. Create `DataAdapter` once for the chart's data (not per layer)
-   b. Resolve palette via `resolve_palette()`; stamp on each `Layer`
-   c. Each `Layer` dispatched via `render_layer(layer, adapter, axes)`
-   d. `_apply_decorators()` sets references, titles, labels, axis options, legend
-   e. Each `.apply()` function called as `func(figure, axes)`
+`Chart._render()` enters the theme context and calls `Canvas.reset()` before building the figure. The reset is what stops a re-rendered `Chart` from drawing on top of its previous render. `_render_onto(fig, axes)` then creates one `DataAdapter` per chart (not per layer), renders layers in chain order, applies decorators after all layers, and calls `.apply()` functions last.
 
-Grid rendering is handled by `Grid._render()` in `layout/grid.py`:
-1. `plt.subplots(rows, cols)` inside theme context
-2. Each panel rendered via `panel._render_onto(figure, axes)` — Grid never reaches into Chart internals
-3. Panel-level theme overrides respected via nested context
-4. Grid-level `.title()` → `fig.suptitle()`
-5. Unassigned cells hidden
-6. Grid-level `.apply()` functions called with `(fig, axes_2d_array)`
+`Grid` (`layout/grid.py`) is a separate layout container. It renders each panel through the panel's `_render_onto()` and never reaches into `Chart` internals. Panels are write-only: `Grid.__getitem__` raises `TypeError`.
 
 ### Input validation
 
@@ -74,23 +61,6 @@ Validation lives in `core/validate.py` — small pure functions that raise `Valu
 
 - **Render-time checks** (in mark renderers): array length mismatches (`check_array_lengths`), numeric type for histogram (`check_numeric`), NaN/Inf warnings (`warn_nan_inf`), stroke dash validation (`check_stroke_dash`). These require resolved data and fire during `_render()`.
 - **Do not duplicate matplotlib.** If matplotlib already raises a clear error for invalid input (alpha out of range, bad scale name, negative figsize, etc.), do not add a gufo-level check. Only add validation when gufo can provide a meaningfully better message.
-
-### Grid layout
-
-Grid is a standalone layout container, separate from Chart. Usage:
-
-```python
-g = gufo.grid(2, 2, figsize=(14, 10))
-g[0, 0] = gufo.chart(df).scatter("x", "y").title("Panel A")
-g[0, 1] = gufo.chart(df).line("x", "y").title("Panel B")
-g.show()
-```
-
-- `gufo.grid(rows, cols)` creates a `Grid` instance directly
-- `Grid.__setitem__` stores panel Charts in `_panels`
-- `Grid.__getitem__` raises `TypeError` (panels are write-only — no implicit state)
-- `Grid._render()` creates subplots and delegates to each panel
-- `Grid.title()`, `.theme()`, `.apply()`, `.show()`, `.save()` for grid-level options
 
 ### Testing
 
