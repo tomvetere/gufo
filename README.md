@@ -32,7 +32,7 @@ import gufo
 pip install gufo
 ```
 
-See [`CHANGELOG.md`](CHANGELOG.md) for release notes.
+See [`CHANGELOG.md`](CHANGELOG.md) for release notes and [`ROADMAP.md`](ROADMAP.md) for planned work.
 
 ---
 
@@ -784,35 +784,3 @@ uv sync --group dev
 # Run the test suite
 pytest tests/ -v
 ```
-
----
-
-## Roadmap
-
-**v0.0.1** — scatter, line, bar, histogram, theming, wide-form data, grid layout, faceting, input validation
-
-**v0.0.2** — box plot, heatmap, area chart, violin plot, polars support
-
-**v0.0.3** — pair plot
-
-**v0.0.4** — regression overlay, KDE/density plot, strip/swarm plots (scipy optional dependency) ✓
-
-**v0.0.5** — categorical color on box/violin, countplot, error bars, rugplot, ECDF, color palette API, reference lines/bands ✓
-
-**v0.0.6** — stacked/dodged bar grouping, continuous color scales on scatter, jointplot, Grid width/height ratios, horizontal histogram, complete docstrings, visual gallery, tutorial ✓
-
-**v0.0.7** — data labels, pointplot, LOWESS smoothing, facet sharex/sharey, legend outside positioning ✓
-
-**v0.0.8** — shared colorbar/legend on faceted charts, continuous color on line, `.label()` on line and pointplot, error bands on area ✓
-
-**v0.0.9** — release-hygiene pass ahead of PyPI (changelog cleanup, README polish, TestPyPI dry run)
-
-**v0.1.0** — first tagged release on PyPI ✓
-
-**v0.1.1** — bug fixes: layer mutation during render, facet NaN handling, kdeplot kwargs passthrough, improved error messages for array input
-
-**v0.1.2** — docstring fix for Sphinx, updated project logo
-
-**v0.2.0** — category ordering (`order=`, `color_order=`), histogram grouping modes (`multiple=`), step histogram (`fill=False`), dev dependency groups
-
-**v0.2.1** — bug fixes: re-render double-draw, `.clear()` not clearing rendered output, figure leak on `.show()`, Read the Docs dependency install

@@ -110,28 +110,7 @@ Only matplotlib and numpy are hard dependencies (versions live in `pyproject.tom
 
 ## Roadmap
 
-- **v0.0.1**: scatter, line, bar, histogram, theming, wide-form data, grid layout, faceting, input validation
-- **v0.0.2**: box, heatmap, area, violin, polars support, two-variable faceting — complete
-- **v0.0.3**: pair plot — complete
-- **v0.0.4**: regression overlay, KDE/density plot, strip/swarm plots (scipy optional dependency) — complete
-- **v0.0.5**: categorical color on box/violin, countplot, error bars, rugplot, ECDF, color palette API, reference lines/bands — complete
-- **v0.0.6**: stacked/dodged bar grouping, continuous color scales on scatter, jointplot, Grid ratios, horizontal histogram, docstrings, gallery, tutorial — complete
-- **v0.0.7**: data labels, pointplot, LOWESS smoothing, facet sharex/sharey, legend outside — complete
-- **v0.0.8**: shared colorbar/legend on faceted charts, continuous color on line, `.label()` on line and pointplot, error bands on area — complete
-- **v0.0.9**: PyPI release prep, CI + trusted-publishing workflows, package rename from cerno to gufo, Read the Docs deploy — complete
-- **v0.1.0**: first tagged release on PyPI. `density=` on `.histogram()`, documented matplotlib kwargs passthrough, CI + trusted-publishing workflows, package rename, Read the Docs deploy — complete
-- **v0.1.1**: bug fixes — layer mutation during render, facet NaN invisible panels, `kdeplot()` `**kwargs` passthrough, better error messages for array input to `chart()`, `[test]`/`[dev]` extras — complete
-- **v0.1.2**: docstring escape fix for Sphinx, updated project logo — complete
-- **v0.2.0**: category ordering (`order=`, `color_order=`), histogram `multiple=` (stack/dodge/layer), step histogram (`fill=False`), dev dependency groups — complete
-- **v0.2.1**: bug fixes — re-render double-draw (`Canvas` figure caching), `.clear()` not clearing rendered output, figure leak on `.show()`/`Grid.show()`, Read the Docs dependency install — complete
-- **v0.3.0**: mixin decomposition — split Chart into MarksMixin, DecoratorsMixin, AxisMixin, ReferenceMixin for maintainability (no public API changes); plan introspection (`.explain()` — print the deferred plan without rendering; design not yet settled)
-- **v0.4.0**: 2D KDE/contour (bivariate `.kdeplot("x", "y")`), ridgeline plot
-- **v0.5.0**: built-in aggregation (`agg=` on bar/line/pointplot), confidence bands on line (`ci=`)
-- **v0.6.0**: secondary y-axis (`.twin_y()`), pattern fills (`hatch=` on bar/histogram/area)
-- **v0.7.0**: notebook auto-repr (`_repr_png_`), stricter type hints (`py.typed`, Literal types)
-- **v1.0.0**: stable API — plugin system for custom marks, theme gallery
-
-Patch releases (v0.x.y) ship between minor versions as needed for bug fixes.
+Planned versions: `ROADMAP.md`. Release history: `CHANGELOG.md`.
 
 ## Release policy
 
@@ -148,7 +127,7 @@ The public API is whatever is re-exported from `gufo/__init__.py` plus every met
 A change is breaking if it removes, renames, or changes the meaning of any public API — method names, parameter names, parameter defaults that alter output, return types, or the shape of `Layer`/`Theme`/`Palette` dataclasses when user code constructs them directly.
 
 When a breaking change ships:
-1. Add a **`### Breaking changes`** subsection to the roadmap entry for that version listing each break and the migration path.
+1. Add a **`### Breaking changes`** subsection to that version's entry in `CHANGELOG.md` listing each break and the migration path.
 2. Cross-reference it from the README if the break affects anything shown in README examples.
 
 ### Deprecation process
@@ -157,6 +136,6 @@ Never remove a public API in a single release. The process is:
 
 1. **Deprecate** in version N: keep the old API working, but emit a `DeprecationWarning` pointing at the replacement. Mark it in the docstring with `.. deprecated:: N` and state the removal version.
 2. **Remove** no earlier than version N+2 (or the next MAJOR, whichever comes later). This gives users at least one full release cycle to migrate.
-3. List deprecations in a **`### Deprecated`** subsection of the roadmap entry for the version that introduces the warning, and again under **`### Breaking changes`** in the version that removes it.
+3. List deprecations under **`### Deprecated`** in the `CHANGELOG.md` entry for the version that introduces the warning, and again under **`### Breaking changes`** in the version that removes it.
 
 Use `warnings.warn(msg, DeprecationWarning, stacklevel=2)` so the warning points at the caller, not gufo internals.
