@@ -11,53 +11,6 @@ The core design philosophy:
 - **One escape hatch: `.apply(func)`.** `func(figure, axes)` drops down to matplotlib and stays in the chain. No `.ax`, no `.fig` properties on the public API.
 - **Deferred rendering.** Marks register `Layer` objects on the `Chart`. Nothing is drawn until `.show()` or `.save()`.
 
-## Module structure
-
-```
-gufo/
-├── __init__.py          # public API only — explicit __all__
-├── _version.py
-├── core/
-│   ├── chart.py         # Chart class — the only thing users interact with
-│   ├── layer.py         # Layer dataclass (one per mark call)
-│   ├── canvas.py        # matplotlib figure/axes lifecycle
-│   └── validate.py      # input validation helpers (check_array_lengths, check_numeric, etc.)
-├── marks/
-│   ├── __init__.py      # render_layer() dispatcher
-│   ├── _base.py         # shared mark utilities (resolve_color, default_colors, apply_label, apply_color, iter_color_groups, is_wide_form, render_wide_form, group_by_x, resolve_color_list, resolve_errors, is_continuous_color, resolve_color_range, render_categorical_scatter, set_category_ticks)
-│   ├── scatter.py       # render(layer, adapter, axes)
-│   ├── line.py
-│   ├── bar.py
-│   ├── boxplot.py
-│   ├── violin.py
-│   ├── heatmap.py
-│   ├── area.py
-│   ├── histogram.py
-│   ├── kde.py           # standalone KDE density plot
-│   ├── strip.py         # jittered categorical scatter
-│   ├── swarm.py         # beeswarm non-overlapping categorical scatter
-│   ├── countplot.py     # bar chart of value counts
-│   ├── ecdf.py          # empirical cumulative distribution function
-│   ├── rug.py           # tick marks along an axis
-│   └── pointplot.py     # connected category means with CI
-├── data/
-│   ├── adapter.py       # DataAdapter.from_any() — resolves all input types to numpy
-│   └── inference.py     # is_categorical()
-├── style/
-│   ├── theme.py         # Theme class, registry, set_theme, theme_context, built-in themes
-│   └── color.py         # Palette dataclass, GUFO_PALETTE, NAMED_PALETTES, resolve_palette()
-├── stats/
-│   ├── __init__.py      # scipy guard (_require_scipy)
-│   ├── regression.py    # Regression dataclass — fit overlay for scatter
-│   ├── kde.py           # KDE dataclass — density estimation config
-│   └── lowess.py        # Lowess dataclass — LOWESS smoothing overlay
-└── layout/
-    ├── grid.py          # Grid class — multi-panel layout container
-    ├── facet.py         # render_facet() — split data by column into subplots
-    ├── pairplot.py      # pairplot() — NxN scatter/histogram grid
-    └── jointplot.py     # jointplot() — scatter with marginal distributions
-```
-
 ## Style
 
 Follow [PEP 8](https://peps.python.org/pep-0008/) and [PEP 20 (The Zen of Python)](https://peps.python.org/pep-0020/). In particular:
@@ -180,7 +133,7 @@ pandas, polars, scipy, and statsmodels are guarded with `try/except ImportError`
 - **v0.1.2**: docstring escape fix for Sphinx, updated project logo — complete
 - **v0.2.0**: category ordering (`order=`, `color_order=`), histogram `multiple=` (stack/dodge/layer), step histogram (`fill=False`), dev dependency groups — complete
 - **v0.2.1**: bug fixes — re-render double-draw (`Canvas` figure caching), `.clear()` not clearing rendered output, figure leak on `.show()`/`Grid.show()`, Read the Docs dependency install — complete
-- **v0.3.0**: mixin decomposition — split Chart into MarksMixin, DecoratorsMixin, AxisMixin, ReferenceMixin for maintainability (no public API changes)
+- **v0.3.0**: mixin decomposition — split Chart into MarksMixin, DecoratorsMixin, AxisMixin, ReferenceMixin for maintainability (no public API changes); plan introspection (`.explain()` — print the deferred plan without rendering; design not yet settled)
 - **v0.4.0**: 2D KDE/contour (bivariate `.kdeplot("x", "y")`), ridgeline plot
 - **v0.5.0**: built-in aggregation (`agg=` on bar/line/pointplot), confidence bands on line (`ci=`)
 - **v0.6.0**: secondary y-axis (`.twin_y()`), pattern fills (`hatch=` on bar/histogram/area)
