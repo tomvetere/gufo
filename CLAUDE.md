@@ -10,53 +10,9 @@ The core design philosophy:
 - **Always returns `Chart` or `Grid`.** Every factory function returns a `Chart` or `Grid`. Never a FacetGrid, never an Axes.
 - **One escape hatch: `.apply(func)`.** `func(figure, axes)` drops down to matplotlib and stays in the chain. No `.ax`, no `.fig` properties on the public API.
 - **Deferred rendering.** Marks register `Layer` objects on the `Chart`. Nothing is drawn until `.show()` or `.save()`.
-
-## Module structure
-
-```
-gufo/
-├── __init__.py          # public API only — explicit __all__
-├── _version.py
-├── core/
-│   ├── chart.py         # Chart class — the only thing users interact with
-│   ├── layer.py         # Layer dataclass (one per mark call)
-│   ├── canvas.py        # matplotlib figure/axes lifecycle
-│   └── validate.py      # input validation helpers (check_array_lengths, check_numeric, etc.)
-├── marks/
-│   ├── __init__.py      # render_layer() dispatcher
-│   ├── _base.py         # shared mark utilities (resolve_color, default_colors, apply_label, apply_color, iter_color_groups, is_wide_form, render_wide_form, group_by_x, resolve_color_list, resolve_errors, is_continuous_color, resolve_color_range, render_categorical_scatter, set_category_ticks)
-│   ├── scatter.py       # render(layer, adapter, axes)
-│   ├── line.py
-│   ├── bar.py
-│   ├── boxplot.py
-│   ├── violin.py
-│   ├── heatmap.py
-│   ├── area.py
-│   ├── histogram.py
-│   ├── kde.py           # standalone KDE density plot
-│   ├── strip.py         # jittered categorical scatter
-│   ├── swarm.py         # beeswarm non-overlapping categorical scatter
-│   ├── countplot.py     # bar chart of value counts
-│   ├── ecdf.py          # empirical cumulative distribution function
-│   ├── rug.py           # tick marks along an axis
-│   └── pointplot.py     # connected category means with CI
-├── data/
-│   ├── adapter.py       # DataAdapter.from_any() — resolves all input types to numpy
-│   └── inference.py     # is_categorical()
-├── style/
-│   ├── theme.py         # Theme class, registry, set_theme, theme_context, built-in themes
-│   └── color.py         # Palette dataclass, GUFO_PALETTE, NAMED_PALETTES, resolve_palette()
-├── stats/
-│   ├── __init__.py      # scipy guard (_require_scipy)
-│   ├── regression.py    # Regression dataclass — fit overlay for scatter
-│   ├── kde.py           # KDE dataclass — density estimation config
-│   └── lowess.py        # Lowess dataclass — LOWESS smoothing overlay
-└── layout/
-    ├── grid.py          # Grid class — multi-panel layout container
-    ├── facet.py         # render_facet() — split data by column into subplots
-    ├── pairplot.py      # pairplot() — NxN scatter/histogram grid
-    └── jointplot.py     # jointplot() — scatter with marginal distributions
-```
+- **A convenience layer, not a platform.** A feature belongs only if it removes real boilerplate (aggregation, CI bands, wide-form wrangling). If `.apply()` plus a few lines of matplotlib does it, it doesn't belong in gufo.
+- **One user-facing `Chart`, kept thin.** No mark subclasses (`Scatter(Chart)` breaks chaining). Chart methods store config and return `self`; logic lives in the modules Chart delegates to. Growth goes into internal mixins, never a second public entry point.
+- **No Dask or PySpark.** Implicitly calling `.compute()`/`.toPandas()` on distributed data is a footgun; users aggregate first and pass pandas/polars.
 
 ## Style
 
@@ -93,24 +49,11 @@ Marks never receive raw DataFrames. Always go through `DataAdapter.resolve(key)`
 
 Themes are immutable. `.merge(overrides)` returns a new `Theme`. Use `plt.rc_context()` via `theme.as_context()` to scope a theme — never call `plt.rcParams.update()` directly in mark code.
 
-### Rendering pipeline (in `Chart._render()`)
+### Rendering
 
-1. Resolve theme → enter `theme.as_context()`
-2. `Canvas.reset()` discards any previously built figure, then `Canvas.build()` creates fig/axes. The reset is what makes re-rendering a `Chart` produce a clean figure instead of drawing on top of the previous render.
-3. Delegate to `_render_onto(fig, axes)`:
-   a. Create `DataAdapter` once for the chart's data (not per layer)
-   b. Resolve palette via `resolve_palette()`; stamp on each `Layer`
-   c. Each `Layer` dispatched via `render_layer(layer, adapter, axes)`
-   d. `_apply_decorators()` sets references, titles, labels, axis options, legend
-   e. Each `.apply()` function called as `func(figure, axes)`
+`Chart._render()` enters the theme context and calls `Canvas.reset()` before building the figure. The reset is what stops a re-rendered `Chart` from drawing on top of its previous render. `_render_onto(fig, axes)` then creates one `DataAdapter` per chart (not per layer), renders layers in chain order, applies decorators after all layers, and calls `.apply()` functions last.
 
-Grid rendering is handled by `Grid._render()` in `layout/grid.py`:
-1. `plt.subplots(rows, cols)` inside theme context
-2. Each panel rendered via `panel._render_onto(figure, axes)` — Grid never reaches into Chart internals
-3. Panel-level theme overrides respected via nested context
-4. Grid-level `.title()` → `fig.suptitle()`
-5. Unassigned cells hidden
-6. Grid-level `.apply()` functions called with `(fig, axes_2d_array)`
+`Grid` (`layout/grid.py`) is a separate layout container. It renders each panel through the panel's `_render_onto()` and never reaches into `Chart` internals. Panels are write-only: `Grid.__getitem__` raises `TypeError`.
 
 ### Input validation
 
@@ -118,23 +61,6 @@ Validation lives in `core/validate.py` — small pure functions that raise `Valu
 
 - **Render-time checks** (in mark renderers): array length mismatches (`check_array_lengths`), numeric type for histogram (`check_numeric`), NaN/Inf warnings (`warn_nan_inf`), stroke dash validation (`check_stroke_dash`). These require resolved data and fire during `_render()`.
 - **Do not duplicate matplotlib.** If matplotlib already raises a clear error for invalid input (alpha out of range, bad scale name, negative figsize, etc.), do not add a gufo-level check. Only add validation when gufo can provide a meaningfully better message.
-
-### Grid layout
-
-Grid is a standalone layout container, separate from Chart. Usage:
-
-```python
-g = gufo.grid(2, 2, figsize=(14, 10))
-g[0, 0] = gufo.chart(df).scatter("x", "y").title("Panel A")
-g[0, 1] = gufo.chart(df).line("x", "y").title("Panel B")
-g.show()
-```
-
-- `gufo.grid(rows, cols)` creates a `Grid` instance directly
-- `Grid.__setitem__` stores panel Charts in `_panels`
-- `Grid.__getitem__` raises `TypeError` (panels are write-only — no implicit state)
-- `Grid._render()` creates subplots and delegates to each panel
-- `Grid.title()`, `.theme()`, `.apply()`, `.show()`, `.save()` for grid-level options
 
 ### Testing
 
@@ -150,44 +76,11 @@ Never include `Co-Authored-By: Claude`, `Authored by Claude`, or any similar att
 
 ## Dependencies
 
-Core:
-- `matplotlib >= 3.5.0`
-- `numpy >= 1.21.0`
-- Python `>= 3.10`
-
-Optional extras:
-- `gufo[pandas]` — `pandas >= 1.3.0`
-- `gufo[polars]` — `polars >= 0.20.0`
-- `gufo[scipy]` — `scipy >= 1.7.0` (required for KDE and swarm)
-- `gufo[stats]` — `statsmodels >= 0.13.0` (required for LOWESS smoothing)
-- `gufo[all]` — all optional dependencies
-
-pandas, polars, scipy, and statsmodels are guarded with `try/except ImportError` at import time. If neither is installed, gufo still works with dicts, arrays, and lists. KDE and swarm raise `ImportError` with install instructions when scipy is missing. LOWESS raises `ImportError` when statsmodels is missing. Regression uses numpy only.
+Only matplotlib and numpy are hard dependencies (versions live in `pyproject.toml`). Never import pandas, polars, scipy, or statsmodels unconditionally — guard with `try/except ImportError`, and when a feature needs one, raise `ImportError` naming the extra to install (e.g. `pip install gufo[scipy]`).
 
 ## Roadmap
 
-- **v0.0.1**: scatter, line, bar, histogram, theming, wide-form data, grid layout, faceting, input validation
-- **v0.0.2**: box, heatmap, area, violin, polars support, two-variable faceting — complete
-- **v0.0.3**: pair plot — complete
-- **v0.0.4**: regression overlay, KDE/density plot, strip/swarm plots (scipy optional dependency) — complete
-- **v0.0.5**: categorical color on box/violin, countplot, error bars, rugplot, ECDF, color palette API, reference lines/bands — complete
-- **v0.0.6**: stacked/dodged bar grouping, continuous color scales on scatter, jointplot, Grid ratios, horizontal histogram, docstrings, gallery, tutorial — complete
-- **v0.0.7**: data labels, pointplot, LOWESS smoothing, facet sharex/sharey, legend outside — complete
-- **v0.0.8**: shared colorbar/legend on faceted charts, continuous color on line, `.label()` on line and pointplot, error bands on area — complete
-- **v0.0.9**: PyPI release prep, CI + trusted-publishing workflows, package rename from cerno to gufo, Read the Docs deploy — complete
-- **v0.1.0**: first tagged release on PyPI. `density=` on `.histogram()`, documented matplotlib kwargs passthrough, CI + trusted-publishing workflows, package rename, Read the Docs deploy — complete
-- **v0.1.1**: bug fixes — layer mutation during render, facet NaN invisible panels, `kdeplot()` `**kwargs` passthrough, better error messages for array input to `chart()`, `[test]`/`[dev]` extras — complete
-- **v0.1.2**: docstring escape fix for Sphinx, updated project logo — complete
-- **v0.2.0**: category ordering (`order=`, `color_order=`), histogram `multiple=` (stack/dodge/layer), step histogram (`fill=False`), dev dependency groups — complete
-- **v0.2.1**: bug fixes — re-render double-draw (`Canvas` figure caching), `.clear()` not clearing rendered output, figure leak on `.show()`/`Grid.show()`, Read the Docs dependency install — complete
-- **v0.3.0**: mixin decomposition — split Chart into MarksMixin, DecoratorsMixin, AxisMixin, ReferenceMixin for maintainability (no public API changes)
-- **v0.4.0**: 2D KDE/contour (bivariate `.kdeplot("x", "y")`), ridgeline plot
-- **v0.5.0**: built-in aggregation (`agg=` on bar/line/pointplot), confidence bands on line (`ci=`)
-- **v0.6.0**: secondary y-axis (`.twin_y()`), pattern fills (`hatch=` on bar/histogram/area)
-- **v0.7.0**: notebook auto-repr (`_repr_png_`), stricter type hints (`py.typed`, Literal types)
-- **v1.0.0**: stable API — plugin system for custom marks, theme gallery
-
-Patch releases (v0.x.y) ship between minor versions as needed for bug fixes.
+Planned versions: `ROADMAP.md`. Release history: `CHANGELOG.md`.
 
 ## Release policy
 
@@ -204,7 +97,7 @@ The public API is whatever is re-exported from `gufo/__init__.py` plus every met
 A change is breaking if it removes, renames, or changes the meaning of any public API — method names, parameter names, parameter defaults that alter output, return types, or the shape of `Layer`/`Theme`/`Palette` dataclasses when user code constructs them directly.
 
 When a breaking change ships:
-1. Add a **`### Breaking changes`** subsection to the roadmap entry for that version listing each break and the migration path.
+1. Add a **`### Breaking changes`** subsection to that version's entry in `CHANGELOG.md` listing each break and the migration path.
 2. Cross-reference it from the README if the break affects anything shown in README examples.
 
 ### Deprecation process
@@ -213,6 +106,6 @@ Never remove a public API in a single release. The process is:
 
 1. **Deprecate** in version N: keep the old API working, but emit a `DeprecationWarning` pointing at the replacement. Mark it in the docstring with `.. deprecated:: N` and state the removal version.
 2. **Remove** no earlier than version N+2 (or the next MAJOR, whichever comes later). This gives users at least one full release cycle to migrate.
-3. List deprecations in a **`### Deprecated`** subsection of the roadmap entry for the version that introduces the warning, and again under **`### Breaking changes`** in the version that removes it.
+3. List deprecations under **`### Deprecated`** in the `CHANGELOG.md` entry for the version that introduces the warning, and again under **`### Breaking changes`** in the version that removes it.
 
 Use `warnings.warn(msg, DeprecationWarning, stacklevel=2)` so the warning points at the caller, not gufo internals.
