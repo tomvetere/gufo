@@ -75,6 +75,15 @@ class TestScatterMark:
         assert labels == {"True", "False"}
         assert len(fig.axes) == 1  # no colorbar axes
 
+    @pytest.mark.parametrize("seq", [list, tuple])
+    def test_scatter_list_color_groups(self, seq):
+        data = {"x": [1, 2, 3], "y": [1, 2, 3]}
+        c = gufo.chart(data).scatter("x", "y", color=seq(["p", "q", "p"])).legend()
+        _, axes = c._render()
+        assert [len(col.get_offsets()) for col in axes.collections] == [2, 1]
+        labels = {t.get_text() for t in axes.get_legend().get_texts()}
+        assert labels == {"p", "q"}
+
     def test_scatter_categorical_creates_groups(self, sample_df):
         c = gufo.chart(sample_df).scatter("x", "y", color="cat")
         _, axes = c._render()
@@ -176,6 +185,12 @@ class TestLineMark:
         _, axes = c._render()
         # Two categories → two lines
         assert len(axes.get_lines()) == 2
+
+    def test_line_list_color_groups(self):
+        data = {"x": [1, 2, 3, 4], "y": [1, 2, 3, 4]}
+        c = gufo.chart(data).line("x", "y", color=["p", "q", "p", "q"])
+        _, axes = c._render()
+        assert [len(ln.get_xdata()) for ln in axes.get_lines()] == [2, 2]
 
     def test_line_stroke_dash(self, sample_df, tmp_path):
         gufo.chart(sample_df).line("x", "y", stroke_dash="dashed").save(tmp_path / "l.png")

@@ -101,6 +101,7 @@ def iter_color_groups(color_value, palette=None, color_order=None):
             or not hasattr(color_value, "__len__")
             or not is_categorical(color_value)):
         return None
+    color_value = np.asarray(color_value)
     categories = _resolve_order(color_value, color_order)
     colors = default_colors(len(categories), palette=palette)
     return [(cat, colors[i], color_value == cat) for i, cat in enumerate(categories)]
