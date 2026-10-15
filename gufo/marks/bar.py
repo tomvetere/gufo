@@ -1,7 +1,7 @@
 """Bar mark."""
 import numpy as np
 
-from ..core.validate import check_array_lengths, check_error_shape, warn_nan_inf
+from ..core.validate import check_array_lengths, warn_nan_inf
 from ._base import (
     _resolve_order, apply_label, apply_color, default_colors, is_wide_form,
     resolve_color, resolve_errors, iter_color_groups, set_category_ticks,
@@ -32,11 +32,8 @@ def render(layer, adapter, axes):
 
     order = enc.get("order")
     if order is not None:
-        # Errors are reindexed here, so check them first; without order=,
-        # matplotlib reports a bad error shape clearly itself.
+        # Errors are reindexed with the bars so each stays on its own bar.
         n = len(x)
-        check_error_shape(yerr, n, "y_error", "bar")
-        check_error_shape(xerr, n, "x_error", "bar")
         x = np.asarray(x)
         idx = _order_rows(x, order)
         x = x[idx]
@@ -80,7 +77,10 @@ def _take_error_rows(err, n, idx):
     """
     if err is None:
         return None
-    return np.broadcast_to(err, (2, n))[:, idx]
+    try:
+        return np.broadcast_to(err, (2, n))[:, idx]
+    except ValueError:
+        return err  # an invalid shape: let matplotlib report it
 
 
 def _draw_dodged(axes, x_pos, series_list, horizontal, extra_kwargs):
