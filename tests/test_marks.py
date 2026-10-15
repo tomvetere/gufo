@@ -1122,12 +1122,14 @@ class TestCategoryOrder:
         assert heights == [3, 3]
         plt.close(fig)
 
-    def test_bar_order(self, tmp_path):
-        df = pd.DataFrame({"x": ["C", "A", "B"], "y": [3, 1, 2]})
-        c = gufo.chart(df).bar("x", "y", order=["B", "A"])
+    @pytest.mark.parametrize("y", ["y", ["y", "z"]], ids=["single", "wide"])
+    def test_bar_order(self, y):
+        df = pd.DataFrame({"x": ["C", "A", "B"], "y": [3, 1, 2], "z": [30, 10, 20]})
+        c = gufo.chart(df).bar("x", y, order=["B", "A"])
         fig, ax = c._render()
         labels = [t.get_text() for t in ax.get_xticklabels()]
         assert labels == ["B", "A"]
+        assert [bar.get_height() for bar in ax.containers[0]] == [2, 1]
         plt.close(fig)
 
     def test_color_order(self, cat_df, tmp_path):
