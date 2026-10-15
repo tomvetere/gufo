@@ -494,6 +494,18 @@ class TestMarkValidation:
         means = [line.get_ydata().tolist() for line in ax.lines if len(line.get_ydata())]
         assert [1.0, 3.0] in means
 
+    def test_pointplot_all_nan_renders(self):
+        data = {"x": ["a", "b"], "y": [np.nan, np.nan]}
+        with pytest.warns(UserWarning, match=r"pointplot\(\): 'y' contains 2 NaN"):
+            gufo.chart(data).pointplot("x", "y")._render()
+
+    def test_pointplot_inf_not_silently_dropped(self):
+        # Only NaN is omitted; Inf stays in, as the Inf warning implies.
+        data = {"x": ["a", "a"], "y": [np.inf, 1.0]}
+        with pytest.warns(UserWarning, match=r"pointplot\(\): 'y' contains 1 Inf"):
+            _, ax = gufo.chart(data).pointplot("x", "y")._render()
+        assert np.isinf(ax.lines[0].get_ydata()[0])
+
     def test_pointplot_clean_data_silent(self, tmp_path):
         c = gufo.chart({"x": ["a", "a", "b"], "y": [1.0, 2.0, 3.0]}).pointplot("x", "y")
         with warnings.catch_warnings():
