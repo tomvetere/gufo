@@ -485,7 +485,10 @@ class TestMarkValidation:
                                  y_error=np.ones(5), order=["b", "a"]),
         lambda: gufo.chart({"x": ["a", "b", "c"], "p": [1, 2, 3], "q": [1, 2, 3, 4, 5]})
                     .bar("x", ["p", "q"], order=["b", "a"]),
-    ], ids=["y-short", "y-long-order", "y-short-order", "yerr-long-order", "wide-long-order"])
+        lambda: gufo.chart({"cat": ["a", "b", "c"], "x": [1, 2], "y": [3, 4]})
+                    .bar("cat", ["x", "y"], order=["b", "a"]),
+    ], ids=["y-short", "y-long-order", "y-short-order", "yerr-long-order", "wide-long-order",
+            "wide-column-named-x"])
     def test_bar_length_mismatch(self, make):
         with pytest.raises(ValueError, match="array length mismatch"):
             make()._render()
@@ -885,16 +888,17 @@ class TestErrorBars:
          .line([1, 2, 3], [4, 5, 6], y_error=[0.5, 0.3, 0.4])
          .save(tmp_path / "e.png"))
 
-    @pytest.mark.parametrize("order", [None, ["b", "a", "c"]])
-    def test_bar_yerr(self, order):
+    @pytest.mark.parametrize("y_error", ["err", [0.5]], ids=["column", "length-1"])
+    @pytest.mark.parametrize("order", [None, ["b", "a", "c"], ["b", "a"]])
+    def test_bar_yerr(self, order, y_error):
         df = pd.DataFrame({"x": ["a", "b", "c"], "y": [4, 5, 6],
                            "err": [0.5, 0.3, 0.4]})
-        _, ax = gufo.chart(df).bar("x", "y", y_error="err", order=order)._render()
+        _, ax = gufo.chart(df).bar("x", "y", y_error=y_error, order=order)._render()
         bars = next(c for c in ax.containers if isinstance(c, BarContainer))
         half_widths = [(top[1] - bottom[1]) / 2
                        for bottom, top in bars.errorbar.lines[2][0].get_segments()]
-        expected = dict(zip(df["y"], df["err"]))
-        assert half_widths == pytest.approx([expected[b.get_height()] for b in bars])
+        per_row = dict(zip(df["y"], df["err"] if y_error == "err" else [0.5] * 3))
+        assert half_widths == pytest.approx([per_row[b.get_height()] for b in bars])
 
 
 # ── Pointplot ─────────────────────────────────────────────────────

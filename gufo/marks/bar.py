@@ -70,23 +70,28 @@ def _order_rows(x, order):
     return keep[np.argsort(sort_keys, kind="stable")]
 
 
+def _broadcasts(err):
+    """True if matplotlib applies err to every bar: a scalar or a length-1 row axis."""
+    return np.ndim(err) == 0 or np.shape(err)[-1] == 1
+
+
 def _error_rows(err):
     """Return the per-row view of an error array for length checks, or None.
 
-    Scalars apply to every row; the asymmetric (2, n) form has n rows.
+    Broadcast errors apply to every row; the asymmetric (2, n) form has n rows.
     """
-    if err is None or np.ndim(err) == 0:
+    if err is None or _broadcasts(err):
         return None
     err = np.asarray(err)
     return err[0] if err.ndim == 2 else err
 
 
 def _take_rows(err, idx):
-    """Select the rows idx from an error array; scalars and idx=None pass through.
+    """Select the rows idx from an error array; broadcast errors and idx=None pass through.
 
     The trailing-axis index keeps matplotlib's asymmetric (2, n) form intact.
     """
-    if idx is None or np.ndim(err) == 0:
+    if idx is None or _broadcasts(err):
         return err
     return np.asarray(err)[..., idx]
 
@@ -156,7 +161,9 @@ def _render_wide_form(layer, adapter, axes, enc):
     series = adapter.resolve(layer.y)
     n_series = len(series)
 
-    check_array_lengths({"x": x_raw, **dict(zip(layer.y, series))}, "bar")
+    for name, y_data in zip(layer.y, series):
+        # One check per column: a column named "x" must not replace x itself.
+        check_array_lengths({"x": x_raw, repr(name): y_data}, "bar")
 
     order = enc.get("order")
     if order is not None:
