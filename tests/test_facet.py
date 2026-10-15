@@ -20,8 +20,16 @@ class TestFacetConstruction:
             chart().scatter([1, 2], [3, 4]).facet("col")
 
     def test_facet_non_categorical_raises(self, sample_df, tmp_path):
-        with pytest.raises(ValueError, match="not categorical"):
+        with pytest.raises(ValueError, match="strings, booleans, or pandas Categorical"):
             chart(sample_df).scatter("x", "y").facet("x").save(tmp_path / "bad.png")
+
+    def test_facet_by_bool_column(self):
+        data = {"x": [1, 2, 3, 4], "y": [1, 2, 3, 4],
+                "flag": np.array([True, False, True, False])}
+        fig, axes_grid = chart(data).scatter("x", "y").facet("flag")._render()
+        visible = [ax for ax in fig.axes if ax.get_visible()]
+        assert len(visible) == 2
+        assert {ax.get_title() for ax in visible} == {"True", "False"}
 
     def test_chaining_facet_then_title(self, sample_df, tmp_path):
         c = chart(sample_df).scatter("x", "y").facet("cat").title("Title")

@@ -1,7 +1,7 @@
 """Pair plot — NxN grid of scatter plots and histograms for variable pairs."""
 from ..core.chart import chart
 from ..data.adapter import DataAdapter
-from ..data.inference import is_categorical
+from ..data.inference import is_numeric
 from ..layout.grid import Grid
 
 
@@ -73,6 +73,6 @@ def _detect_numeric_columns(adapter, exclude=None):
         if name == exclude:
             continue
         arr = adapter.resolve(name)
-        if not is_categorical(arr):
+        if is_numeric(arr):
             numeric.append(name)
     return numeric

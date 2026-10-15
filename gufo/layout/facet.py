@@ -176,7 +176,7 @@ def _check_categorical(data, column_name):
     if not is_categorical(data):
         raise ValueError(
             f"facet(): column '{column_name}' is not categorical. "
-            "Faceting requires a categorical column (strings or pandas Categorical)."
+            "Faceting requires a categorical column (strings, booleans, or pandas Categorical)."
         )
 
 

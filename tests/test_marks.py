@@ -66,6 +66,15 @@ class TestScatterMark:
     def test_scatter_with_categorical_color(self, sample_df, tmp_path):
         gufo.chart(sample_df).scatter("x", "y", color="cat").save(tmp_path / "s.png")
 
+    def test_scatter_bool_color_is_categorical(self):
+        data = {"x": [1, 2, 3, 4], "y": [1, 2, 3, 4],
+                "flag": np.array([True, False, True, False])}
+        fig, axes = gufo.chart(data).scatter("x", "y", color="flag").legend()._render()
+        assert len(axes.collections) == 2
+        labels = {t.get_text() for t in axes.get_legend().get_texts()}
+        assert labels == {"True", "False"}
+        assert len(fig.axes) == 1  # no colorbar axes
+
     def test_scatter_categorical_creates_groups(self, sample_df):
         c = gufo.chart(sample_df).scatter("x", "y", color="cat")
         _, axes = c._render()
@@ -220,6 +229,13 @@ class TestBarGrouped:
         _, axes = c._render()
         # 2 quarters × 2 regions = 4 patches
         assert len(axes.patches) == 4
+
+    def test_bar_bool_color_groups(self):
+        data = {"cat": ["a", "b", "c", "d"], "val": [1, 2, 3, 4],
+                "flag": np.array([True, False, True, False])}
+        _, axes = gufo.chart(data).bar("cat", "val", color="flag")._render()
+        colors = {tuple(p.get_facecolor()) for p in axes.patches if p.get_height() > 0}
+        assert len(colors) == 2
 
     def test_bar_stacked_by_color(self, grouped_df):
         c = gufo.chart(grouped_df).bar("quarter", "revenue", color="region", stacked=True)

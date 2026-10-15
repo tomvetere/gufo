@@ -7,6 +7,8 @@ import warnings
 
 import numpy as np
 
+from ..data.inference import is_numeric
+
 
 def check_array_lengths(arrays: dict, mark: str):
     """Verify that all provided arrays have the same length."""
@@ -25,9 +27,8 @@ def check_array_lengths(arrays: dict, mark: str):
 
 def check_numeric(arr, name: str, mark: str):
     """Verify that an array has a numeric dtype."""
-    if not hasattr(arr, "dtype"):
-        arr = np.asarray(arr)
-    if arr.dtype.kind not in ("i", "u", "f", "c"):
+    arr = np.asarray(arr)
+    if not is_numeric(arr):
         raise ValueError(
             f"{mark}(): '{name}' must be numeric, but got {arr.dtype}. "
             f"{mark.capitalize()} requires numerical data."
