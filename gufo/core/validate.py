@@ -25,6 +25,20 @@ def check_array_lengths(arrays: dict, mark: str):
     )
 
 
+def check_error_shape(err, n: int, name: str, mark: str):
+    """Verify an error array fits n bars by matplotlib's rule: it broadcasts to (2, n)."""
+    if err is None:
+        return
+    try:
+        np.broadcast_to(err, (2, n))
+    except ValueError:
+        raise ValueError(
+            f"{mark}(): array length mismatch — x has {n}, {name} has shape "
+            f"{np.shape(err)}. Errors must be a scalar, have one value per bar, "
+            f"or have shape (2, {n}) for lower/upper errors."
+        ) from None
+
+
 def check_numeric(arr, name: str, mark: str):
     """Verify that an array has a numeric dtype."""
     arr = np.asarray(arr)

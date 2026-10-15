@@ -1,7 +1,7 @@
 """Bar mark."""
 import numpy as np
 
-from ..core.validate import check_array_lengths, warn_nan_inf
+from ..core.validate import check_array_lengths, check_error_shape, warn_nan_inf
 from ._base import (
     _resolve_order, apply_label, apply_color, default_colors, is_wide_form,
     resolve_color, resolve_errors, iter_color_groups, set_category_ticks,
@@ -30,17 +30,19 @@ def render(layer, adapter, axes):
     yerr, xerr = resolve_errors(adapter, enc)
     check_array_lengths({"x": x, "y": y}, "bar")
 
-    idx = None
     order = enc.get("order")
     if order is not None:
-        # Errors are reindexed below, so their lengths must be checked here;
-        # without order=, matplotlib reports a mismatch clearly itself.
-        check_array_lengths({"x": x, "y_error": _error_rows(yerr),
-                             "x_error": _error_rows(xerr)}, "bar")
+        # Errors are reindexed here, so check them first; without order=,
+        # matplotlib reports a bad error shape clearly itself.
+        n = len(x)
+        check_error_shape(yerr, n, "y_error", "bar")
+        check_error_shape(xerr, n, "x_error", "bar")
         x = np.asarray(x)
         idx = _order_rows(x, order)
         x = x[idx]
         y = np.asarray(y, dtype=float)[idx]
+        yerr = _take_error_rows(yerr, n, idx)
+        xerr = _take_error_rows(xerr, n, idx)
 
     warn_nan_inf(y, "y", "bar")
 
@@ -48,9 +50,9 @@ def render(layer, adapter, axes):
     apply_color(kwargs, adapter, enc)
 
     if yerr is not None:
-        kwargs["yerr"] = _take_rows(yerr, idx)
+        kwargs["yerr"] = yerr
     if xerr is not None:
-        kwargs["xerr"] = _take_rows(xerr, idx)
+        kwargs["xerr"] = xerr
 
     if enc.get("horizontal"):
         axes.barh(x, y, **kwargs)
@@ -70,30 +72,15 @@ def _order_rows(x, order):
     return keep[np.argsort(sort_keys, kind="stable")]
 
 
-def _broadcasts(err):
-    """True if matplotlib applies err to every bar: a scalar, [e] or [[lo], [hi]]."""
-    return np.shape(err) in ((), (1,), (2, 1))
+def _take_error_rows(err, n, idx):
+    """Select rows idx from an error array that matplotlib would accept for n bars.
 
-
-def _error_rows(err):
-    """Return the per-row view of an error array for length checks, or None.
-
-    Broadcast errors apply to every row; the asymmetric (2, n) form has n rows.
+    Broadcasting to (2, n) first is matplotlib's own rule, so scalars, single
+    values and asymmetric (2, n) errors all reindex the same way.
     """
-    if err is None or _broadcasts(err):
+    if err is None:
         return None
-    err = np.asarray(err)
-    return err[0] if err.ndim == 2 else err
-
-
-def _take_rows(err, idx):
-    """Select the rows idx from an error array; broadcast errors and idx=None pass through.
-
-    The trailing-axis index keeps matplotlib's asymmetric (2, n) form intact.
-    """
-    if idx is None or _broadcasts(err):
-        return err
-    return np.asarray(err)[..., idx]
+    return np.broadcast_to(err, (2, n))[:, idx]
 
 
 def _draw_dodged(axes, x_pos, series_list, horizontal, extra_kwargs):

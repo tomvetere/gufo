@@ -890,7 +890,7 @@ class TestErrorBars:
          .line([1, 2, 3], [4, 5, 6], y_error=[0.5, 0.3, 0.4])
          .save(tmp_path / "e.png"))
 
-    @pytest.mark.parametrize("y_error", ["err", [0.5]], ids=["column", "length-1"])
+    @pytest.mark.parametrize("y_error", ["err", [0.5], [[0.5]]], ids=["column", "(1,)", "(1,1)"])
     @pytest.mark.parametrize("order", [None, ["b", "a", "c"], ["b", "a"]])
     def test_bar_yerr(self, order, y_error):
         df = pd.DataFrame({"x": ["a", "b", "c"], "y": [4, 5, 6],
