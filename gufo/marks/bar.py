@@ -28,6 +28,7 @@ def render(layer, adapter, axes):
 
     kwargs = dict(layer.kwargs)
 
+    idx = None
     order = enc.get("order")
     if order is not None:
         x = np.asarray(x)
@@ -43,9 +44,9 @@ def render(layer, adapter, axes):
 
     yerr, xerr = resolve_errors(adapter, enc)
     if yerr is not None:
-        kwargs["yerr"] = yerr
+        kwargs["yerr"] = _take_rows(yerr, idx)
     if xerr is not None:
-        kwargs["xerr"] = xerr
+        kwargs["xerr"] = _take_rows(xerr, idx)
 
     if enc.get("horizontal"):
         axes.barh(x, y, **kwargs)
@@ -63,6 +64,16 @@ def _order_rows(x, order):
     keep = np.flatnonzero(np.isin(x, ordered_x))
     sort_keys = np.array([order_idx[v] for v in x[keep]])
     return keep[np.argsort(sort_keys, kind="stable")]
+
+
+def _take_rows(err, idx):
+    """Select the rows idx from an error array; scalars and idx=None pass through.
+
+    The trailing-axis index keeps matplotlib's asymmetric (2, n) form intact.
+    """
+    if idx is None or np.ndim(err) == 0:
+        return err
+    return np.asarray(err)[..., idx]
 
 
 def _draw_dodged(axes, x_pos, series_list, horizontal, extra_kwargs):

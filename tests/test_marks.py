@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 import matplotlib.pyplot as plt
 from matplotlib.collections import PolyCollection
+from matplotlib.container import BarContainer
 
 import gufo
 from gufo.data.adapter import DataAdapter
@@ -876,22 +877,16 @@ class TestErrorBars:
          .line([1, 2, 3], [4, 5, 6], y_error=[0.5, 0.3, 0.4])
          .save(tmp_path / "e.png"))
 
-    def test_bar_yerr(self, tmp_path):
+    @pytest.mark.parametrize("order", [None, ["b", "a", "c"]])
+    def test_bar_yerr(self, order):
         df = pd.DataFrame({"x": ["a", "b", "c"], "y": [4, 5, 6],
                            "err": [0.5, 0.3, 0.4]})
-        (gufo.chart(df)
-         .bar("x", "y", y_error="err")
-         .save(tmp_path / "e.png"))
-
-    def test_bar_yerr_from_column(self, tmp_path):
-        df = pd.DataFrame({
-            "x": ["a", "b", "c"],
-            "y": [4, 5, 6],
-            "err": [0.5, 0.3, 0.4],
-        })
-        (gufo.chart(df)
-         .bar("x", "y", y_error="err")
-         .save(tmp_path / "e.png"))
+        _, ax = gufo.chart(df).bar("x", "y", y_error="err", order=order)._render()
+        bars = next(c for c in ax.containers if isinstance(c, BarContainer))
+        half_widths = [(top[1] - bottom[1]) / 2
+                       for bottom, top in bars.errorbar.lines[2][0].get_segments()]
+        expected = dict(zip(df["y"], df["err"]))
+        assert half_widths == pytest.approx([expected[b.get_height()] for b in bars])
 
 
 # ── Pointplot ─────────────────────────────────────────────────────
@@ -1130,6 +1125,8 @@ class TestCategoryOrder:
         labels = [t.get_text() for t in ax.get_xticklabels()]
         assert labels == ["B", "A"]
         assert [bar.get_height() for bar in ax.containers[0]] == [2, 1]
+        if y != "y":
+            assert [bar.get_height() for bar in ax.containers[1]] == [20, 10]
         plt.close(fig)
 
     def test_color_order(self, cat_df, tmp_path):
