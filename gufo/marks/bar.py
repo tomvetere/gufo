@@ -27,22 +27,26 @@ def render(layer, adapter, axes):
         return
 
     kwargs = dict(layer.kwargs)
+    yerr, xerr = resolve_errors(adapter, enc)
+    check_array_lengths({"x": x, "y": y}, "bar")
 
     idx = None
     order = enc.get("order")
     if order is not None:
+        # Errors are reindexed below, so their lengths must be checked here;
+        # without order=, matplotlib reports a mismatch clearly itself.
+        check_array_lengths({"x": x, "y_error": _error_rows(yerr),
+                             "x_error": _error_rows(xerr)}, "bar")
         x = np.asarray(x)
         idx = _order_rows(x, order)
         x = x[idx]
         y = np.asarray(y, dtype=float)[idx]
 
-    check_array_lengths({"x": x, "y": y}, "bar")
     warn_nan_inf(y, "y", "bar")
 
     apply_label(kwargs, enc)
     apply_color(kwargs, adapter, enc)
 
-    yerr, xerr = resolve_errors(adapter, enc)
     if yerr is not None:
         kwargs["yerr"] = _take_rows(yerr, idx)
     if xerr is not None:
@@ -64,6 +68,17 @@ def _order_rows(x, order):
     keep = np.flatnonzero(np.isin(x, ordered_x))
     sort_keys = np.array([order_idx[v] for v in x[keep]])
     return keep[np.argsort(sort_keys, kind="stable")]
+
+
+def _error_rows(err):
+    """Return the per-row view of an error array for length checks, or None.
+
+    Scalars apply to every row; the asymmetric (2, n) form has n rows.
+    """
+    if err is None or np.ndim(err) == 0:
+        return None
+    err = np.asarray(err)
+    return err[0] if err.ndim == 2 else err
 
 
 def _take_rows(err, idx):
@@ -141,8 +156,7 @@ def _render_wide_form(layer, adapter, axes, enc):
     series = adapter.resolve(layer.y)
     n_series = len(series)
 
-    if series and len(series[0]) != len(x_raw):
-        check_array_lengths({"x": x_raw, layer.y[0]: series[0]}, "bar")
+    check_array_lengths({"x": x_raw, **dict(zip(layer.y, series))}, "bar")
 
     order = enc.get("order")
     if order is not None:

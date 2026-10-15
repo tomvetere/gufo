@@ -477,10 +477,18 @@ class TestMarkValidation:
         with pytest.raises(ValueError, match="array length mismatch"):
             c.save(tmp_path / "bad.png")
 
-    def test_bar_length_mismatch(self, tmp_path):
-        c = gufo.chart().bar(np.arange(5), np.arange(3))
+    @pytest.mark.parametrize("make", [
+        lambda: gufo.chart().bar(np.arange(5), np.arange(3)),
+        lambda: gufo.chart().bar(np.array(["a", "b", "c"]), np.arange(5), order=["b", "a"]),
+        lambda: gufo.chart().bar(np.array(["a", "b", "c"]), np.arange(2), order=["c", "a"]),
+        lambda: gufo.chart().bar(np.array(["a", "b", "c"]), np.arange(3),
+                                 y_error=np.ones(5), order=["b", "a"]),
+        lambda: gufo.chart({"x": ["a", "b", "c"], "p": [1, 2, 3], "q": [1, 2, 3, 4, 5]})
+                    .bar("x", ["p", "q"], order=["b", "a"]),
+    ], ids=["y-short", "y-long-order", "y-short-order", "yerr-long-order", "wide-long-order"])
+    def test_bar_length_mismatch(self, make):
         with pytest.raises(ValueError, match="array length mismatch"):
-            c.save(tmp_path / "bad.png")
+            make()._render()
 
     def test_histogram_non_numeric(self, tmp_path):
         c = gufo.chart().histogram(np.array(["a", "b", "c"]))
