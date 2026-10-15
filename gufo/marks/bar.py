@@ -71,8 +71,8 @@ def _order_rows(x, order):
 
 
 def _broadcasts(err):
-    """True if matplotlib applies err to every bar: a scalar or a length-1 row axis."""
-    return np.ndim(err) == 0 or np.shape(err)[-1] == 1
+    """True if matplotlib applies err to every bar: a scalar, [e] or [[lo], [hi]]."""
+    return np.shape(err) in ((), (1,), (2, 1))
 
 
 def _error_rows(err):

@@ -487,8 +487,10 @@ class TestMarkValidation:
                     .bar("x", ["p", "q"], order=["b", "a"]),
         lambda: gufo.chart({"cat": ["a", "b", "c"], "x": [1, 2], "y": [3, 4]})
                     .bar("cat", ["x", "y"], order=["b", "a"]),
+        lambda: gufo.chart().bar(np.array(["a", "b", "c"]), np.arange(3),
+                                 y_error=np.ones((3, 1)), order=["b", "a"]),
     ], ids=["y-short", "y-long-order", "y-short-order", "yerr-long-order", "wide-long-order",
-            "wide-column-named-x"])
+            "wide-column-named-x", "yerr-column-vector-order"])
     def test_bar_length_mismatch(self, make):
         with pytest.raises(ValueError, match="array length mismatch"):
             make()._render()
