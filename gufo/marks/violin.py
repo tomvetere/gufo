@@ -67,6 +67,7 @@ def _render_grouped(x, y, color_value, groups, axes, enc, extra_kwargs):
         for j, x_val in enumerate(unique_x):
             mask = (x == x_val) & (color_value == cat)
             subset = y[mask]
+            subset = subset[~np.isnan(subset)]
             if len(subset) == 0:
                 continue
             data.append(subset)

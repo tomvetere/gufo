@@ -775,6 +775,13 @@ class TestViolinCategoricalColor:
                 "g": ["p", "p", "q", "q"]}
         assert self._bodies_and_legend(data) == (3, {"p", "q"})
 
+    def test_violin_grouped_nan_only_cell_is_omitted(self):
+        # (a,p) holds only NaN; matplotlib's violinplot raises on [nan].
+        data = {"x": ["a", "a", "a", "b", "b"], "y": [np.nan, 2.0, 3.0, 4.0, 5.0],
+                "g": ["p", "q", "q", "p", "q"]}
+        with pytest.warns(UserWarning, match=r"violin\(\): 'y' contains 1 NaN"):
+            assert self._bodies_and_legend(data) == (3, {"p", "q"})
+
 
 # ── Countplot ─────────────────────────────────────────────────────
 
