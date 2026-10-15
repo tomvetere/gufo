@@ -1,10 +1,12 @@
 """Rug mark — tick marks along an axis showing individual data points."""
+from ..core.validate import warn_nan_inf
 from ._base import apply_label, iter_color_groups, resolve_color
 
 
 def render(layer, adapter, axes):
     enc = layer.encodings
     x = adapter.resolve(layer.x)
+    warn_nan_inf(x, "x", "rug")
     kwargs = dict(layer.kwargs)
 
     height = enc.get("height", 0.05)

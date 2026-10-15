@@ -1,6 +1,8 @@
 """Heatmap mark."""
 import numpy as np
 
+from ..core.validate import check_array_lengths
+
 
 def render(layer, adapter, axes):
     enc = layer.encodings
@@ -60,6 +62,7 @@ def _resolve_long_form(layer, adapter, enc):
     x = adapter.resolve(layer.x)
     y = adapter.resolve(layer.y)
     values = adapter.resolve(color_col)
+    check_array_lengths({"x": x, "y": y, "color": values}, "heatmap")
 
     unique_x = list(dict.fromkeys(x))
     unique_y = list(dict.fromkeys(y))
