@@ -67,7 +67,7 @@ def _render_grouped(x, y, color_value, groups, axes, enc, extra_kwargs):
         for j, x_val in enumerate(unique_x):
             mask = (x == x_val) & (color_value == cat)
             subset = y[mask]
-            if len(subset) < 2:
+            if len(subset) == 0:
                 continue
             data.append(subset)
             base = j + 1
