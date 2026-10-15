@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import matplotlib.pyplot as plt
+from matplotlib.collections import PolyCollection
 
 import gufo
 from gufo.data.adapter import DataAdapter
@@ -754,6 +755,32 @@ class TestViolinCategoricalColor:
         (gufo.chart(df)
          .violin("group", "value", color="hue")
          .save(tmp_path / "v.png"))
+
+    @staticmethod
+    def _bodies_and_legend(data):
+        _, axes = gufo.chart(data).violin("x", "y", color="g").legend()._render()
+        bodies = sum(isinstance(col, PolyCollection) for col in axes.collections)
+        labels = {t.get_text() for t in axes.get_legend().get_texts()}
+        return bodies, labels
+
+    def test_violin_grouped_single_value_cells_render(self):
+        # Matplotlib draws a one-value violin; the ungrouped path already does.
+        data = {"x": ["a", "a", "b", "b"], "y": [1.0, 2.0, 3.0, 4.0],
+                "g": ["p", "q", "p", "q"]}
+        assert self._bodies_and_legend(data) == (4, {"p", "q"})
+
+    def test_violin_grouped_skips_only_empty_cells(self):
+        # Cells: (a,p)=2, (a,q)=1, (b,q)=1, (b,p)=0 values.
+        data = {"x": ["a", "a", "a", "b"], "y": [1.0, 2.0, 3.0, 4.0],
+                "g": ["p", "p", "q", "q"]}
+        assert self._bodies_and_legend(data) == (3, {"p", "q"})
+
+    def test_violin_grouped_nan_only_cell_is_omitted(self):
+        # (a,p) holds only NaN; matplotlib's violinplot raises on [nan].
+        data = {"x": ["a", "a", "a", "b", "b"], "y": [np.nan, 2.0, 3.0, 4.0, 5.0],
+                "g": ["p", "q", "q", "p", "q"]}
+        with pytest.warns(UserWarning, match=r"violin\(\): 'y' contains 1 NaN"):
+            assert self._bodies_and_legend(data) == (3, {"p", "q"})
 
 
 # ── Countplot ─────────────────────────────────────────────────────
