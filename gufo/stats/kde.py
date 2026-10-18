@@ -1,5 +1,6 @@
 """Kernel Density Estimation — standalone mark and histogram overlay."""
 
+import warnings
 from dataclasses import dataclass
 from typing import Optional
 
@@ -68,12 +69,15 @@ class KDE:
         if len(x_clean) < 2:
             return
 
-        try:
-            kernel = gaussian_kde(x_clean, bw_method=self.bw_method)
-        except np.linalg.LinAlgError:
-            # Values with no spread (e.g. [7, 7]) have no density to draw,
-            # like fewer than 2 points above.
+        if np.ptp(x_clean) == 0:
+            warnings.warn(
+                f"KDE: all {len(x_clean)} values equal {x_clean[0]:g}, so "
+                "there is no density to draw; the curve is skipped.",
+                stacklevel=2,
+            )
             return
+
+        kernel = gaussian_kde(x_clean, bw_method=self.bw_method)
         x_grid = np.linspace(x_clean.min(), x_clean.max(), self.n_points)
         density = kernel(x_grid) * scale
 

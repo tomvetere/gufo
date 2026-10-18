@@ -39,7 +39,7 @@ def render(layer, adapter, axes):
     groups = iter_color_groups(color_value, palette=layer.palette,
                                color_order=enc.get("color_order"))
 
-    curves = []  # (values, group, group color, bars area) for the kde overlay
+    curves = []  # (values, group, group color, counts, edges) for kde=
     if groups is not None:
         if multiple == "layer":
             curves = _render_layer(x, groups, axes, bins, density, horizontal,
@@ -60,11 +60,11 @@ def render(layer, adapter, axes):
         apply_label(kwargs, enc)
         apply_color(kwargs, adapter, enc)
         counts, edges, _ = axes.hist(x, **kwargs)
-        curves = [(x, None, None, _bars_area(counts, edges))]
+        curves = [(x, None, None, counts, edges)]
 
     if kde_config is None:
         return
-    for values, cat, color, area in curves:
+    for values, cat, color, counts, edges in curves:
         config = kde_config
         if cat is not None:
             # The bars already give each group a legend entry, so a curve
@@ -73,18 +73,29 @@ def render(layer, adapter, axes):
                      else "_nolegend_")
             config = replace(kde_config, color=kde_config.color or color,
                              label=label)
-        config._render(values, axes, scale=area, horizontal=horizontal)
+        config._render(values, axes, scale=_kde_scale(values, counts, edges),
+                       horizontal=horizontal)
 
 
-def _bars_area(counts, edges):
-    """Total area of the bars, so a density curve can be drawn to match."""
-    return float(np.sum(counts * np.diff(edges)))
+def _kde_scale(values, counts, edges):
+    """Factor that draws a density curve (area 1) in the bars' units.
+
+    The bars' area covers only the values inside the bins, but the curve is
+    fitted to all of them, so the area is spread over n_fitted / n_inside.
+    """
+    values = np.asarray(values, dtype=float)
+    finite = values[np.isfinite(values)]
+    inside = np.count_nonzero((finite >= edges[0]) & (finite <= edges[-1]))
+    if inside == 0:
+        return 0.0
+    area = np.sum(counts * np.diff(edges))
+    return float(area * len(finite) / inside)
 
 
 def _render_layer(x, groups, axes, bins, density, horizontal, fill, kwargs):
     """Overlay histograms with transparency.
 
-    Returns (values, group, color, bars area) per group for the kde overlay.
+    Returns (values, group, color, counts, edges) per group for kde=.
     """
     hist_kwargs = dict(kwargs, bins=bins, density=density)
     if horizontal:
@@ -97,7 +108,7 @@ def _render_layer(x, groups, axes, bins, density, horizontal, fill, kwargs):
     for cat, color, mask in groups:
         counts, edges, _ = axes.hist(x[mask], color=color, label=cat,
                                      alpha=alpha, **hist_kwargs)
-        curves.append((x[mask], cat, color, _bars_area(counts, edges)))
+        curves.append((x[mask], cat, color, counts, edges))
     return curves
 
 

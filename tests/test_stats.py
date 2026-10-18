@@ -5,7 +5,6 @@ import pandas as pd
 import pytest
 import matplotlib.pyplot as plt
 from matplotlib.colors import to_hex
-from scipy.stats import gaussian_kde
 
 import gufo
 from gufo.stats import _require_scipy
@@ -226,12 +225,28 @@ class TestKDEHistogramOverlay:
             assert x[np.argmax(y)] == pytest.approx(centre, abs=0.5)
         plt.close(fig)
 
-    def test_grouped_skips_group_without_spread(self):
-        """A group of identical values has no density; the others draw."""
-        df = pd.DataFrame({"x": [1.0, 2, 3, 4, 5, 7, 7], "g": list("aaaaabb")})
+    def test_curve_meets_bars_when_bins_miss_data(self):
+        """Bins covering only part of the data still meet the curve."""
+        df = pd.DataFrame({"x": np.random.default_rng(0).normal(0, 1, 1000)})
         fig, ax = gufo.chart(df).histogram(
-            "x", color="g", kde=gufo.kde()
+            "x", bins=[-1, 0, 1], kde=gufo.kde()
         )._render()
+        (line,) = ax.lines
+        for bar in ax.patches:
+            centre = bar.get_x() + bar.get_width() / 2
+            assert np.interp(centre, line.get_xdata(), line.get_ydata()) == (
+                pytest.approx(bar.get_height(), rel=0.1)
+            )
+        plt.close(fig)
+
+    @pytest.mark.parametrize("n_same", [2, 3])
+    def test_grouped_skips_group_without_spread(self, n_same):
+        """A group of identical values has no density; the others draw."""
+        df = pd.DataFrame({"x": [1.0, 2, 3, 4, 5] + [7.0] * n_same,
+                           "g": ["a"] * 5 + ["b"] * n_same})
+        chart = gufo.chart(df).histogram("x", color="g", kde=gufo.kde())
+        with pytest.warns(UserWarning, match="no density to draw"):
+            fig, ax = chart._render()
         assert len(ax.lines) == 1
         plt.close(fig)
 
@@ -349,6 +364,7 @@ class TestScipyGuard:
         _, _, patches = ax.hist(x, bins=4)
         KDE().render(x, ax, scale_to_hist=scale_to_hist,
                      hist_patches=list(patches))
+        gaussian_kde = pytest.importorskip("scipy.stats").gaussian_kde
         expected = gaussian_kde(x)(np.linspace(1.0, 5.0, 200))
         if scale_to_hist:
             expected = expected * len(x) * patches[0].get_width()
