@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import matplotlib.pyplot as plt
+from matplotlib.colors import to_hex
 
 import gufo
 from gufo.stats import _require_scipy
@@ -143,20 +144,111 @@ class TestKDEStandalone:
 
 # ── KDE Histogram Overlay ─────────────────────────────────────────────
 
+@pytest.fixture
+def bimodal_df():
+    rng = np.random.default_rng(0)
+    return pd.DataFrame({
+        "x": np.r_[rng.normal(-3, 1, 300), rng.normal(3, 1, 300)],
+        "g": ["a"] * 300 + ["b"] * 300,
+    })
+
+
+def _bars_area(bars):
+    return sum(b.get_width() * b.get_height() for b in bars)
+
+
+def _trapezoid(y, x):
+    # np.trapezoid is NumPy 2 only; gufo supports numpy>=1.21.
+    return np.sum(np.diff(x) * (y[1:] + y[:-1]) / 2)
+
+
+def _curve_area(ax, horizontal=False):
+    """Area under the single KDE curve, drawn as a line or a fill."""
+    if ax.lines:
+        (line,) = ax.lines
+        x, y = line.get_xdata(), line.get_ydata()
+        return _trapezoid(x, y) if horizontal else _trapezoid(y, x)
+    (fill,) = ax.collections
+    vx, vy = fill.get_paths()[0].vertices.T
+    return abs(np.dot(vx, np.roll(vy, 1)) - np.dot(vy, np.roll(vx, 1))) / 2
+
+
 class TestKDEHistogramOverlay:
-    def test_histogram_with_kde_overlay(self, scatter_df, tmp_path):
-        gufo.chart(scatter_df).histogram(
-            "x", kde=gufo.kde()
-        ).save(tmp_path / "hist_kde.png")
+    @pytest.mark.parametrize("kde, hist_kwargs", [
+        (gufo.kde(), {}),
+        (gufo.kde(), {"density": True}),
+        (gufo.kde(), {"bins": [-8, -7.5, 0, 8]}),
+        (gufo.kde(), {"horizontal": True}),
+        (gufo.kde(fill=True, alpha=0.3), {}),
+        (gufo.kde(fill=True, alpha=0.3), {"horizontal": True}),
+    ], ids=["count", "density", "uneven-bins", "horizontal", "fill",
+            "horizontal-fill"])
+    def test_curve_area_matches_bars(self, bimodal_df, kde, hist_kwargs):
+        """The curve is scaled to the bars' area, whatever their units.
 
-    def test_histogram_kde_with_fill(self, scatter_df, tmp_path):
-        gufo.chart(scatter_df).histogram(
-            "x", kde=gufo.kde(fill=True, alpha=0.3)
-        ).save(tmp_path / "hist_kde_fill.png")
+        The KDE grid stops at the data's min and max, so ~3% of the tails
+        is lost; hence rel=0.1.
+        """
+        fig, ax = gufo.chart(bimodal_df).histogram(
+            "x", kde=kde, **hist_kwargs
+        )._render()
+        horizontal = hist_kwargs.get("horizontal", False)
+        assert _curve_area(ax, horizontal) == pytest.approx(
+            _bars_area(ax.patches), rel=0.1
+        )
+        curve = (ax.lines[0].get_xydata() if ax.lines
+                 else ax.collections[0].get_paths()[0].vertices)
+        along_data = curve[:, 1] if horizontal else curve[:, 0]
+        x = bimodal_df["x"]
+        assert (along_data.min(), along_data.max()) == pytest.approx(
+            (x.min(), x.max())
+        )
+        plt.close(fig)
 
-    def test_histogram_without_kde(self, scatter_df, tmp_path):
-        """Histogram without kde= still works as before."""
-        gufo.chart(scatter_df).histogram("x").save(tmp_path / "hist_plain.png")
+    @pytest.mark.parametrize("label, curve_labels", [
+        (None, ["_nolegend_", "_nolegend_"]),
+        ("density", ["density (a)", "density (b)"]),
+    ])
+    def test_grouped_one_curve_per_group(self, bimodal_df, label,
+                                         curve_labels):
+        fig, ax = gufo.chart(bimodal_df).histogram(
+            "x", color="g", kde=gufo.kde(label=label)
+        )._render()
+        assert [line.get_label() for line in ax.lines] == curve_labels
+        for line, container, centre in zip(ax.lines, ax.containers, [-3, 3]):
+            bars = container.patches
+            assert to_hex(line.get_color()) == to_hex(bars[0].get_facecolor())
+            x, y = line.get_xdata(), line.get_ydata()
+            assert _trapezoid(y, x) == pytest.approx(
+                _bars_area(bars), rel=0.1
+            )
+            assert x[np.argmax(y)] == pytest.approx(centre, abs=0.5)
+        plt.close(fig)
+
+    def test_curve_meets_bars_when_bins_miss_data(self):
+        """Bins covering only part of the data still meet the curve."""
+        df = pd.DataFrame({"x": np.random.default_rng(0).normal(0, 1, 1000)})
+        fig, ax = gufo.chart(df).histogram(
+            "x", bins=[-1, 0, 1], kde=gufo.kde()
+        )._render()
+        (line,) = ax.lines
+        for bar in ax.patches:
+            centre = bar.get_x() + bar.get_width() / 2
+            assert np.interp(centre, line.get_xdata(), line.get_ydata()) == (
+                pytest.approx(bar.get_height(), rel=0.1)
+            )
+        plt.close(fig)
+
+    @pytest.mark.parametrize("n_same", [2, 3])
+    def test_grouped_skips_group_without_spread(self, n_same):
+        """A group of identical values has no density; the others draw."""
+        df = pd.DataFrame({"x": [1.0, 2, 3, 4, 5] + [7.0] * n_same,
+                           "g": ["a"] * 5 + ["b"] * n_same})
+        chart = gufo.chart(df).histogram("x", color="g", kde=gufo.kde())
+        with pytest.warns(UserWarning, match="no density to draw"):
+            fig, ax = chart._render()
+        assert len(ax.lines) == 1
+        plt.close(fig)
 
 
 # ── Strip ──────────────────────────────────────────────────────────────
@@ -264,12 +356,20 @@ class TestScipyGuard:
         y = np.array([2.0, 4.0, 6.0])
         r.render(x, y, ax)
 
-    def test_kde_render_requires_scipy(self):
-        """KDE.render calls _require_scipy internally."""
-        k = KDE()
+    @pytest.mark.parametrize("scale_to_hist", [False, True])
+    def test_kde_render_unchanged(self, scale_to_hist):
+        """The public KDE.render still draws exactly as before."""
+        x = np.array([1.0, 2.0, 2.5, 3.0, 5.0])
         fig, ax = plt.subplots()
-        x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
-        k.render(x, ax)
+        _, _, patches = ax.hist(x, bins=4)
+        KDE().render(x, ax, scale_to_hist=scale_to_hist,
+                     hist_patches=list(patches))
+        gaussian_kde = pytest.importorskip("scipy.stats").gaussian_kde
+        expected = gaussian_kde(x)(np.linspace(1.0, 5.0, 200))
+        if scale_to_hist:
+            expected = expected * len(x) * patches[0].get_width()
+        np.testing.assert_allclose(ax.lines[0].get_ydata(), expected)
+        plt.close(fig)
 
 
 # ── LOWESS ────────────────────────────────────────────────────────

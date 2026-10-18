@@ -1,4 +1,6 @@
 """Histogram mark."""
+from dataclasses import replace
+
 import numpy as np
 
 from ..core.validate import check_numeric, warn_nan_inf
@@ -37,11 +39,11 @@ def render(layer, adapter, axes):
     groups = iter_color_groups(color_value, palette=layer.palette,
                                color_order=enc.get("color_order"))
 
-    patches = None
+    curves = []  # (values, group, group color, counts, edges) for kde=
     if groups is not None:
         if multiple == "layer":
-            _render_layer(x, groups, axes, bins, density, horizontal, fill,
-                          kwargs)
+            curves = _render_layer(x, groups, axes, bins, density, horizontal,
+                                   fill, kwargs)
         elif multiple == "stack":
             _render_stack(x, groups, axes, bins, density, horizontal, fill,
                           kwargs)
@@ -57,15 +59,44 @@ def render(layer, adapter, axes):
             kwargs["histtype"] = "step"
         apply_label(kwargs, enc)
         apply_color(kwargs, adapter, enc)
-        _, _, patches = axes.hist(x, **kwargs)
+        counts, edges, _ = axes.hist(x, **kwargs)
+        curves = [(x, None, None, counts, edges)]
 
-    if kde_config is not None:
-        flat_patches = list(patches) if patches is not None else None
-        kde_config.render(x, axes, scale_to_hist=True, hist_patches=flat_patches)
+    if kde_config is None:
+        return
+    for values, cat, color, counts, edges in curves:
+        config = kde_config
+        if cat is not None:
+            # The bars already give each group a legend entry, so a curve
+            # gets one only when the user named it.
+            label = (f"{kde_config.label} ({cat})" if kde_config.label
+                     else "_nolegend_")
+            config = replace(kde_config, color=kde_config.color or color,
+                             label=label)
+        config._render(values, axes, scale=_kde_scale(values, counts, edges),
+                       horizontal=horizontal)
+
+
+def _kde_scale(values, counts, edges):
+    """Factor that draws a density curve (area 1) in the bars' units.
+
+    The bars' area covers only the values inside the bins, but the curve is
+    fitted to all of them, so the area is spread over n_fitted / n_inside.
+    """
+    values = np.asarray(values, dtype=float)
+    finite = values[np.isfinite(values)]
+    inside = np.count_nonzero((finite >= edges[0]) & (finite <= edges[-1]))
+    if inside == 0:
+        return 0.0
+    area = np.sum(counts * np.diff(edges))
+    return float(area * len(finite) / inside)
 
 
 def _render_layer(x, groups, axes, bins, density, horizontal, fill, kwargs):
-    """Overlay histograms with transparency."""
+    """Overlay histograms with transparency.
+
+    Returns (values, group, color, counts, edges) per group for kde=.
+    """
     hist_kwargs = dict(kwargs, bins=bins, density=density)
     if horizontal:
         hist_kwargs["orientation"] = "horizontal"
@@ -73,8 +104,12 @@ def _render_layer(x, groups, axes, bins, density, horizontal, fill, kwargs):
         hist_kwargs["histtype"] = "step"
 
     alpha = hist_kwargs.pop("alpha", 0.6)
+    curves = []
     for cat, color, mask in groups:
-        axes.hist(x[mask], color=color, label=cat, alpha=alpha, **hist_kwargs)
+        counts, edges, _ = axes.hist(x[mask], color=color, label=cat,
+                                     alpha=alpha, **hist_kwargs)
+        curves.append((x[mask], cat, color, counts, edges))
+    return curves
 
 
 def _apply_fill_style(bar_kwargs, color, fill):
