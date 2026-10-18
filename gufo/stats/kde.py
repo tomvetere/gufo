@@ -49,19 +49,33 @@ class KDE:
         \**extra_kwargs
             Additional keyword arguments passed through to matplotlib.
         """
+        scale = 1.0
+        if scale_to_hist and hist_patches is not None:
+            bin_width = hist_patches[0].get_width() if hist_patches else 1.0
+            scale = np.isfinite(x).sum() * bin_width
+        self._render(x, axes, scale=scale, **extra_kwargs)
+
+    def _render(self, x, axes, *, scale=1.0, horizontal=False,
+                **extra_kwargs):
+        """Draw the KDE curve, multiplied by ``scale``.
+
+        A histogram overlay passes the area of its bars as ``scale``, so the
+        curve (area 1) is drawn in the histogram's units.
+        """
         _require_scipy("KDE")
 
         x_clean = x[np.isfinite(x)]
         if len(x_clean) < 2:
             return
 
-        kernel = gaussian_kde(x_clean, bw_method=self.bw_method)
+        try:
+            kernel = gaussian_kde(x_clean, bw_method=self.bw_method)
+        except np.linalg.LinAlgError:
+            # Values with no spread (e.g. [7, 7]) have no density to draw,
+            # like fewer than 2 points above.
+            return
         x_grid = np.linspace(x_clean.min(), x_clean.max(), self.n_points)
-        density = kernel(x_grid)
-
-        if scale_to_hist and hist_patches is not None:
-            bin_width = hist_patches[0].get_width() if hist_patches else 1.0
-            density = density * len(x_clean) * bin_width
+        density = kernel(x_grid) * scale
 
         kwargs = {
             "linestyle": self.linestyle,
@@ -76,7 +90,11 @@ class KDE:
         else:
             kwargs["label"] = "KDE"
 
-        if self.fill:
+        if self.fill and horizontal:
+            axes.fill_betweenx(x_grid, density, **kwargs)
+        elif self.fill:
             axes.fill_between(x_grid, density, **kwargs)
+        elif horizontal:
+            axes.plot(density, x_grid, **kwargs)
         else:
             axes.plot(x_grid, density, **kwargs)

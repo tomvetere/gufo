@@ -72,7 +72,7 @@ Never include `Co-Authored-By: Claude`, `Authored by Claude`, or any similar att
 
 ## What the README is
 
-`README.md` is the API spec. All public-facing behavior should be derivable from it. If a feature isn't in the README, it isn't part of the public API.
+`README.md` is the user-facing spec: every public behaviour should be documented there with an example. A public API missing from the README is a documentation bug — it does not make that API internal.
 
 ## Dependencies
 
@@ -90,7 +90,7 @@ Gufo follows [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 - **MINOR** (`0.x.0`) — new marks, new parameters, new config objects, new themes. Must be backwards-compatible: existing code keeps working unchanged.
 - **MAJOR** (`x.0.0`) — breaking changes to the public API. Pre-1.0, breaking changes may also ship in MINOR bumps, but must still follow the deprecation process below.
 
-The public API is whatever is re-exported from `gufo/__init__.py` plus every method on `Chart` and `Grid`. Anything under a leading underscore or not re-exported is internal and may change at any time.
+The public API is every name re-exported from `gufo/__init__.py`, the public (non-underscore) methods and attributes of those names, and every method on `Chart` and `Grid`. Anything under a leading underscore, or not reachable from those, is internal and may change at any time.
 
 ### Breaking changes
 

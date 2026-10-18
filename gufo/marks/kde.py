@@ -26,7 +26,7 @@ def render(layer, adapter, axes):
     if groups is not None:
         for cat, color, mask in groups:
             group_kde = replace(kde_config, color=color, label=cat)
-            group_kde.render(x[mask], axes, **extra_kwargs)
+            group_kde._render(x[mask], axes, **extra_kwargs)
         return
 
     overrides = {}
@@ -38,4 +38,4 @@ def render(layer, adapter, axes):
     if overrides:
         kde_config = replace(kde_config, **overrides)
 
-    kde_config.render(x, axes, **extra_kwargs)
+    kde_config._render(x, axes, **extra_kwargs)

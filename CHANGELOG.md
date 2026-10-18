@@ -6,6 +6,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 Entries through v0.0.9 were reconstructed from the project roadmap and pre-date tagged releases, so dates on those entries are approximate. For the full per-version detail (internal refactors, test counts, etc.) see [`docs/changelog.md`](docs/changelog.md).
 
+## [Unreleased]
+
+### Fixed
+- **The `kde=` overlay on `.histogram()` now matches the bars.** The curve was scaled by the number of points times the first bar's width, which only fits a plain vertical histogram with even bins. It was about 600x too tall with `density=True`, wrongly sized with uneven `bins=`, drawn sideways with `horizontal=True`, and nearly invisible with a categorical `color=`, where it was also one pooled curve for every group. The curve is now scaled to the bars' own area, and a grouped histogram gets one curve per group in that group's colour.
+
 ## [0.2.1] — 2026-07-18
 
 ### Fixed

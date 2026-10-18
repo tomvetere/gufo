@@ -127,6 +127,7 @@ classDiagram
         +fill: bool
         +n_points: int
         +render(x, axes)
+        -_render(x, axes, scale, horizontal)
     }
 
     class Lowess {
