@@ -27,27 +27,25 @@ def render(layer, adapter, axes):
         return
 
     kwargs = dict(layer.kwargs)
+    yerr, xerr = resolve_errors(adapter, enc)
+    check_array_lengths({"x": x, "y": y}, "bar")
 
     order = enc.get("order")
     if order is not None:
+        # Errors are reindexed with the bars so each stays on its own bar.
+        n = len(x)
         x = np.asarray(x)
-        y = np.asarray(y, dtype=float)
-        ordered_x = _resolve_order(x, order)
-        order_idx = {v: i for i, v in enumerate(ordered_x)}
-        valid = np.isin(x, ordered_x)
-        xf, yf = x[valid], y[valid]
-        sort_keys = np.array([order_idx[v] for v in xf])
-        perm = np.argsort(sort_keys, kind="stable")
-        x = xf[perm]
-        y = yf[perm]
+        idx = _order_rows(x, order)
+        x = x[idx]
+        y = np.asarray(y, dtype=float)[idx]
+        yerr = _take_error_rows(yerr, n, idx)
+        xerr = _take_error_rows(xerr, n, idx)
 
-    check_array_lengths({"x": x, "y": y}, "bar")
     warn_nan_inf(y, "y", "bar")
 
     apply_label(kwargs, enc)
     apply_color(kwargs, adapter, enc)
 
-    yerr, xerr = resolve_errors(adapter, enc)
     if yerr is not None:
         kwargs["yerr"] = yerr
     if xerr is not None:
@@ -57,6 +55,32 @@ def render(layer, adapter, axes):
         axes.barh(x, y, **kwargs)
     else:
         axes.bar(x, y, **kwargs)
+
+
+def _order_rows(x, order):
+    """Return the indices of rows whose x is in order, sorted into that order.
+
+    Values not in order are dropped; duplicate x values keep their data order.
+    """
+    ordered_x = _resolve_order(x, order)
+    order_idx = {v: i for i, v in enumerate(ordered_x)}
+    keep = np.flatnonzero(np.isin(x, ordered_x))
+    sort_keys = np.array([order_idx[v] for v in x[keep]])
+    return keep[np.argsort(sort_keys, kind="stable")]
+
+
+def _take_error_rows(err, n, idx):
+    """Select rows idx from an error array that matplotlib would accept for n bars.
+
+    Broadcasting to (2, n) first is matplotlib's own rule, so scalars, single
+    values and asymmetric (2, n) errors all reindex the same way.
+    """
+    if err is None:
+        return None
+    try:
+        return np.broadcast_to(err, (2, n))[:, idx]
+    except ValueError:
+        return err  # an invalid shape: let matplotlib report it
 
 
 def _draw_dodged(axes, x_pos, series_list, horizontal, extra_kwargs):
@@ -124,8 +148,16 @@ def _render_wide_form(layer, adapter, axes, enc):
     series = adapter.resolve(layer.y)
     n_series = len(series)
 
-    if series and len(series[0]) != len(x_raw):
-        check_array_lengths({"x": x_raw, layer.y[0]: series[0]}, "bar")
+    for name, y_data in zip(layer.y, series):
+        # One check per column: a column named "x" must not replace x itself.
+        check_array_lengths({"x": x_raw, repr(name): y_data}, "bar")
+
+    order = enc.get("order")
+    if order is not None:
+        x_raw = np.asarray(x_raw)
+        idx = _order_rows(x_raw, order)
+        x_raw = x_raw[idx]
+        series = [np.asarray(s)[idx] for s in series]
 
     colors = default_colors(n_series, palette=layer.palette)
     x_pos = np.arange(len(x_raw))
