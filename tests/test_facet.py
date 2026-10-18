@@ -152,10 +152,14 @@ class TestFacetDecorators:
 
     @pytest.mark.parametrize("layout", _FACET_LAYOUTS)
     def test_subtitle_and_caption_drawn_once(self, facet_df, layout):
+        """Drawn once, and before .apply() runs, so apply can restyle them."""
+        seen_by_apply = []
         c = (chart(facet_df).scatter("x", "y").subtitle("SUB").caption("CAP")
+             .apply(lambda f, a: seen_by_apply.append(len(f.texts)))
              .facet(**_FACET_LAYOUTS[layout]))
         fig, axs = c._render()
         assert sorted(t.get_text() for t in fig.texts) == ["CAP", "SUB"]
+        assert set(seen_by_apply) == {2}
         plt.close(fig)
 
     def test_theme_respected(self, sample_df, tmp_path):

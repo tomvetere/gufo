@@ -70,6 +70,7 @@ def _render_one_variable(chart, adapter, facet_column, wrap_cols, *,
                                       sharex=sharex, sharey=sharey,
                                       layout="constrained")
         axes_grid = np.atleast_2d(axes_grid).reshape(rows, cols)
+        _draw_chart_text(fig, chart)
 
         with _patched_layers(chart, adapter) as shared_bars:
             for i, category in enumerate(categories):
@@ -77,7 +78,7 @@ def _render_one_variable(chart, adapter, facet_column, wrap_cols, *,
                 mask = col_data == category
                 sub_adapter = adapter.subset(mask)
                 chart._render_onto(fig, axes_grid[r, c], adapter=sub_adapter,
-                                   as_panel=True)
+                                   facet_panel=True)
                 axes_grid[r, c].set_title(str(category))
 
             for i in range(n, rows * cols):
@@ -87,8 +88,6 @@ def _render_one_variable(chart, adapter, facet_column, wrap_cols, *,
             visible_axes = [axes_grid[divmod(i, cols)] for i in range(n)]
             _draw_shared_colorbars(fig, visible_axes, shared_bars)
             _draw_shared_legend(fig, visible_axes, chart)
-
-        _draw_chart_text(fig, chart)
 
     return fig, axes_grid
 
@@ -117,6 +116,7 @@ def _render_two_variable(chart, adapter, facet_column, facet_row, *,
             n_rows, n_cols, figsize=_facet_figsize(n_rows, n_cols),
             sharex=sharex, sharey=sharey, layout="constrained")
         axes_grid = np.atleast_2d(axes_grid).reshape(n_rows, n_cols)
+        _draw_chart_text(fig, chart)
 
         with _patched_layers(chart, adapter) as shared_bars:
             visible_axes = []
@@ -132,7 +132,7 @@ def _render_two_variable(chart, adapter, facet_column, facet_row, *,
                         sub_adapter = adapter.subset(mask)
                         chart._render_onto(fig, axes_grid[ri, ci],
                                            adapter=sub_adapter,
-                                           as_panel=True)
+                                           facet_panel=True)
                         visible_axes.append(axes_grid[ri, ci])
                     else:
                         axes_grid[ri, ci].set_visible(False)
@@ -145,18 +145,17 @@ def _render_two_variable(chart, adapter, facet_column, facet_row, *,
             _draw_shared_colorbars(fig, visible_axes, shared_bars)
             _draw_shared_legend(fig, visible_axes, chart)
 
-        _draw_chart_text(fig, chart)
-
     return fig, axes_grid
 
 
 def _draw_chart_text(fig, chart):
     """Draw the chart's title, subtitle and caption once for the figure.
 
-    Panels are rendered with as_panel=True, which skips them, so they are not
-    repeated in every panel.
+    Panels are rendered with facet_panel=True, which skips them, so they are
+    not repeated in every panel. Called before the panels so that .apply()
+    functions, which run per panel, still run after them.
     """
-    if chart._title:
+    if chart._title is not None:
         fig.suptitle(chart._title)
     chart._apply_subtitle(fig)
     chart._apply_caption(fig)
