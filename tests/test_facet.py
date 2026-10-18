@@ -120,12 +120,42 @@ class TestFacetRendering:
 
 # ── Facet decorators ────────────────────────────────────────────────
 
+_FACET_LAYOUTS = {
+    "one-var": {"column": "col_var"},
+    "two-var": {"column": "col_var", "row": "row_var"},
+    "row-only": {"row": "row_var"},
+}
+
+
+@pytest.fixture
+def facet_df():
+    return pd.DataFrame({
+        "x": range(12),
+        "y": range(12),
+        "row_var": ["R1", "R1", "R1", "R1", "R2", "R2",
+                    "R2", "R2", "R3", "R3", "R3", "R3"],
+        "col_var": ["C1", "C2", "C1", "C2", "C1", "C2",
+                    "C1", "C2", "C1", "C2", "C1", "C2"],
+    })
+
+
 class TestFacetDecorators:
-    def test_chart_title_becomes_suptitle(self, sample_df):
-        c = chart(sample_df).scatter("x", "y").title("Overall").facet("cat")
+    @pytest.mark.parametrize("layout", _FACET_LAYOUTS)
+    def test_chart_title_becomes_suptitle(self, facet_df, layout):
+        """The title is drawn once, above the panels, and in no panel."""
+        c = (chart(facet_df).scatter("x", "y").title("Overall")
+             .facet(**_FACET_LAYOUTS[layout]))
         fig, axs = c._render()
-        assert fig._suptitle is not None
         assert fig._suptitle.get_text() == "Overall"
+        assert "Overall" not in [ax.get_title() for ax in axs.flat]
+        plt.close(fig)
+
+    @pytest.mark.parametrize("layout", _FACET_LAYOUTS)
+    def test_subtitle_and_caption_drawn_once(self, facet_df, layout):
+        c = (chart(facet_df).scatter("x", "y").subtitle("SUB").caption("CAP")
+             .facet(**_FACET_LAYOUTS[layout]))
+        fig, axs = c._render()
+        assert sorted(t.get_text() for t in fig.texts) == ["CAP", "SUB"]
         plt.close(fig)
 
     def test_theme_respected(self, sample_df, tmp_path):
@@ -169,17 +199,6 @@ class TestFacetDecorators:
 # ── Two-variable faceting ──────────────────────────────────────────
 
 class TestTwoVariableFacet:
-    @pytest.fixture
-    def facet_df(self):
-        return pd.DataFrame({
-            "x": range(12),
-            "y": range(12),
-            "row_var": ["R1", "R1", "R1", "R1", "R2", "R2",
-                        "R2", "R2", "R3", "R3", "R3", "R3"],
-            "col_var": ["C1", "C2", "C1", "C2", "C1", "C2",
-                        "C1", "C2", "C1", "C2", "C1", "C2"],
-        })
-
     def test_two_var_facet_saves(self, facet_df, tmp_path):
         path = tmp_path / "two_var.png"
         chart(facet_df).scatter("x", "y").facet("col_var", row="row_var").save(path)
@@ -191,8 +210,10 @@ class TestTwoVariableFacet:
         assert axs.shape == (3, 2)  # 3 row cats × 2 col cats
         plt.close(fig)
 
-    def test_two_var_facet_column_headers(self, facet_df):
-        c = chart(facet_df).scatter("x", "y").facet("col_var", row="row_var")
+    @pytest.mark.parametrize("title", [None, "Overall"])
+    def test_two_var_facet_column_headers(self, facet_df, title):
+        c = (chart(facet_df).scatter("x", "y").title(title)
+             .facet("col_var", row="row_var"))
         fig, axs = c._render()
         # Top row should have column category titles
         top_titles = [axs[0, j].get_title() for j in range(2)]
@@ -239,13 +260,6 @@ class TestTwoVariableFacet:
     def test_facet_no_args_raises(self, facet_df):
         with pytest.raises(ValueError, match="at least one"):
             chart(facet_df).scatter("x", "y").facet()
-
-    def test_two_var_facet_with_title(self, facet_df):
-        c = (chart(facet_df).scatter("x", "y")
-             .title("Two-var").facet("col_var", row="row_var"))
-        fig, axs = c._render()
-        assert fig._suptitle.get_text() == "Two-var"
-        plt.close(fig)
 
 
 # ── Facet sharex/sharey ──────────────────────────────────────────
@@ -307,14 +321,23 @@ class TestFacetSharedColorbar:
             "group": ["A"] * 6 + ["B"] * 6,
         })
 
-    def test_single_colorbar_across_panels(self, color_df):
+    @pytest.mark.parametrize("colorbar_kwargs, n_colorbars", [
+        ({}, 1),
+        ({"colorbar": False}, 0),
+    ], ids=["default", "colorbar=False"])
+    def test_panels_share_one_color_scale(self, color_df, colorbar_kwargs,
+                                          n_colorbars):
+        """colorbar=False hides the bar; the panels still share the scale."""
         c = (chart(color_df)
-             .scatter("x", "y", color="z", cmap="viridis")
+             .scatter("x", "y", color="z", cmap="viridis", **colorbar_kwargs)
              .facet("group"))
         fig, axs = c._render()
         data_axes = list(axs.flat)
+        assert [ax.collections[0].get_clim() for ax in data_axes] == (
+            [(0, 100)] * len(data_axes)
+        )
         colorbar_axes = [ax for ax in fig.axes if ax not in data_axes]
-        assert len(colorbar_axes) == 1
+        assert len(colorbar_axes) == n_colorbars
         plt.close(fig)
 
     def test_shared_colorbar_uses_global_range(self, color_df):
@@ -327,16 +350,6 @@ class TestFacetSharedColorbar:
         # The colorbar's value range should span the full data [0, 100]
         ylim = cbar_ax.get_ylim()
         assert ylim[0] <= 0 and ylim[1] >= 100
-        plt.close(fig)
-
-    def test_suppressed_when_colorbar_false(self, color_df):
-        c = (chart(color_df)
-             .scatter("x", "y", color="z", cmap="viridis", colorbar=False)
-             .facet("group"))
-        fig, axs = c._render()
-        data_axes = list(axs.flat)
-        colorbar_axes = [ax for ax in fig.axes if ax not in data_axes]
-        assert len(colorbar_axes) == 0
         plt.close(fig)
 
     def test_categorical_color_does_not_trigger_colorbar(self, color_df):

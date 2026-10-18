@@ -25,7 +25,6 @@ class Chart:
     """
 
     _SIMPLE_SETTERS = [
-        ("_title", "set_title"),
         ("_xlabel", "set_xlabel"),
         ("_ylabel", "set_ylabel"),
         ("_xscale", "set_xscale"),
@@ -686,13 +685,14 @@ class Chart:
 
         return fig, axes
 
-    def _render_onto(self, figure, axes, adapter=None, suppress_legend=False):
+    def _render_onto(self, figure, axes, adapter=None, as_panel=False):
         """Render this chart's layers onto an externally provided axes.
 
         Used by Grid and facet rendering. When adapter is provided, it is
-        used instead of creating one from self._data. When suppress_legend
-        is True, the per-axes legend is skipped — facet rendering uses this
-        to draw a single figure-level legend after all panels are rendered.
+        used instead of creating one from self._data. When as_panel is True,
+        the axes is one panel of a faceted figure, so the chart-level
+        decorators (title, subtitle, caption, legend) are skipped — the facet
+        draws them once for the whole figure.
         """
         theme = _resolve_theme(self._theme_override)
         if adapter is None:
@@ -704,12 +704,13 @@ class Chart:
             for layer in self._layers:
                 render_layer(replace(layer, palette=resolved_palette),
                              adapter, axes)
-            self._apply_decorators(figure, axes, adapter,
-                                   suppress_legend=suppress_legend)
+            self._apply_decorators(figure, axes, adapter, as_panel=as_panel)
             for func in self._apply_funcs:
                 func(figure, axes)
 
-    def _apply_decorators(self, fig, axes, adapter=None, suppress_legend=False):
+    def _apply_decorators(self, fig, axes, adapter=None, as_panel=False):
+        if self._title is not None and not as_panel:
+            axes.set_title(self._title)
         for attr, method in self._SIMPLE_SETTERS:
             value = getattr(self, attr)
             if value is not None:
@@ -722,12 +723,12 @@ class Chart:
 
         self._apply_labels(axes, adapter)
         self._apply_references(axes)
-        self._apply_subtitle(fig)
-        self._apply_caption(fig)
         self._apply_ticks(axes, "x", self._xticks)
         self._apply_ticks(axes, "y", self._yticks)
         self._apply_annotations(axes)
-        if not suppress_legend:
+        if not as_panel:
+            self._apply_subtitle(fig)
+            self._apply_caption(fig)
             self._apply_legend(axes)
 
     def _apply_labels(self, axes, adapter=None):

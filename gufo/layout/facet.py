@@ -77,7 +77,7 @@ def _render_one_variable(chart, adapter, facet_column, wrap_cols, *,
                 mask = col_data == category
                 sub_adapter = adapter.subset(mask)
                 chart._render_onto(fig, axes_grid[r, c], adapter=sub_adapter,
-                                   suppress_legend=True)
+                                   as_panel=True)
                 axes_grid[r, c].set_title(str(category))
 
             for i in range(n, rows * cols):
@@ -88,8 +88,7 @@ def _render_one_variable(chart, adapter, facet_column, wrap_cols, *,
             _draw_shared_colorbars(fig, visible_axes, shared_bars)
             _draw_shared_legend(fig, visible_axes, chart)
 
-        if chart._title:
-            fig.suptitle(chart._title)
+        _draw_chart_text(fig, chart)
 
     return fig, axes_grid
 
@@ -133,7 +132,7 @@ def _render_two_variable(chart, adapter, facet_column, facet_row, *,
                         sub_adapter = adapter.subset(mask)
                         chart._render_onto(fig, axes_grid[ri, ci],
                                            adapter=sub_adapter,
-                                           suppress_legend=True)
+                                           as_panel=True)
                         visible_axes.append(axes_grid[ri, ci])
                     else:
                         axes_grid[ri, ci].set_visible(False)
@@ -146,10 +145,21 @@ def _render_two_variable(chart, adapter, facet_column, facet_row, *,
             _draw_shared_colorbars(fig, visible_axes, shared_bars)
             _draw_shared_legend(fig, visible_axes, chart)
 
-        if chart._title:
-            fig.suptitle(chart._title)
+        _draw_chart_text(fig, chart)
 
     return fig, axes_grid
+
+
+def _draw_chart_text(fig, chart):
+    """Draw the chart's title, subtitle and caption once for the figure.
+
+    Panels are rendered with as_panel=True, which skips them, so they are not
+    repeated in every panel.
+    """
+    if chart._title:
+        fig.suptitle(chart._title)
+    chart._apply_subtitle(fig)
+    chart._apply_caption(fig)
 
 
 def _unique_categories(col_data, column_name):
@@ -202,7 +212,9 @@ def _shared_color_scales(chart, full_adapter):
 
     Returns (patched_layers, descriptors). patched_layers is a list matching
     chart._layers where continuous-color layers have vmin/vmax/colorbar
-    overridden. The original chart._layers are never mutated.
+    overridden. descriptors has one entry per shared colorbar to draw;
+    colorbar=False hides that bar but keeps the shared scale. The original
+    chart._layers are never mutated.
     """
     patched_layers = []
     descriptors = []
@@ -223,9 +235,6 @@ def _shared_color_scales(chart, full_adapter):
         if is_categorical(values):
             patched_layers.append(layer)
             continue
-        if enc.get("colorbar") is False:
-            patched_layers.append(layer)
-            continue
 
         arr = np.asarray(values, dtype=float)
         if not np.isfinite(arr).any():
@@ -237,6 +246,8 @@ def _shared_color_scales(chart, full_adapter):
         new_enc = {**enc, "vmin": vmin, "vmax": vmax, "colorbar": False}
         patched_layers.append(replace(layer, encodings=new_enc))
 
+        if enc.get("colorbar") is False:
+            continue
         descriptors.append({
             "cmap": enc.get("cmap"),
             "vmin": vmin,

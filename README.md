@@ -643,14 +643,17 @@ gufo.chart(df).scatter("gdp", "life_exp").facet("continent", sharex=False, share
 ```
 
 `facet()` takes a categorical column name and creates one panel per unique value,
-each showing the same layers with only that subset of data. Chart-level `.title()`
-becomes a super-title above all panels. Empty cells are hidden automatically.
+each showing the same layers with only that subset of data. Chart-level `.title()`,
+`.subtitle()` and `.caption()` apply to the whole figure: the title becomes a
+super-title above all panels, and the subtitle and caption are drawn once, not
+per panel. Empty cells are hidden automatically.
 `sharex` and `sharey` both default to `True`; set either to `False` for
 independent per-panel scales.
 
 When a faceted chart uses continuous color (`scatter`/`line` with a numeric
 color column), a single figure-level colorbar is drawn with the global data
-range, so panel colors are directly comparable. When `.legend()` is called on
+range, so panel colors are directly comparable (`colorbar=False` hides the bar
+but keeps the shared range). When `.legend()` is called on
 a faceted chart, a single figure-level legend is drawn (deduped by label)
 instead of one legend per panel.
 
