@@ -75,7 +75,9 @@ gufo.chart(df).scatter("gdp", "life_exp").facet("continent", row="income_group")
 gufo.chart(df).scatter("gdp", "life_exp").facet(row="income_group").show()
 ```
 
-Chart-level `.title()` becomes a super-title above all panels. Empty cells are hidden automatically.
+Chart-level `.title()`, `.subtitle()` and `.caption()` apply to the whole figure: the title becomes a
+super-title above all panels, and the subtitle and caption are drawn once, not per panel. Empty cells
+are hidden automatically.
 
 ### Shared / independent axes
 
@@ -90,7 +92,8 @@ gufo.chart(df).scatter("x", "y").facet("group", sharey=False).show()
 
 When a faceted chart uses continuous color (a numeric column as `color=` on
 `scatter` or `line`), a single figure-level colorbar is drawn using the
-global data range across all panels, so colors are directly comparable. When
+global data range across all panels, so colors are directly comparable
+(`colorbar=False` hides the bar but keeps the shared range). When
 `.legend()` is called on a faceted chart, a single figure-level legend is
 drawn (deduped by label) instead of one per panel.
 

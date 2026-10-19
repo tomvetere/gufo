@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.2.2
+
+**Fixes**
+- Wide-form bar charts honour `order=`. `.bar("x", ["a", "b"], order=[...])` drew every row in data order. Error bars now follow `order=` as well; they were taken from the original rows, so they landed on the wrong bars or raised a shape mismatch when `order=` dropped a category. Bar lengths are checked before reordering, so an array longer than `x` raises instead of being silently truncated.
+- A list or tuple `color=` now groups like an array. A plain Python list or tuple drew nothing, though the legend still listed every group. Every mark that groups by colour was affected.
+- Boolean columns are treated as categorical. `scatter(color=<bool column>)` drew a gradient colorbar with no legend, and `bar(color=<bool column>)` crashed. Both now behave like any categorical column: one colour per value, labelled by `.legend()`. Faceting by a boolean column now works, and `pairplot()` no longer picks boolean or datetime columns that its diagonal histogram then rejected.
+- Grouped violins draw cells that have one value. With `color=`, every cell with fewer than two values was skipped, so data with one value per cell gave a blank chart with no legend. A cell that holds only NaN is skipped.
+- `pointplot()` omits NaN instead of losing the whole category, and warns. An `x`/`y` length mismatch raises gufo's length message instead of a raw `IndexError`.
+- Long-form `heatmap()` raises on mismatched `x`/`y`/`color` lengths instead of silently truncating them into a partial matrix.
+- `rug()` warns about NaN in `x`, matching `scatter`, `histogram`, `line` and `ecdf`.
+- The `kde=` overlay on `.histogram()` now matches the bars. It was scaled by the number of points times the first bar's width, so it was about 600x too tall with `density=True`, wrongly sized with uneven `bins=`, drawn sideways with `horizontal=True`, and one pooled, nearly invisible curve with a categorical `color=`. It is now scaled to the bars' own area, with one curve per colour group.
+- Faceted charts draw `.title()`, `.subtitle()` and `.caption()` once. A two-variable facet repeated the title in panels below the top row, and the subtitle and caption were stacked once per panel.
+- `colorbar=False` on a faceted chart hides the shared colorbar but keeps the shared colour scale. Before, each panel got its own scale, so one colour meant different values in different panels.
+
+**Internal**
+- New `is_numeric()` in `gufo/data/inference.py`, shared by `pairplot` column detection and `check_numeric`, so both use one definition of numeric.
+- `Chart._render_onto()`'s `suppress_legend=` is now `facet_panel=`, which skips all chart-level decorators; the facet draws them once for the figure.
+
+**Testing**
+- 502 tests passing (up from 444).
+
+---
+
 ## v0.2.1
 
 **Fixes**
