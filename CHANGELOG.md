@@ -8,7 +8,16 @@ Entries through v0.0.9 were reconstructed from the project roadmap and pre-date 
 
 ## [Unreleased]
 
+## [0.2.2] — 2026-10-18
+
 ### Fixed
+- **Wide-form bar charts honour `order=`.** `.bar("x", ["a", "b"], order=[...])` ignored `order=` and drew every row in data order. Error bars now follow `order=` too: `y_error=`/`x_error=` were taken from the original rows, so they landed on the wrong bars or raised a shape mismatch when `order=` dropped a category. Bar `x`/`y` and error lengths are checked before reordering, so an array longer than `x` raises instead of being silently truncated.
+- **A list or tuple `color=` now groups like an array.** A plain Python list or tuple drew nothing at all, though the legend still listed every group. This affected every mark that groups by colour.
+- **Boolean columns are treated as categorical.** `scatter(color=<bool column>)` drew a gradient colorbar with no legend, and `bar(color=<bool column>)` crashed. Both now behave like any categorical column: one colour per value, labelled by `.legend()`. Faceting by a boolean column works. `pairplot()` no longer picks boolean or datetime columns, which its diagonal histogram then rejected.
+- **Grouped violins draw cells that have one value.** A violin with `color=` skipped every cell with fewer than two values, so data with one value per cell gave a blank chart with no legend. One-value cells now draw like they do on an ungrouped violin, and a cell that holds only NaN is skipped.
+- **`pointplot()` omits NaN instead of losing the whole category.** One NaN in `y` made that category's mean NaN, so the category disappeared. NaN values are now dropped, with a warning. An `x`/`y` length mismatch raises gufo's length message instead of a raw `IndexError`.
+- **Long-form `heatmap()` checks its column lengths.** Mismatched `x`/`y`/`color` lengths were silently truncated into a partial matrix. They now raise.
+- `rug()` warns about NaN in `x`, like `scatter`, `histogram`, `line` and `ecdf`.
 - **The `kde=` overlay on `.histogram()` now matches the bars.** The curve was scaled by the number of points times the first bar's width, which only fits a plain vertical histogram with even bins. It was about 600x too tall with `density=True`, wrongly sized with uneven `bins=`, drawn sideways with `horizontal=True`, and nearly invisible with a categorical `color=`, where it was also one pooled curve for every group. The curve is now scaled to the bars' own area, and a grouped histogram gets one curve per group in that group's colour.
 - **Faceted charts draw the title, subtitle and caption once.** Each panel was rendered with the chart's own decorators, so a two-variable facet repeated `.title()` in every panel below the top row, and `.subtitle()`/`.caption()` were stacked once per panel at the same spot. The title is now only the super-title above the panels, as documented, and the subtitle and caption are drawn once for the figure.
 - **`colorbar=False` on a faceted chart no longer gives each panel its own colour scale.** It skipped the shared scale along with the shared colorbar, so the same colour meant a different value in each panel. It now hides only the bar.

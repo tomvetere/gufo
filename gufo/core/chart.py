@@ -507,6 +507,13 @@ class Chart:
         across. With row only, each row category gets one panel in a
         single column.
 
+        Chart-level .title(), .subtitle() and .caption() apply to the whole
+        figure: the title becomes a super-title above all panels, and the
+        subtitle and caption are drawn once. Continuous color (a numeric
+        color column on scatter or line) gets one shared colorbar and color
+        range across panels; colorbar=False hides the bar but keeps the
+        shared range.
+
         Parameters
         ----------
         column : str or None
