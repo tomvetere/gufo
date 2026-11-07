@@ -43,4 +43,7 @@ def resolve_palette(palette):
                 f"Available: {sorted(NAMED_PALETTES)}"
             )
         return NAMED_PALETTES[palette]
-    return list(palette)
+    colors = list(palette)
+    if not colors:
+        raise ValueError("Palette cannot be empty.")
+    return colors
