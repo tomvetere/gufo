@@ -169,3 +169,21 @@ class TestPaletteAPI:
          .bar("x", ["series_a", "series_b"])
          .palette(["coral", "teal"])
          .save(tmp_path / "p.png"))
+
+    def test_palette_empty_list_raises(self, sample_df):
+        c = (gufo.chart(sample_df)
+             .scatter("x", "y", color="cat")
+             .palette([]))
+        with pytest.raises(ValueError, match="Palette cannot be empty"):
+            c.save("/dev/null")
+
+    def test_resolve_palette_empty_raises(self):
+        from gufo.style.color import resolve_palette
+        with pytest.raises(ValueError, match="Palette cannot be empty"):
+            resolve_palette([])
+
+    def test_default_colors_empty_palette(self):
+        from gufo.marks._base import default_colors
+        assert default_colors(0, palette=[]) == []
+        with pytest.raises(ValueError, match="Palette cannot be empty"):
+            default_colors(3, palette=[])

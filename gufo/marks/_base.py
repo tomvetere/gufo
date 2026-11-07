@@ -26,6 +26,10 @@ def default_colors(n, palette=None):
     """Return n colors from the palette, cycling if needed."""
     colors = palette if palette is not None else GUFO_PALETTE.categorical
     k = len(colors)
+    if k == 0:
+        if n == 0:
+            return []
+        raise ValueError("Palette cannot be empty.")
     return [colors[i % k] for i in range(n)]
 
 
