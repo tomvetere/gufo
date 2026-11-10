@@ -1,4 +1,5 @@
 """Tests for gufo.style — Theme, registry, palette."""
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import pytest
 
@@ -59,11 +60,44 @@ class TestRegistry:
         register_theme(custom)
         assert get_theme("my_custom") is custom
 
-    def test_theme_context_manager(self):
-        original = plt.rcParams.get("axes.facecolor")
-        with theme_context("gufo_dark"):
-            assert plt.rcParams["axes.facecolor"] == "#1e1e2e"
-        assert plt.rcParams["axes.facecolor"] == original
+
+# ── Global theme ────────────────────────────────────────────────────
+
+@pytest.fixture
+def restore_rcparams():
+    """Undo global rcParams changes made by set_theme() during a test."""
+    with plt.rc_context():
+        yield
+
+
+@pytest.mark.usefixtures("restore_rcparams")
+class TestApplyTheme:
+    def test_switching_theme_resets_previous_keys(self, sample_df):
+        set_theme("gufo_dark")
+        set_theme("gufo_print")
+        for key in ("text.color", "axes.labelcolor", "xtick.color", "ytick.color"):
+            assert plt.rcParams[key] == mpl.rcParamsOrig[key]
+        _, ax = gufo.chart(sample_df).scatter("x", "y").title("t")._render()
+        assert ax.title.get_color() != "#cccccc"
+
+    def test_switching_theme_restores_spines(self):
+        set_theme("gufo_modern")
+        set_theme("gufo_print")
+        assert plt.rcParams["axes.spines.left"] is True
+        assert plt.rcParams["axes.spines.bottom"] is True
+
+    def test_set_theme_keeps_backend(self):
+        backend = mpl.get_backend()
+        set_theme("gufo_dark")
+        assert mpl.get_backend() == backend
+
+    def test_theme_context_scopes_and_inherits(self):
+        with plt.rc_context({"font.size": 17}):
+            original = plt.rcParams["axes.facecolor"]
+            with theme_context("gufo_dark"):
+                assert plt.rcParams["axes.facecolor"] == "#1e1e2e"
+                assert plt.rcParams["font.size"] == 17
+            assert plt.rcParams["axes.facecolor"] == original
 
 
 # ── _resolve_theme ──────────────────────────────────────────────────

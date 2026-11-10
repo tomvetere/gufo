@@ -1,5 +1,7 @@
 """Theme — immutable style object with registry and context manager support."""
 import contextlib
+
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 from .color import GUFO_PALETTE
@@ -42,7 +44,13 @@ class Theme:
             yield
 
     def apply_global(self):
-        """Apply this theme to matplotlib's global rcParams."""
+        """
+        Apply this theme to matplotlib's global rcParams.
+
+        The rcParams are first reset to the rc-file defaults, so the theme
+        replaces any previously applied theme rather than layering on it.
+        """
+        mpl.rc_file_defaults()
         plt.rcParams.update(self._rc)
 
 
@@ -125,7 +133,7 @@ def get_theme(name: str) -> Theme:
 
 
 def set_theme(name: str = "gufo_modern") -> None:
-    """Apply a theme globally to all subsequent charts."""
+    """Apply a theme globally to all subsequent charts, replacing the previous one."""
     get_theme(name).apply_global()
 
 
